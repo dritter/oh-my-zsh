@@ -35,8 +35,8 @@ PR_RESET="%{${reset_color}%}";
 # %R - repository path
 # %S - path in the repository
 FMT_BRANCH="%{$bg[black]$fg[green]%}%b%u%c" # e.g. master¹²
-FMT_ACTION="%{($bg[black]fg[cyan]%}%a%)"   # e.g. (rebase-i)
-FMT_PATH="%R%{$bg[black]$fg[yellow]%}/%S"              # e.g. ~/repo/subdir
+FMT_ACTION="%{$bg[black]$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
+FMT_PATH="%R%{$bg[black]$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 
 # check-for-changes can be really slow.
 # you should disable it, if you work with large repositories    
