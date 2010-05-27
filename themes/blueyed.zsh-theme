@@ -13,7 +13,7 @@ prompt_blueyed_precmd () {
     # http_proxy defines color of "@" between user and host
     if [ -n "$http_proxy" ] ; then
         prompt_at="%{$bg[black]$fg_bold[green]%}@"
-    else                               
+    else
         prompt_at="%{$bg[black]$fg_bold[red]%}@"
     fi
 
@@ -39,7 +39,7 @@ FMT_ACTION="%{$bg[black]$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
 FMT_PATH="%R%{$bg[black]$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 
 # check-for-changes can be really slow.
-# you should disable it, if you work with large repositories    
+# you should disable it, if you work with large repositories
 zstyle ':vcs_info:*:prompt:*' check-for-changes true
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
@@ -65,7 +65,7 @@ function prompt_blueyed_setup {
     local -h bracket_close="${signtext}]"
     local -h brace_open="${signtext}{"
     local -h brace_close="${signtext}}"
- 
+
     local ret_status="%(?:: ${bracket_open}${alerttext}es:%?${bracket_close})"
 
     # TODO: use $jobstates to get stopped/running numbers. Or "jobs" output (=> custom_prompt.sh)
@@ -80,7 +80,7 @@ function prompt_blueyed_setup {
     PROMPT="${prefix}${user}\$prompt_at${host}\$prompt_extra${ret_status}${jobstatus} $brace_open $cwd $brace_close
 ${vcs}%# ${PR_RESET}"
     RPROMPT="$histnr $time${PR_RESET}"
-}                                                                                        
+}
 
 prompt_blueyed_setup
 
