@@ -7,11 +7,33 @@ setopt prompt_subst
 
 add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
+    local -h      hitext="%{$fg_bold[green]%}"
+    local -h     invtext="%{$fg_bold[cyan]%}"
+
     if ! vcs_info 'prompt' &> /dev/null; then
-        psvar[2]="${PWD/#$HOME/~}"
+        # No vcs_info available, only set cwd
+        prompt_cwd="${PWD/#$HOME/~}"
+        prompt_vcs=""
     else
-        psvar[1]="$vcs_info_msg_0_"
-        psvar[2]='${${vcs_info_msg_1_%%.}/$HOME/~}'
+        local cwd="${vcs_info_msg_1_%.}"
+
+        # Check if VCS $cwd is in $PWD - which may not be the case with symbolic links
+        # (e.g. some SVN symlink in a CVS repo)
+        if [[ ${cwd#$PWD} = $cwd ]]; then
+#            echo "Using PWD"
+            cwd=$PWD
+        fi
+
+        # Highlight symbolic links in $cwd
+        local colored cur
+        for i in ${(ps:/:)${cwd}}; do
+            [[ -h "$cur/$i" ]] && colored+="${invtext}/→$i${hitext}" || colored+="/$i"
+            cur+="/$i"
+        done
+        cwd="${colored/#$HOME/~}"
+
+        prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
+        prompt_vcs="$vcs_info_msg_0_"
     fi
 
     # http_proxy defines color of "@" between user and host
@@ -32,13 +54,8 @@ PR_RESET="%{${reset_color}%}";
 
 
 # set formats
-# %b - branchname
-# %u - unstagedstr (see below)
-# %c - stangedstr (see below)
-# %a - action (e.g. rebase-i)
-# %R - repository path
-# %S - path in the repository
-FMT_BRANCH="%{$fg[green]%}%b%u%c" # e.g. master¹²
+# XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
+FMT_BRANCH="%{$fg_no_bold[white]%}(%s)%{$fg[green]%}%b%u%c" # e.g. master¹²
 FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
 FMT_PATH="%R%{$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 
@@ -47,8 +64,8 @@ FMT_PATH="%R%{$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 zstyle ':vcs_info:*:prompt:*' check-for-changes true
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
-zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH}${FMT_ACTION}//" "${FMT_PATH}"
-zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}//"              "${FMT_PATH}"
+zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH}${FMT_ACTION} " "${FMT_PATH}"
+zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH} "              "${FMT_PATH}"
 zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                             "%~"
 
 
@@ -75,13 +92,10 @@ function prompt_blueyed_setup {
     # TODO: use $jobstates to get stopped/running numbers. Or "jobs" output (=> custom_prompt.sh)
     local jobstatus="%(1j. ${bracket_open}${lighttext}jobs:${hitext}%j${bracket_close}.)"
 
-    local vcs='%(1V:$psvar[1] :)'
-    local cwd="${hitext}%B%50<..<\${psvar[2]}%<<%b"
-
     local -h    prefix="%{$fg_bold[red]%}❤ "
 
-    PROMPT="${prefix}${user}\$prompt_at${host}\$prompt_extra${ret_status}${jobstatus} $brace_open $cwd $brace_close
-${vcs}%# ${PR_RESET}"
+    PROMPT="${prefix}${user}\$prompt_at${host}\$prompt_extra${ret_status}${jobstatus} $brace_open \$prompt_cwd $brace_close
+\$prompt_vcs%# ${PR_RESET}"
     RPROMPT="$histnr $time${PR_RESET}"
 }
 
