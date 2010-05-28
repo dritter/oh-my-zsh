@@ -25,9 +25,18 @@ prompt_blueyed_precmd () {
         fi
 
         # Highlight symbolic links in $cwd
-        local colored cur
+        # typeset -A color_map
+        # color_map=("${(s:=:)${LS_COLORS//:/=}}" '')
+        local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
+        [[ -z $ln_color ]] && ln_color=${fg_bold[cyan]} || ln_color="%{"$'\e'"[${ln_color}m%}"
+        local colored cur color
         for i in ${(ps:/:)${cwd}}; do
-            [[ -h "$cur/$i" ]] && colored+="${invtext}/→$i${hitext}" || colored+="/$i"
+            if [[ -h "$cur/$i" ]]; then
+                color=$ln_color
+                colored+="${color}/→$i${hitext}"
+            else
+                colored+="/$i"
+            fi
             cur+="/$i"
         done
         cwd="${colored/#$HOME/~}"
