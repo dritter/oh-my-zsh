@@ -17,10 +17,9 @@ prompt_blueyed_precmd () {
     else
         local cwd="${vcs_info_msg_1_%.}"
 
-        # Check if VCS $cwd is in $PWD - which may not be the case with symbolic links
+        # Check if $cwd (from vcs_info) is in $PWD - which may not be the case with symbolic links
         # (e.g. some SVN symlink in a CVS repo)
         if [[ ${cwd#$PWD} = $cwd ]]; then
-#            echo "Using PWD"
             cwd=$PWD
         fi
 
@@ -41,7 +40,9 @@ prompt_blueyed_precmd () {
         done
         cwd="${colored/#$HOME/~}"
 
-        prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
+        # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
+        #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
+        prompt_cwd="${hitext}${cwd}"
         prompt_vcs="$vcs_info_msg_0_"
     fi
 
@@ -49,7 +50,7 @@ prompt_blueyed_precmd () {
     if [ -n "$http_proxy" ] ; then
         prompt_at="%{$fg_bold[green]%}@"
     else
-        prompt_at="%{$fg_bold[red]%}@"
+        prompt_at="%{$fg_bold[normtext]%}@"
     fi
 
     # $debian_chroot:
@@ -89,7 +90,7 @@ function prompt_blueyed_setup {
     local -h     user="%(#.$alerttext.$normtext)%(!.%U.)%n%(!.%u.)"
     local -h     host="${hitext}%m"
     local -h   histnr="${normtext}!${invtext}%!"
-    local -h     time="${normtext}%T"
+    local -h     time="${normtext}%*"
 
     local -h bracket_open="${lighttext}["
     local -h bracket_close="${lighttext}]"
@@ -101,9 +102,9 @@ function prompt_blueyed_setup {
     # TODO: use $jobstates to get stopped/running numbers. Or "jobs" output (=> custom_prompt.sh)
     local jobstatus="%(1j. ${bracket_open}${lighttext}jobs:${hitext}%j${bracket_close}.)"
 
-    local -h    prefix="%{$fg_bold[red]%}❤ "
+    local -h    prefix="%{$normtext%}❤ "
 
-    PROMPT="${prefix}${user}\$prompt_at${host}\$prompt_extra${ret_status}${jobstatus} $brace_open \$prompt_cwd $brace_close
+    PROMPT="${user}\$prompt_at${host}:\$prompt_cwd \$prompt_extra${ret_status}${jobstatus}
 \$prompt_vcs%# ${PR_RESET}"
     RPROMPT="$histnr $time${PR_RESET}"
 }
