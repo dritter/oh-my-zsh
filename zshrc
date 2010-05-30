@@ -63,3 +63,8 @@ autoload -U zsh-mime-setup
 zsh-mime-setup
 
 watch=(notme)
+
+# autojump
+if which autojump > /dev/null ; then
+	source ~/.dotfiles/autojump/autojump.zsh
+fi
