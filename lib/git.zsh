@@ -23,12 +23,16 @@ function current_branch() {
 
 # Aliases
 alias g='git'
+alias ga='git add'
+alias gae='git add --edit'
+alias gco='git checkout'
 alias gst='git status'
 alias gl='git l'
 alias gup='git fetch && git rebase'
 alias gp='git push'
 alias gpl='git pull'
 alias gd='git diff'
+alias gdc='git diff --cached'
 alias gdv='git diff -w "$@" | vim -R -'
 alias gc='git commit -v'
 alias gca='git commit -v -a'
