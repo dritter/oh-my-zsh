@@ -68,3 +68,9 @@ watch=(notme)
 if which autojump > /dev/null ; then
 	source ~/.dotfiles/autojump/autojump.zsh
 fi
+
+# run-help for builtins
+# Explicitly set HELPDIR, see http://bugs.debian.org/530366
+HELPDIR=/usr/share/zsh/help
+unalias run-help
+autoload run-help
