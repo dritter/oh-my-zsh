@@ -5,6 +5,8 @@ autoload -Uz vcs_info
 
 setopt prompt_subst
 
+PR_RESET="%{${reset_color}%}";
+
 add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
     local -h      hitext="%{$fg_bold[green]%}"
@@ -28,22 +30,30 @@ prompt_blueyed_precmd () {
         # color_map=("${(s:=:)${LS_COLORS//:/=}}" '')
         local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
         [[ -z $ln_color ]] && ln_color=${fg_bold[cyan]} || ln_color="%{"$'\e'"[${ln_color}m%}"
-        local colored cur color
+        local colored="/" cur color
         for i in ${(ps:/:)${cwd}}; do
             if [[ -h "$cur/$i" ]]; then
                 color=$ln_color
-                colored+="${color}/→$i${hitext}"
+                colored+="${color}→$i${hitext}/"
             else
-                colored+="/$i"
+                colored+="$i/"
             fi
             cur+="/$i"
         done
+        # Remove trailing slash, if not in root
+        if [[ ${#colored} > 1 ]]; then colored=${colored%%/}; fi
         cwd="${colored/#$HOME/~}"
+
+        if [[ ! -w $PWD ]]; then
+            # strip color codes, and paint in red (www.commandlinefu.com/commands/view/3584/)
+            cleancwd=$(echo $cwd | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g")
+            cwd="${fg_bold[red]}${cwd}"
+        fi
 
         # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
         #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
         prompt_cwd="${hitext}${cwd}"
-        prompt_vcs="$vcs_info_msg_0_"
+        prompt_vcs="${PR_RESET}$vcs_info_msg_0_"
     fi
 
     # http_proxy defines color of "@" between user and host
@@ -58,9 +68,6 @@ prompt_blueyed_precmd () {
         prompt_extra=" %{$fg[red]%}(dch:$debian_chroot)"
     fi
 }
-
-
-PR_RESET="%{${reset_color}%}";
 
 
 # set formats
