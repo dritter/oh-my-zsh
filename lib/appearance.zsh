@@ -10,7 +10,7 @@ then
   ls --color -d . &>/dev/null 2>&1 && alias ls='ls --color=tty' || alias ls='ls -G'
 
 	# setup LS_COLORS (Linux)
-	eval `dircolors -b`
+	eval `dircolors -b $ZSH/.dircolors`
 fi
 
 #setopt no_beep
