@@ -83,3 +83,10 @@ bash_source() {
 }
 # Load completion from bash, which isn't available in zsh yet.
 which vzctl > /dev/null && bash_source /etc/bash_completion.d/vzctl.sh
+
+
+# run-help for builtins
+# Explicitly set HELPDIR, see http://bugs.debian.org/530366
+HELPDIR=/usr/share/zsh/help
+unalias run-help
+autoload run-help
