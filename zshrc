@@ -68,3 +68,18 @@ watch=(notme)
 if which autojump > /dev/null ; then
 	source ~/.dotfiles/autojump/autojump.zsh
 fi
+
+# Load bash completion system
+# via http://zshwiki.org/home/convert/bash
+autoload -U bashcompinit
+bash_source() {
+  alias shopt=':'
+  alias _expand=_bash_expand
+  alias _complete=_bash_comp
+  emulate -L sh
+  setopt kshglob noshglob braceexpand
+
+  source "$@"
+}
+# Load completion from bash, which isn't available in zsh yet.
+which vzctl > /dev/null && bash_source /etc/bash_completion.d/vzctl.sh
