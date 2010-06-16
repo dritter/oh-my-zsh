@@ -11,6 +11,7 @@ add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
     local -h      hitext="%{$fg_bold[green]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
+    local -h    normtext="%{$fg_no_bold[green]%}"
 
     if ! vcs_info 'prompt' &> /dev/null; then
         # No vcs_info available, only set cwd
@@ -57,10 +58,11 @@ prompt_blueyed_precmd () {
     fi
 
     # http_proxy defines color of "@" between user and host
+    # TODO: use $prompt_extra instead?!
     if [ -n "$http_proxy" ] ; then
         prompt_at="%{$fg_bold[green]%}@"
     else
-        prompt_at="%{$fg_bold[normtext]%}@"
+        prompt_at="%{$fg_no_bold[white]%}@"
     fi
 
     # $debian_chroot:
@@ -90,11 +92,11 @@ function prompt_blueyed_setup {
     # via http://www.zsh.org/mla/users/2005/msg00863.html
     local -h    normtext="%{$fg_no_bold[green]%}"
     local -h      hitext="%{$fg_bold[green]%}"
-    local -h   alerttext="%{$fg_no_bold[red]%}"
+    local -h   alerttext="%{$fg_bold[red]%}"
     local -h   lighttext="%{$fg_no_bold[white]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
 
-    local -h     user="%(#.$alerttext.$normtext)%(!.%U.)%n%(!.%u.)"
+    local -h     user="%(#.$alerttext.$normtext)%n"
     local -h     host="${hitext}%m"
     local -h   histnr="${normtext}!${invtext}%!"
     local -h     time="${normtext}%*"
