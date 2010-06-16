@@ -90,3 +90,6 @@ which vzctl > /dev/null && bash_source /etc/bash_completion.d/vzctl.sh
 HELPDIR=/usr/share/zsh/help
 unalias run-help
 autoload run-help
+
+alias grep="nocorrect grep"
+alias sr="nocorrect sr"
