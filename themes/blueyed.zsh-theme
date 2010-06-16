@@ -132,7 +132,7 @@ prompt_blueyed_precmd () {
     PR_FILLBAR="\${(l.(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))).)}"
 
     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
-\$prompt_vcs%# ${PR_RESET}"
+${prompt_vcs}%# ${PR_RESET}"
 }
 
 
