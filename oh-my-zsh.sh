@@ -11,11 +11,6 @@ for config_file ($ZSH/lib/*.zsh) source $config_file
 for config_file ($ZSH/custom/*.zsh) source $config_file
 
 # Check for updates on initial load...
-if [ "$DISABLE_AUTO_UPDATE" = "true" ]
-then
-  return
-else
-  /usr/bin/env zsh $ZSH/tools/check_for_upgrade.sh
-fi
+[[ "$DISABLE_AUTO_UPDATE" = "true" ]] || /usr/bin/env zsh $ZSH/tools/check_for_upgrade.sh
 
 unset config_file
