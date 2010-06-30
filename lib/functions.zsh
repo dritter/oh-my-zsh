@@ -2,12 +2,12 @@
 function title {
   if [[ $TERM == "screen" ]]; then
     # Use these two for GNU Screen:
-    print -nR $'\033k'$1$'\033'\\\
-
-    print -nR $'\033]0;'$2$'\a'
+    print -nR $'\033k'"$*"$'\033'\\\
+    # xterm title: gets updated via screen hardstatus
+    # print -nR $'\033]0;__USED__:'$2$'\a'
   elif [[ $TERM == "xterm" || $TERM == "rxvt" ]]; then
     # Use this one instead for XTerms:
-    print -nR $'\033]0;'$*$'\a'
+    print -nR $'\033]0;'"$*"$'\a'
   fi
 }
 
