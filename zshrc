@@ -88,7 +88,7 @@ which vzctl > /dev/null && bash_source /etc/bash_completion.d/vzctl.sh
 # run-help for builtins
 # Explicitly set HELPDIR, see http://bugs.debian.org/530366
 HELPDIR=/usr/share/zsh/help
-unalias run-help
+unalias run-help &>/dev/null
 autoload run-help
 
 alias grep="nocorrect grep"
