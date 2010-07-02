@@ -98,3 +98,6 @@ autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '\ee' edit-command-line
 
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval $(lesspipe)
+
