@@ -123,7 +123,9 @@ prompt_blueyed_precmd () {
 
     # Assemble prompt: 
     local -h rprompt=" $histnr $time${PR_RESET}"
-    local -h prompt="${user}${prompt_at}${host}:${prompt_cwd} ${prompt_extra}${ret_status}${jobstatus}"
+    local -h prompt="${user}${prompt_at}${host} ${brace_open} ${prompt_cwd} ${brace_close} ${prompt_extra}${ret_status}${jobstatus}"
+    # right trim:
+    prompt=${prompt%% #}
 
     # Attach $rprompt to $prompt, aligned to $COLUMNS (terminal width)
     local -h TERMWIDTH=$((${COLUMNS}))
