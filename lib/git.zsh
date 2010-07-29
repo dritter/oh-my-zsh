@@ -21,6 +21,10 @@ function current_branch() {
   echo ${ref#refs/heads/}
 }
 
+# Setup hub alias for git, if available
+# (http://github.com/defunkt/hub)
+test -x ~/bin/hub && eval `hub alias -s bash`
+
 # Aliases
 alias g='git'
 alias ga='git add'
