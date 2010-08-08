@@ -23,7 +23,7 @@ function current_branch() {
 
 # Setup hub alias for git, if available
 # (http://github.com/defunkt/hub)
-test -x ~/bin/hub && eval `hub alias -s bash`
+test -x ~/bin/hub && eval `~/bin/hub alias -s bash`
 
 # Aliases
 alias g='git'
