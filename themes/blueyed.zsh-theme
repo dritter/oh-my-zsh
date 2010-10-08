@@ -128,7 +128,7 @@ prompt_blueyed_precmd () {
     prompt=${prompt%% #}
 
     # Attach $rprompt to $prompt, aligned to $COLUMNS (terminal width)
-    local -h TERMWIDTH=$((${COLUMNS}))
+    local -h TERMWIDTH=$((${COLUMNS}-1))
     local -h rprompt_len=${#${(%)"$(_strip_escape_codes $rprompt)"}}
     local -h prompt_len=${#${(%)"$(_strip_escape_codes $prompt)"}}
     PR_FILLBAR="\${(l.(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))).)}"
