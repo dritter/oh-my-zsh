@@ -121,7 +121,7 @@ prompt_blueyed_precmd () {
 
     local -h    prefix="%{$normtext%}❤ "
 
-    # Assemble prompt: 
+    # Assemble prompt:
     local -h rprompt=" $histnr $time${PR_RESET}"
     local -h prompt="${user}${prompt_at}${host} ${brace_open} ${prompt_cwd} ${brace_close} ${prompt_extra}${ret_status}${jobstatus}"
     # right trim:
