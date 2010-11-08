@@ -73,11 +73,6 @@ prompt_blueyed_precmd () {
         prompt_at="%{$fg_no_bold[white]%}@"
     fi
 
-    # $debian_chroot:
-    if [[ -n "$debian_chroot" ]]; then
-        prompt_extra=" %{$fg[red]%}(dch:$debian_chroot)"
-    fi
-
     # via http://www.zsh.org/mla/users/2005/msg00863.html
     local -h    normtext="%{$fg_no_bold[green]%}"
     local -h      hitext="%{$fg_bold[green]%}"
@@ -92,8 +87,19 @@ prompt_blueyed_precmd () {
 
     local -h bracket_open="${lighttext}["
     local -h bracket_close="${lighttext}]"
-    local -h brace_open="%(#.$alerttext.$normtext){"
-    local -h brace_close="%(#.$alerttext.$normtext)}"
+    local -h brace_open_cwd="%(#.$alerttext.$normtext){"
+    local -h brace_close_cwd="%(#.$alerttext.$normtext)}${normtext}"
+
+    local -h prompt_extra
+    # $debian_chroot:
+    if [[ -n "$debian_chroot" ]]; then
+        prompt_extra+="${alerttext}(dch:$debian_chroot) "
+    fi
+    # OpenVZ container ID (/proc/bc is only on the host):
+    if [[ -f /proc/user_beancounters && ! -d /proc/bc ]]; then
+        prompt_extra+="${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
+    fi
+		prompt_extra+="${PR_RESET}"
 
     #local ret_status="%(?:: ${bracket_open}${alerttext}es:%?${bracket_close})"
     local -h ret_status disp
@@ -123,7 +129,7 @@ prompt_blueyed_precmd () {
 
     # Assemble prompt: 
     local -h rprompt=" $histnr $time${PR_RESET}"
-    local -h prompt="${user}${prompt_at}${host} ${brace_open} ${prompt_cwd} ${brace_close} ${prompt_extra}${ret_status}${jobstatus}"
+    local -h prompt="${user}${prompt_at}${host} ${brace_open_cwd} ${prompt_cwd} ${brace_close_cwd} ${prompt_extra}${ret_status}${jobstatus}"
     # right trim:
     prompt=${prompt%% #}
 
