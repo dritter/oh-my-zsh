@@ -99,7 +99,7 @@ prompt_blueyed_precmd () {
     if [[ -f /proc/user_beancounters && ! -d /proc/bc ]]; then
         prompt_extra+="${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
     fi
-		prompt_extra+="${PR_RESET}"
+    prompt_extra+="${PR_RESET}"
 
     #local ret_status="%(?:: ${bracket_open}${alerttext}es:%?${bracket_close})"
     local -h ret_status disp
