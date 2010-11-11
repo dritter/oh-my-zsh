@@ -17,7 +17,9 @@ function precmd {
 
 function preexec {
   emulate -L zsh
-  local -a cmd; cmd=(${(z)1})
+  local -a cmd; cmd=(${(z)2})
+	# when the command starts with "fg", use the current's job text
+	[[ $cmd == fg* ]] && cmd=(${(z)${jobtexts[%+]}})
   title $cmd[1]:t "$cmd[2,-1]"
 }
 
