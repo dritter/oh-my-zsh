@@ -19,7 +19,15 @@ function preexec {
   emulate -L zsh
   local -a cmd; cmd=(${(z)2})
 	# when the command starts with "fg", use the current's job text
-	[[ $cmd == fg* ]] && cmd=(${(z)${jobtexts[%+]}})
+	if [[ $cmd[1] == fg ]] ; then
+		# set cmd to jobtext for first argument. If there are more, add "(+x jobs)"
+		local -a newcmd
+		newcmd=(${(z)${jobtexts[${cmd[2]:-%+}]}})
+		if (( ${+cmd[3]} )) ; then
+			newcmd+=(" (+ $(( ${#cmd}-2 )) jobs)")
+		fi
+		cmd=($newcmd)
+	fi
   title $cmd[1]:t "$cmd[2,-1]"
 }
 
