@@ -1,6 +1,6 @@
 ## fixme, i duplicated this in xterms - oops
 function title {
-  if [[ $TERM == "screen" ]]; then
+  if [[ $TERM == screen* ]]; then
     # Use these two for GNU Screen:
     print -nR $'\033k'"$*"$'\033'\\\
     # xterm title: gets updated via screen hardstatus
