@@ -2,7 +2,11 @@
 function title {
   if [[ $TERM == screen* ]]; then
     # Use these two for GNU Screen:
-    print -nR $'\033k'"$*"$'\033'\\\
+    # Get OpenVZ container ID (/proc/bc is only on the host):
+    if [[ -f /proc/user_beancounters && ! -d /proc/bc ]]; then
+      CTID=" [$(hostname) #$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')]"
+    fi
+    print -nR $'\033k'"$*$CTID"$'\033'\\\
     # xterm title: gets updated via screen hardstatus
     # print -nR $'\033]0;__USED__:'$2$'\a'
   elif [[ $TERM == "xterm" || $TERM == "rxvt" ]]; then
