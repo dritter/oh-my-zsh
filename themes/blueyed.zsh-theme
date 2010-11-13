@@ -99,6 +99,35 @@ prompt_blueyed_precmd () {
     if [[ -f /proc/user_beancounters && ! -d /proc/bc ]]; then
         prompt_extra+="${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
     fi
+
+		# information about release, taken and adopted from byobu:
+		if ! (( $+DISTRO )) ; then
+			if [ -r "/etc/debian_version" ]; then
+				DISTRO="Debian $(cat /etc/debian_version)"
+			elif [ -r "/etc/issue" ]; then
+				# Otherwise, grab part of /etc/issue, ideally the distro and version
+				DISTRO=$(grep -m1 "^[A-Za-z]" /etc/issue | sed "s/ [^0-9]* / /" | awk '{print $1 " " $2}')
+			elif which lsb_release >/dev/null 2>&1; then
+				# If lsb_release is available, use it
+				r=$(lsb_release -s -d)
+				case "$r" in
+					Ubuntu*.*.*)
+						# Use the -d if an Ubuntu LTS
+						DISTRO="$r"
+					;;
+					*)
+						# But for other distros the description
+						# is too long, so build from -i and -r
+						i=$(lsb_release -s -i)
+						r=$(lsb_release -s -r)
+						DISTRO="$i $r"
+					;;
+				esac
+			fi
+		fi
+		if [[ -n $DISTRO ]]; then
+			prompt_extra+="[${normtext}$DISTRO] "
+		fi
     prompt_extra+="${PR_RESET}"
 
     #local ret_status="%(?:: ${bracket_open}${alerttext}es:%?${bracket_close})"
