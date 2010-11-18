@@ -21,7 +21,7 @@ function precmd {
 
 function preexec {
   emulate -L zsh
-  local -a cmd; cmd=(${(z)2})
+  local -a cmd; cmd=(${(z)1})
 	# when the command starts with "fg", use the current's job text
 	if [[ $cmd[1] == fg ]] ; then
 		# set cmd to jobtext for first argument. If there are more, add "(+x jobs)"
