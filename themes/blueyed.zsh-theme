@@ -106,7 +106,7 @@ prompt_blueyed_precmd () {
         # lsb_release is *really* slow;  try to use /etc/issue first
         issue=$(grep -m1 "^[A-Za-z]" /etc/issue)
         case "$issue" in
-          Ubuntu*) DISTRO=${issue%%\\*} ;;
+          Ubuntu*) DISTRO=${${issue%%\\*}%% } ;;
           Debian*) DISTRO="Debian $(</etc/debian_version)" ;;
           *) DISTRO=$(echo "$issue" | sed "s/ [^0-9]* / /" | awk '{print $1 " " $2}') ;;
         esac
