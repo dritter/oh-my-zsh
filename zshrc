@@ -105,5 +105,17 @@ bindkey '\ee' edit-command-line
 hash -d l=/var/log
 
 
+# quickly go back in directories (i.e. "cd ..../dir")
+rationalise-dot() {
+  if [[ $LBUFFER = *.. ]]; then
+    LBUFFER+=/..
+  else
+    LBUFFER+=.
+  fi
+}
+zle -N rationalise-dot
+bindkey . rationalise-dot
+
+
 # Source local rc file if any
 test -f ~/.zshrc.local && source ~/.zshrc.local
