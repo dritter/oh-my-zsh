@@ -91,9 +91,6 @@ HELPDIR=/usr/share/zsh/help
 unalias run-help &>/dev/null
 autoload run-help
 
-alias grep="nocorrect grep"
-alias sr="nocorrect sr"
-
 autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '\ee' edit-command-line

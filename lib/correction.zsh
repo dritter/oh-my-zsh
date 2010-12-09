@@ -6,3 +6,7 @@ alias mysql='nocorrect mysql'
 alias mkdir='nocorrect mkdir'
 alias gist='nocorrect gist'
 alias heroku='nocorrect heroku'
+
+alias grep="nocorrect grep"
+alias sr="nocorrect sr"
+
