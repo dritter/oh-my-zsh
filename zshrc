@@ -101,6 +101,9 @@ bindkey '\ee' edit-command-line
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval $(lesspipe)
 
+# directory shortcuts
+hash -d l=/var/log
+
 
 # Source local rc file if any
 test -f ~/.zshrc.local && source ~/.zshrc.local
