@@ -6,12 +6,12 @@ function title {
       CTID=" [$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')]"
     fi
     # Use these two for GNU Screen:
-    print -nR $'\033k'"$*$CTID"$'\033'\\\
+    print -nR $'\033k'${(f)*}$CTID$'\033'\\\
     # xterm title: gets updated via screen hardstatus
-    # print -nR $'\033]0;__USED__:'$2$'\a'
+    # print -nR $'\033]0;'${(f)2}$'\a'
   elif [[ $TERM == "xterm" || $TERM == "rxvt" ]]; then
     # Use this one instead for XTerms:
-    print -nR $'\033]0;'"$*"$'\a'
+    print -nR $'\033]0;'"${(f)*}"$'\a'
   fi
 }
 
