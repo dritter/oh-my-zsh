@@ -91,15 +91,29 @@ HELPDIR=/usr/share/zsh/help
 unalias run-help &>/dev/null
 autoload run-help
 
-alias grep="nocorrect grep"
-alias sr="nocorrect sr"
-
 autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '\ee' edit-command-line
 
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval $(lesspipe)
+
+
+# directory shortcuts
+hash -d l=/var/log
+
+
+# quickly go back in directories (i.e. "cd ..../dir")
+rationalise-dot() {
+  if [[ $LBUFFER = *.. ]]; then
+    LBUFFER+=/..
+  else
+    LBUFFER+=.
+  fi
+}
+zle -N rationalise-dot
+bindkey . rationalise-dot
+
 
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
