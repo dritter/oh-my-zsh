@@ -3,7 +3,7 @@ function title {
   local SUFFIX RELPWD
   if [[ $TERM == screen* ]]; then
     # Get OpenVZ container ID (/proc/bc is only on the host):
-    if [[ -f /proc/user_beancounters ]]; then
+    if [[ -r /proc/user_beancounters ]]; then
       if [[ ! -d /proc/bc ]]; then
         # container
         SUFFIX=" [$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]'):$PWD]"

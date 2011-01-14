@@ -1,5 +1,9 @@
+# TODO: move to keybindings.zsh
+return
+
+#
 # Use VIM keymap
-bindkey -v
+# bindkey -v
 
 # Re-add Ctrl-R
 bindkey -M viins '^r' history-incremental-search-backward

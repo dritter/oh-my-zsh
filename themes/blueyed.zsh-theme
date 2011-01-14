@@ -96,7 +96,7 @@ prompt_blueyed_precmd () {
         prompt_extra+="${alerttext}(dch:$debian_chroot) "
     fi
     # OpenVZ container ID (/proc/bc is only on the host):
-    if [[ -f /proc/user_beancounters && ! -d /proc/bc ]]; then
+    if [[ -r /proc/user_beancounters && ! -d /proc/bc ]]; then
         prompt_extra+="${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
     fi
 
