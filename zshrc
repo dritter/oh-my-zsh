@@ -114,6 +114,14 @@ rationalise-dot() {
 zle -N rationalise-dot
 bindkey . rationalise-dot
 
+# Fix up TERM if there's no info for the currently set one (might cause programs to fail)
+if ! tput longname &> /dev/null; then
+	if [[ $TERM == screen*bce ]]; then TERM=screen-bce
+	elif [[ $TERM == screen* ]]; then TERM=screen
+	else TERM=xterm
+	fi
+	export TERM
+fi
 
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
