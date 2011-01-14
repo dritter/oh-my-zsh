@@ -17,7 +17,7 @@ function title {
     print -nR $'\033k'"${(f)*}$CTID${SUFFIX- [$PWD]}"$'\033'\\\
     # xterm title: gets updated via screen hardstatus
     # print -nR $'\033]0;'${(f)2}$'\a'
-  elif [[ $TERM == "xterm" || $TERM == "rxvt" ]]; then
+  elif [[ $TERM == xterm* || $TERM == "rxvt" ]]; then
     # Use this one instead for XTerms:
     print -nR $'\033]0;'"${(f)*}"$'\a'
   fi
