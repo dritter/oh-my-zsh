@@ -103,16 +103,23 @@ bindkey '\ee' edit-command-line
 hash -d l=/var/log
 
 
-# quickly go back in directories (i.e. "cd ..../dir")
+# just type '...' to get '../..'
+# Originally by grml, improved by Mikachu
 rationalise-dot() {
-  if [[ $LBUFFER = *.. ]]; then
-    LBUFFER+=/..
-  else
-    LBUFFER+=.
-  fi
+local MATCH
+if [[ $LBUFFER =~ '(^|/| |	|'$'\n''|\||;|&)\.\.$' ]]; then
+  LBUFFER+=/
+  zle self-insert
+  zle self-insert
+else
+  zle self-insert
+fi
 }
 zle -N rationalise-dot
 bindkey . rationalise-dot
+# without this, typing a . aborts incremental history search
+bindkey -M isearch . self-insert
+
 
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
 if ! tput longname &> /dev/null; then
