@@ -19,7 +19,7 @@ function title {
     # print -nR $'\033]0;'${(f)2}$'\a'
   elif [[ $TERM == xterm* || $TERM == "rxvt" ]]; then
     # Use this one instead for XTerms:
-    print -nR $'\033]0;'"${(f)*}"$'\a'
+    print -nR $'\033]0;'"${(f)*} [$PWD]"$'\a'
   fi
 }
 
