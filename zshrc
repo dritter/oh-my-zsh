@@ -134,6 +134,9 @@ if ! tput longname &> /dev/null; then
 	export TERM
 fi
 
+# make path/PATH entries unique
+typeset -U path
+
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
