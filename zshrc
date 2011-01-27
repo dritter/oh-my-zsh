@@ -43,6 +43,10 @@ zstyle ':vcs_info:bzr:*' use-simple true
 bindkey -M vicmd "/" history-incremental-search-backward
 bindkey -M vicmd "?" history-incremental-search-forward
 
+# Remap C-R/C-S to use patterns
+bindkey "^R" history-incremental-pattern-search-backward
+bindkey "^S" history-incremental-pattern-search-forward
+
 # Search based on what you typed in already
 bindkey -M vicmd "//" history-beginning-search-backward
 bindkey -M vicmd "??" history-beginning-search-forward
