@@ -14,11 +14,6 @@ alias sc='ruby script/console'
 alias sd='ruby script/server --debugger'
 alias devlog='tail -f log/development.log'
 
-# Basic directory operations
-alias .='pwd'
-alias ...='cd ../..'
-alias -- -='cd -'
-
 # Super user
 alias _='sudo'
 
