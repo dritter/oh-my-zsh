@@ -19,9 +19,9 @@ bindkey "^[[1~" beginning-of-line
 bindkey "^[[F"  end-of-line
 bindkey "^[[4~" end-of-line
 bindkey ' ' magic-space    # also do history expansion on space
-
 bindkey '\e[2~' overwrite-mode # insert key
 bindkey '\e[3~' delete-char    # delete key
+bindkey '^[[Z' reverse-menu-complete
 
 # consider emacs keybindings:
 

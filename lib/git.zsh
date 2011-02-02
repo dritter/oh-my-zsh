@@ -12,37 +12,29 @@ parse_git_dirty () {
   fi
 }
 
-#
-# Will return the current branch name
-# Usage example: git pull origin $(current_branch)
-#
-function current_branch() {
-  ref=$(git symbolic-ref HEAD 2> /dev/null) || return
-  echo ${ref#refs/heads/}
+# get the status of the working tree
+git_prompt_status() {
+  INDEX=$(git status --porcelain 2> /dev/null)
+  STATUS=""
+  if $(echo "$INDEX" | grep '^?? ' &> /dev/null); then
+    STATUS="$ZSH_THEME_GIT_PROMPT_UNTRACKED$STATUS"
+  fi
+  if $(echo "$INDEX" | grep '^A  ' &> /dev/null); then
+    STATUS="$ZSH_THEME_GIT_PROMPT_ADDED$STATUS"
+  elif $(echo "$INDEX" | grep '^M  ' &> /dev/null); then
+    STATUS="$ZSH_THEME_GIT_PROMPT_ADDED$STATUS"
+  fi
+  if $(echo "$INDEX" | grep '^ M ' &> /dev/null); then
+    STATUS="$ZSH_THEME_GIT_PROMPT_MODIFIED$STATUS"
+  fi
+  if $(echo "$INDEX" | grep '^R  ' &> /dev/null); then
+    STATUS="$ZSH_THEME_GIT_PROMPT_RENAMED$STATUS"
+  fi
+  if $(echo "$INDEX" | grep '^ D ' &> /dev/null); then
+    STATUS="$ZSH_THEME_GIT_PROMPT_DELETED$STATUS"
+  fi
+  if $(echo "$INDEX" | grep '^UU ' &> /dev/null); then
+    STATUS="$ZSH_THEME_GIT_PROMPT_UNMERGED$STATUS"
+  fi
+  echo $STATUS
 }
-
-# Setup hub alias for git, if available
-# (http://github.com/defunkt/hub)
-test -x ~/bin/hub && eval `~/bin/hub alias -s bash`
-
-# Aliases
-alias g='git'
-alias ga='git add'
-alias gae='git add --edit'
-alias gco='git checkout'
-alias gst='git status'
-alias gl='git l'
-alias gup='git fetch && git rebase'
-alias gp='git push'
-alias gpl='git pull'
-alias gd='git diff'
-alias gdc='git diff --cached'
-alias gdv='git diff -w "$@" | vim -R -'
-alias gc='git commit -v'
-alias gca='git commit -v -a'
-alias gb='git branch'
-alias gba='git branch -a'
-alias gcount='git shortlog -sn'
-alias gcp='git cherry-pick'
-alias gsm='git submodule'
-gsmc() { [ x$1 = x ] && { echo "Commit update to which submodule?"; return 1;} || git submodule|grep -q "$1" || { echo "Submodule $1 not found."; return 2; } && git ci -m "Update submodule $1." "$1" }
