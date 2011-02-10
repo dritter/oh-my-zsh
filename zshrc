@@ -39,7 +39,7 @@ export RI="--format ansi"
 
 
 # directory based VCS before repo based ones (e.g. CVS in $HOME, the latter using Git)
-zstyle ':vcs_info:*' enable cvs svn bzr git
+zstyle ':vcs_info:*' enable cvs svn bzr hg git 
 zstyle ':vcs_info:bzr:*' use-simple true
 
 
@@ -106,6 +106,8 @@ bindkey '\ee' edit-command-line
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval $(lesspipe)
 
+# options for less: move jump target to line 5 and handle ANSI color sequences (default, but required with $LESS set?!), for "git diff"
+export LESS="-j5 -R"
 
 # directory shortcuts
 hash -d l=/var/log
