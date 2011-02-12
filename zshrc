@@ -128,7 +128,8 @@ fi
 zle -N rationalise-dot
 bindkey . rationalise-dot
 # without this, typing a . aborts incremental history search
-bindkey -M isearch . self-insert
+# "isearch" does not exist in zsh 4.3.6 (Debian Lenny)
+bindkey -M isearch . self-insert 2>/dev/null
 
 
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
