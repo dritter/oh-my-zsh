@@ -48,8 +48,11 @@ bindkey -M vicmd "/" history-incremental-search-backward
 bindkey -M vicmd "?" history-incremental-search-forward
 
 # Remap C-R/C-S to use patterns
-bindkey "^R" history-incremental-pattern-search-backward
-bindkey "^S" history-incremental-pattern-search-forward
+if zle -l -a | grep -q history-incremental-pattern-search-backward ; then
+	# since 4.3.7, not in Debian Lenny
+	bindkey "^R" history-incremental-pattern-search-backward
+	bindkey "^S" history-incremental-pattern-search-forward
+fi
 
 # Search based on what you typed in already
 bindkey -M vicmd "//" history-beginning-search-backward
