@@ -20,50 +20,51 @@ prompt_blueyed_precmd () {
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h    normtext="%{$fg_no_bold[green]%}"
     local -h prompt_cwd prompt_vcs
+    local -h cwd
 
     if ! vcs_info 'prompt' &> /dev/null; then
         # No vcs_info available, only set cwd
-        prompt_cwd="${PWD/#$HOME/~}"
         prompt_vcs=""
+        cwd=$PWD
     else
-        local cwd="${vcs_info_msg_1_%.}"
+        prompt_vcs="${PR_RESET}$vcs_info_msg_0_"
+        cwd="${vcs_info_msg_1_%.}"
 
         # Check if $cwd (from vcs_info) is in $PWD - which may not be the case with symbolic links
         # (e.g. some SVN symlink in a CVS repo)
         if [[ ${cwd#$PWD} = $cwd ]]; then
             cwd=$PWD
         fi
+    fi
 
-        # Highlight symbolic links in $cwd
-        # typeset -A color_map
-        # color_map=("${(s:=:)${LS_COLORS//:/=}}" '')
-        local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
-        [[ -z $ln_color ]] && ln_color=${fg_bold[cyan]} || ln_color="%{"$'\e'"[${ln_color}m%}"
-        local colored="/" cur color i
-        for i in ${(ps:/:)${cwd}}; do
+    # Highlight symbolic links in $cwd
+    # typeset -A color_map
+    # color_map=("${(s:=:)${LS_COLORS//:/=}}" '')
+    local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
+    [[ -z $ln_color ]] && ln_color=${fg_bold[cyan]} || ln_color="%{"$'\e'"[${ln_color}m%}"
+    local colored="/" cur color i
+    for i in ${(ps:/:)${cwd}}; do
             if [[ -h "$cur/$i" ]]; then
-                color=$ln_color
-                colored+="${color}→$i${hitext}/"
+                    color=$ln_color
+                    colored+="${color}→$i${hitext}/"
             else
-                colored+="$i/"
+                    colored+="$i/"
             fi
             cur+="/$i"
-        done
-        # Remove trailing slash, if not in root
-        if [[ ${#colored} > 1 ]]; then colored=${colored%%/}; fi
-        cwd="${colored/#$HOME/~}"
+    done
+    # Remove trailing slash, if not in root
+    if [[ ${#colored} > 1 ]]; then colored=${colored%%/}; fi
+    cwd="${colored/#$HOME/~}"
 
-        # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
-        if [[ ! -w $PWD ]]; then
+    # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
+    if [[ ! -w $PWD ]]; then
             cleancwd="$(_strip_escape_codes "$cwd")"
             cwd="${fg_bold[red]}${cleancwd}"
-        fi
-
-        # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
-        #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
-        prompt_cwd="${hitext}${cwd}"
-        prompt_vcs="${PR_RESET}$vcs_info_msg_0_"
     fi
+
+    # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
+    #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
+    prompt_cwd="${hitext}${cwd}"
 
     # http_proxy defines color of "@" between user and host
     # TODO: use $prompt_extra instead?!
