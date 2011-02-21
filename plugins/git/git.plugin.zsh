@@ -3,7 +3,7 @@
 test -x ~/bin/hub && eval `~/bin/hub alias -s bash`
 
 # Aliases
-alias g='git'
+#alias g='git' # used for 'gvim --remote'
 alias ga='git add'
 alias gae='git add --edit'
 alias gco='git checkout'
