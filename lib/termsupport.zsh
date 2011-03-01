@@ -7,10 +7,9 @@ function title {
   1=${(pj: :)${(f)1}}
   2=${(pj: :)${(f)2}}
   # echo "title:1:$1" ; echo "title:2:$2"
-  if [[ "$TERM" == "screen" ]]; then 
-    # SUFFIX handling for long title:
+  if [[ $TERM == screen* ]]; then 
     local PREFIX SUFFIX RELPWD
-    # Test for OpenVZ container ID (/proc/bc is only on the host):
+    # Get OpenVZ container ID (/proc/bc is only on the host):
     if [[ -r /proc/user_beancounters ]]; then
       if [[ ! -d /proc/bc ]]; then
         # container
@@ -22,6 +21,7 @@ function title {
         SUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
       fi
     fi
+    SUFFIX=${SUFFIX:- ($PWD)}
     print -Pn "\ek$PREFIX$1$SUFFIX\e\\" #set screen hardstatus, usually truncated at 20 chars
   elif [[ ($TERM =~ "^xterm") ]] || [[ ($TERM == "rxvt") ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     print -Pn "\e]0;$2 (%~)\a" #set window name

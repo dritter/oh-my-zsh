@@ -72,6 +72,8 @@ zle -N edit-command-output
 # Make files executable via associated apps
 autoload -U zsh-mime-setup
 zsh-mime-setup
+# Do not break invoke-rc.d completion
+unalias -s d
 
 watch=(notme)
 
