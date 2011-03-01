@@ -1,6 +1,8 @@
 # Setup hub alias for git, if available
 # (http://github.com/defunkt/hub)
-test -x ~/bin/hub && eval `~/bin/hub alias -s bash`
+# Deactivated, because it changes context of "git" command completion.
+# Basically this is "alias git=hub" and would need "setopt complete_aliases" to not break "git" completion.
+# test -x ~/bin/hub && eval `~/bin/hub alias -s bash`
 
 # Aliases
 #alias g='git' # used for 'gvim --remote'
