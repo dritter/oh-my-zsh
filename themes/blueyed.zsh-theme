@@ -58,7 +58,7 @@ prompt_blueyed_precmd () {
 
     # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
     if [[ ! -w $PWD ]]; then
-            cleancwd="$(_strip_escape_codes "$cwd")"
+            local cleancwd="$(_strip_escape_codes "$cwd")"
             cwd="${fg_bold[red]}${cleancwd}"
     fi
 
