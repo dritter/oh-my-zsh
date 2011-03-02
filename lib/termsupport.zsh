@@ -29,8 +29,12 @@ function title {
   fi
 }
 
+ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<..<%~%<<" #15 char left truncated PWD
+ZSH_THEME_TERM_TITLE_IDLE="%n@%m"
+
+#Appears when you have the prompt
 function precmd {
-  title zsh zsh
+  title $ZSH_THEME_TERM_TAB_TITLE_IDLE $ZSH_THEME_TERM_TITLE_IDLE
 }
 
 #Appears at the beginning of (and during) of command execution
