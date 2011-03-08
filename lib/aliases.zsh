@@ -19,4 +19,7 @@ alias sl=ls # often screw this up
 
 alias afind='ack-grep -il'
 
+# "fast find": filter out any dotfiles
+alias ffind='find -mindepth 1 -name ".*" -prune'
+
 alias x=extract

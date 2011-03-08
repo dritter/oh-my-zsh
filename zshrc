@@ -73,7 +73,7 @@ zle -N edit-command-output
 autoload -U zsh-mime-setup
 zsh-mime-setup
 # Do not break invoke-rc.d completion
-unalias -s d
+unalias -s d 2>/dev/null
 
 watch=(notme)
 
