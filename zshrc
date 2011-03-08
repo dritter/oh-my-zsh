@@ -149,6 +149,8 @@ fi
 # make path/PATH entries unique
 typeset -U path
 
+setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
+
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
