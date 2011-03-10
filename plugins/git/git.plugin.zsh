@@ -1,7 +1,3 @@
-# Setup hub alias for git, if available, see http://github.com/defunkt/hub
-# will become a plugin, see https://github.com/robbyrussell/oh-my-zsh/pull/229
-test -x ~/bin/hub && eval `~/bin/hub alias -s zsh`
-
 # Aliases
 #alias g='git' # used for 'gvim --remote'
 alias ga='git add'
