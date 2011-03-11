@@ -15,8 +15,8 @@ export DISABLE_AUTO_UPDATE="true"
 # export DISABLE_LS_COLORS="true"
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git)
+# Example format: plugins=(rails git textmate ruby ighthouse)
+plugins=(git github cdlastdir)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -39,7 +39,7 @@ export RI="--format ansi"
 
 
 # directory based VCS before repo based ones (e.g. CVS in $HOME, the latter using Git)
-zstyle ':vcs_info:*' enable cvs svn bzr hg git 
+zstyle ':vcs_info:*' enable cvs svn bzr hg git
 zstyle ':vcs_info:bzr:*' use-simple true
 
 
@@ -78,9 +78,7 @@ unalias -s d 2>/dev/null
 watch=(notme)
 
 # autojump
-if which autojump > /dev/null ; then
-	source ~/.dotfiles/autojump/autojump.zsh
-fi
+test "$commands[autojump]" && source ~/.dotfiles/autojump/autojump.zsh
 
 # Load bash completion system
 # via http://zshwiki.org/home/convert/bash
@@ -95,7 +93,7 @@ bash_source() {
   source "$@"
 }
 # Load completion from bash, which isn't available in zsh yet.
-which vzctl > /dev/null && bash_source /etc/bash_completion.d/vzctl.sh
+test "$commands[vzctl]" && bash_source /etc/bash_completion.d/vzctl.sh
 
 
 # run-help for builtins
@@ -141,8 +139,7 @@ bindkey -M isearch . self-insert 2>/dev/null
 if ! tput longname &> /dev/null; then
 	if [[ $TERM == screen*bce ]]; then TERM=screen-bce
 	elif [[ $TERM == screen* ]]; then TERM=screen
-	else TERM=xterm
-	fi
+	else TERM=xterm fi
 	export TERM
 fi
 
