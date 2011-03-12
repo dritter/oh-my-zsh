@@ -6,7 +6,7 @@
 
 _zsh_plugin_lastdir=~/.lastdir
 
-[ -f $_zsh_plugin_lastdir ] && cd $(< $_zsh_plugin_lastdir)
+[ -f $_zsh_plugin_lastdir ] && cd "$(< $_zsh_plugin_lastdir)"
 
 autoload -U add-zsh-hook
 add-zsh-hook chpwd chpwd_update_lastdir
