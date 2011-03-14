@@ -21,7 +21,10 @@ alias gcp='git cherry-pick'
 alias gsm='git submodule'
 alias gbl='git blame'
 alias gr='git remote'
+# "git submodule commit":
 gsmc() { [ x$1 = x ] && { echo "Commit update to which submodule?"; return 1;} || git submodule|grep -q "$1" || { echo "Submodule $1 not found."; return 2; } && git ci -m "Update submodule $1." "$1" }
+# "git submodule add":
+gsma() { git submodule add "$1" "$2" && git commit -m "Add submodule $2." }
 
 # Git and svn mix
 alias git-svn-dcommit-push='git svn dcommit && git push github master:svntrunk'
