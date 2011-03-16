@@ -3,6 +3,7 @@
 alias ga='git add'
 alias gae='git add --edit'
 alias gco='git checkout'
+alias gcl='git clone --recursive'
 alias gst='git status'
 alias gl='git l'
 alias glg='git log --stat --max-count=5'
