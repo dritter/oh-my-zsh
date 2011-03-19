@@ -22,7 +22,7 @@ function title {
       fi
     fi
     SUFFIX=${SUFFIX:- ($PWD)}
-    print -Pn $'\ek$PREFIX$1$SUFFIX\e\\' #set screen hardstatus, usually truncated at 20 chars
+    print -Pn $'\ek$PREFIX$2$SUFFIX\e\\' #set screen hardstatus, usually truncated at 20 chars
   elif [[ ($TERM =~ "^xterm") ]] || [[ ($TERM == "rxvt") ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     print -Pn $'\e]0;$2 (%~)\a' #set window name
     print -Pn $'\e]1;$1\a' #set icon (=tab) name (will override window name on broken terminal)
@@ -56,6 +56,6 @@ function preexec {
   fi
   (( $#newtyped )) && typed=($newtyped)
 
-  local CMD=${1[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
+  local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
   title "$CMD" "${typed}" # let the terminal app itself handle cropping
 }
