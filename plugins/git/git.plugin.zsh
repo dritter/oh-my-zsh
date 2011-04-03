@@ -55,3 +55,8 @@ function current_branch() {
 alias ggpull='git pull origin $(current_branch)'
 alias ggpush='git push origin $(current_branch)'
 alias ggpnp='git pull origin $(current_branch) && git push origin $(current_branch)'
+
+# Setup editor for git commit messages (assuming `commit` is the only command using the editor)
+# This scrolls to "Changes" in the buffer, splits the window (resized to 10 lines).
+# This allows for reviewing the diff (from `git commit -v`) while editing the commit message.
+export GIT_EDITOR='vim -c "/Changes" -c "normal zt" -c "set nohlsearch nospell" -c "sp" -c "normal gg" -c "resize 10" -c "set spell"'
