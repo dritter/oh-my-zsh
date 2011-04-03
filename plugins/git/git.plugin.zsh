@@ -13,7 +13,7 @@ alias gcount='git shortlog -sn'
 alias gcp='git cherry-pick'
 alias gd='git diff'
 alias gdc='git diff --cached'
-alias gdv='git diff -w "$@" | vim -R -'
+gdv() { git diff -w "$@" | view - }
 alias gl='git l'
 alias glg='git log --stat --max-count=5'
 alias gls='git ls-files'
