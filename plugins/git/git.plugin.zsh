@@ -41,6 +41,7 @@ gsma() { git diff --cached --exit-code > /dev/null || { echo "Index is not clean
 
 # Git and svn mix
 alias git-svn-dcommit-push='git svn dcommit && git push github master:svntrunk'
+compdef git-svn-dcommit-push=git
 
 #
 # Will return the current branch name
@@ -53,9 +54,11 @@ function current_branch() {
 
 # these aliases take advantage of the previous function
 alias ggpull='git pull origin $(current_branch)'
+compdef ggpull=git
 alias ggpush='git push origin $(current_branch)'
+compdef ggpush=git
 alias ggpnp='git pull origin $(current_branch) && git push origin $(current_branch)'
-
+compdef ggpnp=git
 # Setup wrapper for git's editor. It will use just core.editor for other
 # files (e.g. patch editing in `git add -p`).
 export GIT_EDITOR=vim-for-git

@@ -34,28 +34,31 @@ ZSH_THEME_TERM_TITLE_IDLE="%n@%m"
 
 #Appears when you have the prompt
 function precmd {
-  title $ZSH_THEME_TERM_TAB_TITLE_IDLE $ZSH_THEME_TERM_TITLE_IDLE
+  if [ "$DISABLE_AUTO_TITLE" != "true" ]; then
+    title $ZSH_THEME_TERM_TAB_TITLE_IDLE $ZSH_THEME_TERM_TITLE_IDLE
+  fi
 }
 
 #Appears at the beginning of (and during) of command execution
 function preexec {
-  local -a typed; typed=(${(z)1}) # split what the user has typed into words using shell parsing
-  # Resolve jobspecs, e.g. when "fg" or "%-" is used:
-  local jobspec
-  local -a newtyped
-  if [[ $typed[1] == fg ]] ; then
-    # set typed to jobtext for first argument. If there are more, add "(+x jobs)"
-    jobspec=${typed[2]:-%+} ;
-    newtyped=(${(z)${jobtexts[$jobspec]}})
-    if (( ${+typed[3]} )) ; then
-      newtyped+=(" (+ $(( ${#typed}-2 )) jobs)")
+  if [ "$DISABLE_AUTO_TITLE" != "true" ]; then
+    # Resolve jobspecs, e.g. when "fg" or "%-" is used:
+    local jobspec
+    local -a newtyped
+    if [[ $typed[1] == fg ]] ; then
+      # set typed to jobtext for first argument. If there are more, add "(+x jobs)"
+      jobspec=${typed[2]:-%+} ;
+      newtyped=(${(z)${jobtexts[$jobspec]}})
+      if (( ${+typed[3]} )) ; then
+        newtyped+=(" (+ $(( ${#typed}-2 )) jobs)")
+      fi
+    elif [[ $typed[1] == %* ]] && (( $+jobtexts[$typed[1]] )); then
+      jobspec=$typed[1]
+      newtyped=(${(z)${jobtexts[$jobspec]}})
     fi
-  elif [[ $typed[1] == %* ]] && (( $+jobtexts[$typed[1]] )); then
-    jobspec=$typed[1]
-    newtyped=(${(z)${jobtexts[$jobspec]}})
-  fi
-  (( $#newtyped )) && typed=($newtyped)
+    (( $#newtyped )) && typed=($newtyped)
 
-  local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
-  title "$CMD" "${typed}" # let the terminal app itself handle cropping
+    local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
+    title "$CMD" "${typed}" # let the terminal app itself handle cropping
+  fi
 }
