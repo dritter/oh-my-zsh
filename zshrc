@@ -134,7 +134,9 @@ bindkey . rationalise-dot
 # "isearch" does not exist in zsh 4.3.6 (Debian Lenny)
 bindkey -M isearch . self-insert 2>/dev/null
 
-
+if [[ "${COLORTERM}" == "gnome-terminal" && "$TERM" == "xterm" ]]; then
+    export TERM="xterm-256color"
+fi
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
 if ! tput longname &> /dev/null; then
 	if [[ $TERM == screen*bce ]]; then TERM=screen-bce
