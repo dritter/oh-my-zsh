@@ -24,6 +24,7 @@ alias gr='git remote'
 alias grh='git reset HEAD'
 alias gsh='git show'
 alias gsm='git submodule'
+alias gsms='git submodule summary'
 alias gst='git status'
 alias gup='git fetch && git rebase'
 # "git submodule commit":
