@@ -46,7 +46,7 @@ gsma() {
   git submodule add "$1" "$2" && \
   summary=$(git submodule summary "$2") && \
   summary=( ${(f)summary} ) && \
-  git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}."$'\n\n'"${(F)summary}" "$2"
+  git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}."$'\n\n'"${(F)summary}" "$2" .gitmodules
 }
 
 # Git and svn mix
