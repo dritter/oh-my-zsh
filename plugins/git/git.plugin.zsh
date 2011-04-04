@@ -38,7 +38,16 @@ gsmc() {
   git commit -m "Update submodule $1 ${${(ps: :)summary[1]}[3]}."$'\n\n'"${(F)summary}" "$1"
 }
 # "git submodule add":
-gsma() { git diff --cached --exit-code > /dev/null || { echo "Index is not clean."; exit 1; } ; git submodule add "$1" "$2" && git commit -m "Add submodule $2." }
+gsma() {
+  git diff --cached --exit-code > /dev/null || {
+    echo "Index is not clean."
+    exit 1
+  }
+  git submodule add "$1" "$2" && \
+  summary=$(git submodule summary "$2") && \
+  summary=( ${(f)summary} ) && \
+  git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}."$'\n\n'"${(F)summary}" "$2"
+}
 
 # Git and svn mix
 alias git-svn-dcommit-push='git svn dcommit && git push github master:svntrunk'
