@@ -42,6 +42,7 @@ function precmd {
 #Appears at the beginning of (and during) of command execution
 function preexec {
   if [ "$DISABLE_AUTO_TITLE" != "true" ]; then
+    local -a typed; typed=(${(z)1}) # split what the user has typed into words using shell parsing
     # Resolve jobspecs, e.g. when "fg" or "%-" is used:
     local jobspec
     local -a newtyped
