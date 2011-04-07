@@ -69,9 +69,9 @@ prompt_blueyed_precmd () {
     # http_proxy defines color of "@" between user and host
     # TODO: use $prompt_extra instead?!
     if [[ -n $http_proxy ]] ; then
-        prompt_at="%{$fg_bold[green]%}@"
+        prompt_at="${hitext}@"
     else
-        prompt_at="%{$fg_no_bold[white]%}@"
+        prompt_at="${normtext}@"
     fi
 
     # via http://www.zsh.org/mla/users/2005/msg00863.html
