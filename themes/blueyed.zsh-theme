@@ -69,9 +69,9 @@ prompt_blueyed_precmd () {
     # http_proxy defines color of "@" between user and host
     # TODO: use $prompt_extra instead?!
     if [[ -n $http_proxy ]] ; then
-        prompt_at="%{$fg_bold[green]%}@"
+        prompt_at="${hitext}@"
     else
-        prompt_at="%{$fg_no_bold[white]%}@"
+        prompt_at="${normtext}@"
     fi
 
     # via http://www.zsh.org/mla/users/2005/msg00863.html
@@ -82,7 +82,11 @@ prompt_blueyed_precmd () {
     local -h     invtext="%{$fg_bold[cyan]%}"
 
     local -h     user="%(#.$alerttext.$normtext)%n"
-    local -h     host="${hitext}%m"
+    if [ -n "$SSH_TTY" ] || [ "$(who am i | cut -f2  -d\( | cut -f1 -d:)" != "" ]; then
+        local -h     host="${hitext}%m"
+    else
+        local -h     host="${normtext}%m"
+    fi
     local -h   histnr="${normtext}!${invtext}%!"
     local -h     time="${normtext}%*"
 
