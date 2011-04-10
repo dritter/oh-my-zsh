@@ -46,7 +46,8 @@ gsma() {
   git submodule add "$1" "$2" && \
   summary=$(git submodule summary "$2") && \
   summary=( ${(f)summary} ) && \
-  git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}."$'\n\n'"${(F)summary}" "$2" .gitmodules
+  git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}."$'\n\n'"${(F)summary}" "$2" .gitmodules && \
+  git submodule update --init --recursive "$2"
 }
 
 # Git and svn mix
