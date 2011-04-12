@@ -67,7 +67,3 @@ zstyle ':completion:*:descriptions' format "%{$fg_no_bold[green]%}%U%B%d:%b%u%{$
 zstyle ':completion:*:warnings' format '%BNo matches for: %d%b'
 zstyle ':completion:*:functions' ignored-patterns '_*'
 
-# Load and run compinit
-autoload -U compinit
-compinit -i
-
