@@ -25,14 +25,19 @@ alias grh='git reset HEAD'
 alias gsh='git show'
 alias gsm='git submodule'
 alias gsms='git submodule summary'
+alias gsmst='git submodule status'
 alias gst='git status'
 alias gup='git fetch && git rebase'
 # "git submodule commit":
 gsmc() {
   [ x$1 = x ] && { echo "Commit update to which submodule?"; return 1;}
-  summary=$(git submodule summary "$1")
+  [ -d "$1" ] || { echo "Submodule $1 not found."; return 2;}
+  summary=$(git submodule summary "$1" 2>&1)
   if [[ $summary == "" ]] ; then
-    echo "Submodule $1 not found."; return 2
+    echo "Submodule $1 not changed."; return 3
+  fi
+  if [[ $summary == fatal:* ]] ; then
+    echo $summary ; return 4
   fi
   summary=( ${(f)summary} )
   git commit -m "Update submodule $1 ${${(ps: :)summary[1]}[3]}."$'\n\n'"${(F)summary}" "$1"
