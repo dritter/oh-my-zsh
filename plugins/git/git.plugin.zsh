@@ -14,6 +14,7 @@ alias gcp='git cherry-pick'
 alias gd='git diff'
 alias gdc='git diff --cached'
 gdv() { git diff -w "$@" | view - }
+compdef _git gdv=git-diff
 alias gl='git l'
 alias glg='git log --stat --max-count=5'
 alias gls='git ls-files'
@@ -28,6 +29,7 @@ alias gsms='git submodule summary'
 alias gsmst='git submodule status'
 alias gst='git status'
 alias gup='git fetch && git rebase'
+compdef _git gup=git-fetch
 # "git submodule commit":
 gsmc() {
   [ x$1 = x ] && { echo "Commit update to which submodule?"; return 1;}
