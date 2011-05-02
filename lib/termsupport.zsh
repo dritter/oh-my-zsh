@@ -22,8 +22,8 @@ function title {
       fi
     fi
     SUFFIX=${SUFFIX:- ($PWD)}
-    print -Pn $'\ekPREFIX$2$SUFFIX\e\\' #set screen hardstatus, usually truncated at 20 chars
-  elif [[ ($TERM =~ "^xterm") ]] || [[ ($TERM == "rxvt") ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
+    print -Pn $'\ek$PREFIX$2$SUFFIX\e\\' #set screen hardstatus, usually truncated at 20 chars
+  elif [[ $TERM == xterm* ]] || [[ $TERM == rxvt* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     print -Pn $'\e]0;$2 (%~)\a' #set window name
     print -Pn $'\e]1;$1\a' #set icon (=tab) name (will override window name on broken terminal)
   fi
