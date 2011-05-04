@@ -21,7 +21,7 @@ function title {
         SUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
       fi
     fi
-    SUFFIX=${SUFFIX:- ($PWD)}
+    SUFFIX=${SUFFIX:- (${PWD/#$HOME/\~})}
     print -Pn $'\ek$PREFIX$2$SUFFIX\e\\' #set screen hardstatus, usually truncated at 20 chars
   elif [[ $TERM == xterm* ]] || [[ $TERM == rxvt* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     print -Pn $'\e]0;$2 (%~)\a' #set window name
@@ -41,6 +41,7 @@ function precmd {
 function preexec {
   emulate -L zsh
   setopt extended_glob
+  local -a typed; typed=(${(z)1}) # split what the user has typed into words using shell parsing
   # Resolve jobspecs, e.g. when "fg" or "%-" is used:
   local jobspec
   local -a newtyped
