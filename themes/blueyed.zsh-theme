@@ -41,6 +41,8 @@ prompt_blueyed_precmd () {
     # typeset -A color_map
     # color_map=("${(s:=:)${LS_COLORS//:/=}}" '')
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
+    # fallback to default, if "target" is used
+    [ "$ln_color" = "target" ] && ln_color="01;36"
     [[ -z $ln_color ]] && ln_color=${fg_bold[cyan]} || ln_color="%{"$'\e'"[${ln_color}m%}"
     local colored="/" cur color i
     for i in ${(ps:/:)${cwd}}; do
