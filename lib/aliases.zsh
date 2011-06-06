@@ -26,12 +26,12 @@ alias x=extract
 
 
 # ls
-export LS_OPTIONS='--color=auto'
-alias ls='ls $LS_OPTIONS'
-alias l='ls $LS_OPTIONS -F'
-alias la='ls $LS_OPTIONS -aF'
-alias ll='ls $LS_OPTIONS -lF'
-alias lla='ls $LS_OPTIONS -laF'
+export LS_OPTIONS='--color=auto -h'
+alias ls='ls ${=LS_OPTIONS}'
+alias l='ls ${=LS_OPTIONS} -F'
+alias la='ls ${=LS_OPTIONS} -aF'
+alias ll='ls ${=LS_OPTIONS} -lF'
+alias lla='ls ${=LS_OPTIONS} -laF'
 alias lll='ll -a --color | less -R'
 lth() {
 	ll -t "$@" | head
