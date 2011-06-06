@@ -56,6 +56,15 @@ gsma() {
   git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}."$'\n\n'"${(F)summary}" "$2" .gitmodules && \
   git submodule update --init --recursive "$2"
 }
+gsmrm() {
+  # Remove a git submodule
+  [ x$1 = x ] && { echo "Remove which submodule?"; return 1;}
+  [ -d "$1" ] || { echo "Submodule $1 not found."; return 2;}
+  [ -f .gitmodules ] || { echo ".gitmodules not found."; return 3;}
+  # remove submodule entry from .gitmodules
+  awk "/^\[submodule '$1'\]/{g=1;next} /^\[/ {g=0} !g" .gitmodules
+  git rm --cached $1
+}
 
 # Git and svn mix
 alias git-svn-dcommit-push='git svn dcommit && git push github master:svntrunk'
