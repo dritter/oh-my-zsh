@@ -69,6 +69,7 @@ gsmrm() {
 # Git and svn mix
 alias git-svn-dcommit-push='git svn dcommit && git push github master:svntrunk'
 compdef git-svn-dcommit-push=git
+alias gsvnup='git svn fetch && git stash && git svn rebase && git stash pop'
 
 #
 # Will return the current branch name
