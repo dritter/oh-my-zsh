@@ -28,7 +28,9 @@ alias gsm='git submodule'
 alias gsms='git submodule summary'
 alias gsmst='git submodule status'
 alias gst='git status'
-alias gup='git fetch && git rebase'
+gup() {
+  git fetch && git rebase ${1:-origin/master}
+}
 compdef _git gup=git-fetch
 # "git submodule commit":
 gsmc() {
