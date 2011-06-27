@@ -28,10 +28,9 @@ alias gsm='git submodule'
 alias gsms='git submodule summary'
 alias gsmst='git submodule status'
 alias gst='git status'
-gup() {
-  git fetch && git rebase ${1:-origin/master}
-}
-compdef _git gup=git-fetch
+# git-up and git-reup from ~/.dotfiles/usr/bin
+compdef _git git-up=git-fetch
+compdef _git git-reup=git-fetch
 # "git submodule commit":
 gsmc() {
   [ x$1 = x ] && { echo "Commit update to which submodule?"; return 1;}
