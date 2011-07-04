@@ -58,5 +58,5 @@ function preexec {
   fi
   (( $#newtyped )) && typed=($newtyped)
   local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
-  title "$CMD" "${typed}" # let the terminal app itself handle cropping
+  title "$CMD" "${typed:gs/%/%%/}" # let the terminal app itself handle cropping
 }
