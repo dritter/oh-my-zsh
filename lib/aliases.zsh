@@ -49,7 +49,16 @@ alias debverprevubuntu="dpkg-parsechangelog --format rfc822 --count 1000 | grep 
 alias sdebuild='debuild -S -k3FE63E00 -v$(debverprevubuntu)'
 alias bts='DEBEMAIL=debian-bugs@thequod.de bts --sendmail "/usr/sbin/sendmail -f$DEBEMAIL -t"'
 # alias m=less
-alias xgrep='grep --exclude-dir=CVS --exclude-dir=.svn --exclude-dir=.bzr --exclude-dir=.git --exclude-dir=.hg'
+xgrep() {
+  # build command to use once ("--exclude-dir" might not be supported)
+  if [[ -z $_xgrep_cmd ]] ; then
+    _xgrep_cmd=(grep)
+    if command grep --help | command grep -q exclude-dir ; then
+      _xgrep_cmd+=(--exclude-dir=CVS --exclude-dir=.svn --exclude-dir=.bzr --exclude-dir=.git --exclude-dir=.hG)
+    fi
+  fi
+  $=_xgrep_cmd $@
+}
 # xrgrep: recursive xgrep, path is optional (defaults to current dir)
 xrgrep() {
 	# Get number of (non-option) args: for args >= 2 we do not use the default dir.
