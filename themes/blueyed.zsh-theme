@@ -115,7 +115,12 @@ prompt_blueyed_precmd () {
         case "$issue" in
           Ubuntu*) DISTRO=${${${issue%%\(*}%%\\*}%% } ;;
           Debian*) DISTRO="Debian $(</etc/debian_version)" ;;
-          *) DISTRO=$(echo "$issue" | sed "s/ [^0-9]* / /" | awk '{print $1 " " $2}') ;;
+          *) if [ -r /etc/SuSE-release ] ; then
+              DISTRO="SuSE $(fgrep VERSION /etc/SuSE-release | cut -f2 -d= | tr -d ' ').$(fgrep PATCHLEVEL /etc/SuSE-release | cut -f2 -d= | tr -d ' ')"
+            else
+              DISTRO=$(echo "$issue" | sed "s/ [^0-9]* / /" | awk '{print $1 " " $2}')
+            fi
+          ;;
         esac
       elif which lsb_release >/dev/null 2>&1; then
         # If lsb_release is available, use it
