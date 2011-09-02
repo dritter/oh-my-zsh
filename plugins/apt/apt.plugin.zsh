@@ -136,11 +136,13 @@ if [[ $UID = 0 ]]; then
     alias aupgrade="aptitude upgrade -V"
     alias apurge="aptitude purge"
     alias asup="LANG=C verynice apt-get update -qq && verynice aptitude safe-upgrade -V"
+    alias afsu="apt-file update"
 else
     alias aup="LANG=C sudo apt-get update"
     alias aupgrade="sudo aptitude upgrade -V"
     alias apurge="sudo aptitude purge"
     alias asup="LANG=C verynice sudo apt-get update -q2 && verynice sudo aptitude safe-upgrade -V"
+    alias afsu="sudo apt-file update"
 fi
 
 # Install source package, supports grepping in $2 to fetch a specific version
