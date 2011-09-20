@@ -1,0 +1,133 @@
+#!/bin/sh -e
+#
+#    byobu-janitor - a collection of byobu tasks that ensure  a clean
+#                    environtment and smooth upgrades
+#
+#    Copyright (C) 2009 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@ubuntu.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 3 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PKG="byobu"
+[ -z "${BYOBU_PREFIX}" ] && export BYOBU_PREFIX="/home/daniel/.dotfiles/oh-my-zsh/plugins/byobu"
+. "${BYOBU_PREFIX}/lib/${PKG}/.common"
+
+# Ensure that all updates get run immediately
+rm -rf "$BYOBU_RUN_DIR/.last.$BYOBU_BACKEND"
+
+# Exit immediately, if we're not forced, and there is no reload flag
+FLAG="$BYOBU_RUN_DIR/reload-required"
+if [ "$1" != "--force" ] && [ ! -e "$FLAG" ]; then
+	exit 0
+fi
+
+# Set the rest of the variables
+DEFAULT_PROFILE="light"
+PROFILE="$BYOBU_CONFIG_DIR/profile"
+
+# Create byobu-exchange buffer file, with secure permissions, if it doesn't exist
+[ -e "$BYOBU_RUN_DIR/printscreen" ] || install -m 600 /dev/null "$BYOBU_RUN_DIR/printscreen"
+
+# Affects: users who launched using sudo, such that their config dir
+# is not writable by them
+if [ -d "$BYOBU_CONFIG_DIR" ] && [ ! -w "$BYOBU_CONFIG_DIR" ]; then
+	echo "ERROR: [$BYOBU_CONFIG_DIR] is not writable by the current user" 1>&2
+	exit 1
+fi
+
+# Affects: First runs with no configuration
+# Seed the configuration
+# Setup initial local user configuration
+[ -r "$BYOBU_CONFIG_DIR/color" ] || printf "BACKGROUND=k\nFOREGROUND=w\nMONOCHROME=0" > "$BYOBU_CONFIG_DIR/color"
+[ -r "$BYOBU_CONFIG_DIR/profile" ] || echo "source $BYOBU_PREFIX/share/$PKG/profiles/common" > "$BYOBU_CONFIG_DIR/profile"
+[ -r "$BYOBU_CONFIG_DIR/profile.tmux" ] || echo "source-file $BYOBU_PREFIX/share/$PKG/profiles/tmux" > "$BYOBU_CONFIG_DIR/profile.tmux"
+[ -r "$BYOBU_CONFIG_DIR/keybindings" ] || echo "source $BYOBU_PREFIX/share/$PKG/keybindings/common" > "$BYOBU_CONFIG_DIR/keybindings"
+[ -r "$BYOBU_CONFIG_DIR/windows" ] || touch "$BYOBU_CONFIG_DIR/windows"
+[ -r "$HOME/.screenrc" ] || touch "$HOME/.screenrc"
+for f in status statusrc; do
+	if [ ! -r "$BYOBU_CONFIG_DIR/$f" ]; then
+		# Copy from skeleton, if possible
+		cp -f "$BYOBU_PREFIX/share/$PKG/status/$f" "$BYOBU_CONFIG_DIR/$f"
+		if [ "$f" = "status" ] && metadata_available; then
+			# Enable ec2_cost if we're in ec2
+			$SED -i -e "s/ec2_cost=.*/ec2_cost=1/" "$BYOBU_CONFIG_DIR/$f"
+		fi
+	fi
+done
+
+# Affects: Upgrades from <= byobu-2.11
+# The status scripts used to have hyphens in their name, but now use
+# underscores such that we can source the file as a shell snippet;
+# fix existing status configuration.
+$SED -i -e "s/\([^=]+\)-\([^=]+\)=/\1_\2=/g" "$BYOBU_CONFIG_DIR/status"
+$SED -i -e "s/^disk-.*=/disk=/" "$BYOBU_CONFIG_DIR/status"
+$SED -i -e "s/^network-.*=/network=/" "$BYOBU_CONFIG_DIR/status"
+
+# Affects: Upgrades from <= byobu-2.16
+# screen-launcher was renamed byobu-launcher; if the user has byobu
+# set to auto-launch, update their configuration to use the byobu-launcher
+if grep -qs " screen-launcher" "$HOME/.profile"; then
+	byobu-launcher-install
+fi
+
+# Affects: Upgrades from <= byobu-2.25
+# Collapse separate status config files into the sourced config
+for i in disk network distro logo; do
+	if [ -r "$BYOBU_CONFIG_DIR/$i" ]; then
+		val=`cat $BYOBU_CONFIG_DIR/$i`
+		uc=`echo "$i" | tr "[:lower:]" "[:upper:]"`
+		case $i in
+			disk|network)
+				key="MONITORED_"$uc ;;
+			distro|logo)
+				key="$uc" ;;
+		esac
+		echo "$key=\"$val\"" >> "$BYOBU_CONFIG_DIR/statusrc"
+		rm "$BYOBU_CONFIG_DIR/$i"
+	fi
+done
+
+# Affects: Upgrades from <= byobu-2.57 that autolaunch
+# If the global autolaunch is on, then remove duplicate entry in ~/.profile
+if [ -h "/etc/profile.d/Z98-$PKG.sh" ]; then
+	$SED -i -e "/ $PKG-launch/d" "$HOME"/.profile || true
+fi
+
+# Affects: Upgrades from <= byobu-2.70 that autolaunch
+# Update the byobu-launch line, if necessary
+if grep -qs " $PKG-launch$" "$HOME"/.profile; then
+	$PKG-launcher-install
+fi
+
+# Affects: Upgrades from <= byobu-2.78 which might have "motd+shell"
+# in their window list; update this to just "shell"
+if grep -qs "motd+shell" "$BYOBU_CONFIG_DIR/windows"; then
+	$SED -i -e "s/motd+shell/shell/g" "$BYOBU_CONFIG_DIR/windows" || true
+fi
+
+# Affects: Upgrades from <= byobu 4.3, remove ec2_rates
+rm -f "$BYOBU_CONFIG_DIR/ec2_rates"
+
+# Affects: Upgrades from <= byobu 4.4, update "shell" -> "byobu-shell"
+if grep -qs " shell$" "$BYOBU_CONFIG_DIR/windows"; then
+	$SED -i -e "s/ shell$/ $PKG-shell/g" "$BYOBU_CONFIG_DIR/windows" || true
+fi
+
+# Affects: Upgrades from <= byobu 4.22
+killall -u $USER byobu-statusd >/dev/null 2>&1 || true
+
+# Clean up flag
+rm -f "$FLAG"
+
+# vi: syntax=sh ts=4 noexpandtab

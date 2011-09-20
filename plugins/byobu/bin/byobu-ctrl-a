@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+#    byobu-ctrl-a - set the ctrl-a behavior
+#    Copyright (C) 2011 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@ubuntu.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 3 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Usage() {
+	cat <<EOF
+Usage: ${0##*/} [mode]
+   mode is one of 'screen' or 'emacs'
+   if not specified, prompt the user
+EOF
+}
+
+PKG="byobu"
+[ -z "${BYOBU_PREFIX}" ] && export BYOBU_PREFIX="/home/daniel/.dotfiles/oh-my-zsh/plugins/byobu"
+. "${BYOBU_PREFIX}/lib/${PKG}/.common"
+
+bind_to=""
+keybindings="$BYOBU_CONFIG_DIR/keybindings"
+touch "$keybindings"
+
+case "${1}" in
+	-h|--help) Usage; exit 0;;
+	screen) bind_to="screen";;
+	emacs) bind_to="emacs";;
+	"") :;;
+	*) { Usage echo "bad argument $1"; } 1>&2; exit 1;;
+esac
+
+while [ -z "$bind_to" ]; do
+	echo
+	echo "Configure Byobu's ctrl-a behavior..."
+	echo
+	echo "When you press ctrl-a in Byobu, do you want it to operate in:"
+	echo "    (1) Emacs mode  (go to beginning of line)"
+	echo "    (2) Screen mode (GNU Screen's default escape sequence)"
+	echo
+	echo "Note that:"
+	echo "  - F12 also operates as Screen escape in Byobu"
+	echo "  - You can press F9 and choose your escape character"
+	echo "  - You can run 'byobu-ctrl-a' at any time to change your selection"
+	echo
+	echo -n "Select [1 or 2]: "
+	s=$(head -n1)
+	echo
+	case "$s" in
+		1) bind_to="emacs"; break;;
+		2) bind_to="screen"; break;;
+	esac
+done
+
+case "$bind_to" in
+	emacs)
+			$SED -i -e "/^register a /d" -e "/^bindkey \"^A\"/d" -e "/^escape /d" "$keybindings"
+			echo 'bindkey "^A"' >> "$keybindings"
+			echo "INFO: ctrl-a will now operate in emacs mode"
+			;;
+	screen)
+			$SED -i -e "/^register a /d" -e "/^bindkey \"^A\"/d" -e "/^escape /d" "$keybindings"
+			echo 'escape "^Aa"' >> "$keybindings"
+			echo 'register x "^A"' >> "$keybindings"
+			echo 'bindkey "^A"' >> "$keybindings"
+			echo "INFO: ctrl-a will now operate in GNU Screen mode"
+			break
+		;;
+	*) echo "Error: bad value for binding: $bind_to";;
+esac
+
+$BYOBU_BACKEND -X at 0 source "$BYOBU_CONFIG_DIR/profile"
+echo "To modify this behavior again later, run 'byobu-ctrl-a'"
+echo
+
+# vi: syntax=sh ts=4 noexpandtab

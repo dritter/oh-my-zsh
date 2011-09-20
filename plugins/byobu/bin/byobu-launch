@@ -1,0 +1,64 @@
+#!/bin/sh -e
+#
+#    byobu-launch - call the launcher if we're in an interactive shell
+#    Copyright (C) 2010 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@ubuntu.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 3 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# 1) Prevent recursion, and multiple sourcing of profiles with the BYOBU_SOURCED_PROFILE environment variable.
+# 2) Respect environment variables (LC_BYOBU and BYOBU_DISABLE) passable over SSH to disable
+#    Byobu launch.  This puts that configurability on the SSH client,
+#    in addition to the server.
+#    To use over SSH, your /etc/ssh/sshd_config and /etc/ssh/ssh_config
+#    must pass this variable with AcceptEnv and SendEnv.
+#    Note that LC_* are passed by default on Debian/Ubuntu, we'll optionally
+#    support LC_BYOBU=0
+#    And in your local bashrc:
+#      $HOME/.bashrc:  export LC_BYOBU=0
+#    or edit your sshd_config, ssh_config, and set:
+#      $HOME/.bashrc:  export BYOBU_DISABLE=1
+if [ "$BYOBU_SOURCED_PROFILE" != "1" ] && [ "$LC_BYOBU" != "0" ] && [ "$BYOBU_DISABLE" != "1" ] && [ -O "$HOME" ]; then
+	BYOBU_SOURCED_PROFILE=1
+	PKG="byobu"
+	[ -z "${BYOBU_PREFIX}" ] && export BYOBU_PREFIX="/home/daniel/.dotfiles/oh-my-zsh/plugins/byobu"
+	. "${BYOBU_PREFIX}/lib/${PKG}/.common"
+	case "$-" in
+		*i*)
+			# Attempt to merge shell history across sessions/windows (works with a few exceptions)
+			if command -v shopt >/dev/null; then
+				shopt -s histappend || true
+			elif command -v setopt >/dev/null; then
+				# Support zsh too
+				setopt appendhistory
+			fi
+			[ -n "$PROMPT_COMMAND" ] && PROMPT_COMMAND="$PROMPT_COMMAND;history -a" || PROMPT_COMMAND="history -a"
+			# Source profile
+			[ -r "$HOME/.profile" ] && . "$HOME/.profile"
+			if byobu-launcher; then
+				# Wait very briefly for the no-logout flag to get written?
+				sleep 0.1
+				if [ -e "$BYOBU_CONFIG_DIR/no-logout-on-detach" ] || [ -e "$BYOBU_RUN_DIR/no-logout" ]; then
+					# The user does not want to logout on byobu detach
+					rm -f "$BYOBU_RUN_DIR/no-logout"	# Remove one-time no-logout flag, if it exists
+					true
+				else
+					exit 0
+				fi
+			fi
+		;;
+	esac
+fi
+true
+# vi: syntax=sh ts=4 noexpandtab
