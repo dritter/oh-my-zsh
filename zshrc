@@ -148,6 +148,9 @@ fi
 # Add binaries from gems to path
 path+=(/var/lib/gems/1.8/bin/)
 
+# Add superuser binaries to path
+path+=(/sbin /usr/sbin)
+
 # make path/PATH entries unique
 typeset -U path
 
