@@ -101,7 +101,7 @@ alias ssh='if ! ssh-add -l >/dev/null 2>&1; then ssh-add; fi; ssh'
 
 # make (overwriting) file operations interactive by default
 alias cp="cp -i"
-alias mv="nocorrect mv -i"
+alias mv="mv -i"
 
 c() {
 	local prev=$PWD

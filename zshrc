@@ -35,6 +35,8 @@ setopt EXTENDED_GLOB
 # hows about arrays be awesome?  (that is, frew${cool}frew has frew surrounding all the variables, not just first and last
 setopt RC_EXPAND_PARAM
 
+setopt CORRECT # do not use CORRECT_ALL
+
 export RI="--format ansi"
 
 
