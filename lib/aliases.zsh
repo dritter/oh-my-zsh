@@ -150,3 +150,5 @@ screen() {
 }
 
 alias idn='idn --quiet'
+
+alias tf='tail -F'
