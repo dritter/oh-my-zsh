@@ -116,13 +116,22 @@ prompt_blueyed_precmd () {
           Ubuntu*) DISTRO=${${${issue%%\(*}%%\\*}%% } ;;
           Debian*) DISTRO="Debian $(</etc/debian_version)" ;;
           *) if [ -r /etc/SuSE-release ] ; then
+              # TODO: use ${//}
               DISTRO="SuSE $(fgrep VERSION /etc/SuSE-release | cut -f2 -d= | tr -d ' ').$(fgrep PATCHLEVEL /etc/SuSE-release | cut -f2 -d= | tr -d ' ')"
-            else
+            elif [ -r /etc/redhat-release ] ; then
+              DISTRO=$(</etc/redhat-release)
+              DISTRO=${DISTRO/Red Hat Enterprise Linux Server/RHEL}
+              DISTRO=${DISTRO/ Linux/} # for CentOS
+              DISTRO=${DISTRO/release /}
+              DISTRO=${DISTRO/ \(*/}
+            elif ! which lsb_release >/dev/null 2>&1; then
               DISTRO=$(echo "$issue" | sed "s/ [^0-9]* / /" | awk '{print $1 " " $2}')
             fi
           ;;
         esac
-      elif which lsb_release >/dev/null 2>&1; then
+      fi
+
+      if ! (( $+DISTRO )) && which lsb_release >/dev/null 2>&1; then
         # If lsb_release is available, use it
         r=$(lsb_release -s -d)
         case "$r" in
@@ -133,12 +142,13 @@ prompt_blueyed_precmd () {
           *)
             # But for other distros the description
             # is too long, so build from -i and -r
-            i=$(lsb_release -s -i)
-            r=$(lsb_release -s -r)
-            DISTRO="$i $r"
+            DISTRO="${(f)$(lsb_release -s -i -r)}"
+            DISTRO=${DISTRO/RedHatEnterpriseServer/RHEL}
           ;;
         esac
       fi
+      (( $+DISTRO )) || DISTRO="unknown"
+      DISTRO+=" ($(uname -m))"
     fi
     if [[ -n $DISTRO ]]; then
       prompt_extra+="[${normtext}$DISTRO] "
