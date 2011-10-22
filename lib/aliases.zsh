@@ -73,7 +73,7 @@ xrgrep() {
 	done
 	xgrep -R $@ ${dir:-}
 }
-alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"screen -x byobu || { sleep 2 && byobu -S byobu }\" && break; done"'
+alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"byobu -x byobu || { sleep 2 && byobu -S byobu }\" && break; done"'
 alias o=xdg-open
 alias 7zpwd="7z a -mx0 -mhe=on -p"
 alias ag="ack-grep"
