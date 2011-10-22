@@ -63,7 +63,9 @@ gsmrm() {
   [ -d "$1" ] || { echo "Submodule $1 not found."; return 2;}
   [ -f .gitmodules ] || { echo ".gitmodules not found."; return 3;}
   # remove submodule entry from .gitmodules
-  awk "/^\[submodule '$1'\]/{g=1;next} /^\[/ {g=0} !g" .gitmodules
+  tempfile=$(tempfile)
+  awk "/^\[submodule \"${1//\//\\/}\"\]/{g=1;next} /^\[/ {g=0} !g" .gitmodules >> $tempfile
+  mv $tempfile .gitmodules
   git rm --cached $1
 }
 
