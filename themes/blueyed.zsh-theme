@@ -17,6 +17,7 @@ add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
     local -h exitstatus=$? # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
     local -h      hitext="%{$fg_bold[green]%}"
+    local -h     redtext="%{$fg_bold[red]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h    normtext="%{$fg_no_bold[green]%}"
     local -h prompt_cwd prompt_vcs
@@ -61,7 +62,7 @@ prompt_blueyed_precmd () {
     # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
     if [[ ! -w $PWD ]]; then
             local cleancwd="$(_strip_escape_codes "$cwd")"
-            cwd="${fg_bold[red]}${cleancwd}"
+            cwd="${redtext}${cleancwd}"
     fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
