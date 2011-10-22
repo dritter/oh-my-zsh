@@ -28,14 +28,13 @@ alias x=extract
 # ls
 export LS_OPTIONS='--color=auto -h'
 alias ls='ls ${=LS_OPTIONS}'
-alias l='ls ${=LS_OPTIONS} -F'
-alias la='ls ${=LS_OPTIONS} -aF'
-alias ll='ls ${=LS_OPTIONS} -lF'
-alias lla='ls ${=LS_OPTIONS} -laF'
+alias l='ls -F'
+alias la='ls -aF'
+alias ll='ls -lF'
+alias lla='ls -laF'
 alias lll='ll -a --color | less -R'
-lth() {
-	ll -t "$@" | head
-}
+lth() { ll --color -t "$@" | head }
+lsh() { ls --color -t "$@" | head }
 
 # commands starting with % for pasting from web
 alias %=' '
