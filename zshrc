@@ -65,6 +65,13 @@ bindkey -M vicmd "??" history-beginning-search-forward
 # <Esc>-h runs help on current BUFFER
 bindkey "\eh" run-help
 
+# TODO: http://zshwiki.org/home/zle/bindkeys%22%22
+# see also lib/wordnav.zsh
+bindkey -M vicmd "\eOH" beginning-of-line
+bindkey -M vicmd "\eOF" end-of-line
+# bindkey "\e[1;3D" backward-word
+# bindkey "\e[1;3C" forward-word
+
 # Replace current buffer with executed result (vicmd mode)
 bindkey -M vicmd '!' edit-command-output
 edit-command-output() {
