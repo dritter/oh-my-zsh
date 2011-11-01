@@ -170,6 +170,17 @@ if [ "$commands[(I)vim]" ]; then
   alias vi=vim
 fi
 
+# Restart network interface
+ifrestart() {
+  (( $# > 0 )) || { echo "Missing interface."; return 1; }
+  if [[ $UID == 0 ]]; then
+    ifdown $1
+    ifup $1
+  else
+    sudo ifdown $1
+    sudo ifup $1
+  fi
+}
 
 
 # Start a session as root, using a separate environment (~/.rootsession)
