@@ -165,6 +165,11 @@ export PAGER=~/.dotfiles/lib/vimpager/vimpager
 alias less=$PAGER
 alias zless=$PAGER
 
+# use full blown vim always
+if [ "$commands[(I)vim]" ]; then
+  alias vi=vim
+fi
+
 
 
 # Start a session as root, using a separate environment (~/.rootsession)
