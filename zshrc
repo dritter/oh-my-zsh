@@ -160,6 +160,25 @@ typeset -U path
 
 setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
 
+
+
+# Start a session as root, using a separate environment (~/.rootsession)
+rootsession() {
+  rh=$HOME/.rootsession
+  if [[ ! -d $rh ]]; then
+    # Create home directory for root session
+    mkdir -p $rh
+    # Copy dotfiles repo from user home
+    # TODO: maybe just symlink it?! (no separation, but easier to keep in sync)
+    cp -a $HOME/.dotfiles $rh
+    cd $rh/.dotfiles
+    # Install symlinks for dotfiles
+    sudo -s HOME=$rh make install_checkout
+  fi
+  sudo -s HOME=$rh
+}
+
+
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
