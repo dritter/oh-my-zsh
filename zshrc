@@ -182,6 +182,13 @@ ifrestart() {
   fi
 }
 
+multicat() {
+  for file in $@; do
+    echo "=== $file ==="
+    cat $file
+  done
+}
+
 
 # Start a session as root, using a separate environment (~/.rootsession)
 rootsession() {
