@@ -160,6 +160,11 @@ typeset -U path
 
 setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
 
+# Setup vimpager as pager:
+export PAGER=~/.dotfiles/lib/vimpager/vimpager
+alias less=$PAGER
+alias zless=$PAGER
+
 
 
 # Start a session as root, using a separate environment (~/.rootsession)
