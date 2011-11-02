@@ -217,4 +217,10 @@ rootsession() {
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
+
+# OpenVZ container: change to previous directory (via dirstack plugin)
+if [[ -r /proc/user_beancounters ]] && [[ ! -d /proc/bc ]] && (( $plugins[(I)dirstack] )); then
+  popd
+fi
+
 true # return code 0
