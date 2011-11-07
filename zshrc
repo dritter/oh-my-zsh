@@ -219,7 +219,7 @@ rootsession() {
 
 
 # OpenVZ container: change to previous directory (via dirstack plugin)
-if [[ -r /proc/user_beancounters ]] && [[ ! -d /proc/bc ]] && (( $plugins[(I)dirstack] )); then
+if [[ -r /proc/user_beancounters ]] && [[ ! -d /proc/bc ]] && (( $plugins[(I)dirstack] )) && (( $#dirstack )); then
   popd
 fi
 
