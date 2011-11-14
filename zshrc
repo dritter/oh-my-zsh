@@ -215,6 +215,10 @@ rootsession() {
 alias rs=rootsession
 
 
+# connect to qemu system by default
+export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
+
+
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
