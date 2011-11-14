@@ -210,7 +210,7 @@ rootsession() {
     # Install symlinks for dotfiles
     sudo -s HOME=$rh make install_checkout
   fi
-  sudo -s HOME=$rh "$@"
+  sudo -s HOME=$rh SSH_AUTH_SOCK=$SSH_AUTH_SOCK "$@"
 }
 alias rs=rootsession
 
