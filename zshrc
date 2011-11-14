@@ -219,6 +219,22 @@ alias rs=rootsession
 # connect to qemu system by default
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 
+# Special treatment for verdi4u machines
+if [[ $(hostname -f) = *.verdi4u.de ]]; then
+  # Get recent python into $PATH for autojump
+  # (the first python from /opt != 2.4/2.5)
+  if [[ $(python -V 2>&1) = Python\ 2.[45]* ]]; then
+    for i in /opt/python /opt/py*(/) ; do
+      i=${i%/}
+      test -f $i/bin/python || continue
+      if [[ $($i/bin/python -V 2>&1 ) != Python\ 2.[45]* ]]; then
+        path=($i/bin $path)
+        break
+      fi
+    done
+  fi
+fi
+
 
 # Source local rc file if any
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
