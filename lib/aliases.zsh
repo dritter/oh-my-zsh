@@ -138,6 +138,7 @@ wiki() {
 	fi
 }
 
+if [ $commands[screen] ]; then
 screen() {
   local term=$TERM
   if [ "$TERM" = rxvt-unicode-256color ]; then
@@ -151,6 +152,7 @@ screen() {
     TERM=$term command screen "$@"
   fi
 }
+fi
 
 alias idn='idn --quiet'
 
