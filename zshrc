@@ -168,9 +168,9 @@ typeset -U path
 setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
 
 # Setup vimpager as pager:
-export PAGER=~/.dotfiles/lib/vimpager/vimpager
-alias less=$PAGER
-alias zless=$PAGER
+# export PAGER=~/.dotfiles/lib/vimpager/vimpager
+# alias less=$PAGER
+# alias zless=$PAGER
 
 # use full blown vim always
 if [ "$commands[(I)vim]" ]; then
