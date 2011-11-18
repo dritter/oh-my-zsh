@@ -163,7 +163,7 @@ prompt_blueyed_precmd () {
         if [ $exitstatus -gt 128 -a $exitstatus -lt 163 ] ; then
             disp+=" (SIG$signals[$exitstatus-127])"
         fi
-        ret_status="${bracket_open}${alerttext}${disp}${bracket_close}"
+        ret_status="${bracket_open}${alerttext}${disp}${bracket_close} "
     fi
 
     # Running and suspended jobs, parsed via $jobstates
@@ -184,7 +184,7 @@ prompt_blueyed_precmd () {
 
     # Assemble prompt:
     local -h rprompt=" $histnr $time${PR_RESET}"
-    local -h prompt="${user}${prompt_at}${host} ${brace_open_cwd} ${prompt_cwd} ${brace_close_cwd} ${prompt_extra}${ret_status}${jobstatus}"
+    local -h prompt="${ret_status}${user}${prompt_at}${host} ${brace_open_cwd} ${prompt_cwd} ${brace_close_cwd} ${prompt_extra}${jobstatus}"
     # right trim:
     prompt=${prompt%% #}
 
