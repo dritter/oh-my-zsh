@@ -209,6 +209,7 @@ rootsession() {
     cd $rh/.dotfiles
     # Install symlinks for dotfiles
     sudo -s HOME=$rh make install_checkout
+    cd $OLDPWD
   fi
   sudo -s HOME=$rh SSH_AUTH_SOCK=$SSH_AUTH_SOCK "$@"
 }
