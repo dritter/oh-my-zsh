@@ -17,6 +17,7 @@ gdv() { git diff -w "$@" | view - }
 compdef _git gdv=git-diff
 alias gl='git l'
 alias glg='git log --stat --max-count=5'
+alias glgg='git log --graph --max-count=5'
 alias gls='git ls-files'
 alias glsu='git ls-files -o --exclude-standard'
 alias gp='git push'
@@ -27,6 +28,7 @@ alias gsh='git show'
 alias gsm='git submodule'
 alias gsms='git submodule summary'
 alias gsmst='git submodule status'
+alias gss='git status -s'
 alias gst='git status'
 # git-up and git-reup from ~/.dotfiles/usr/bin
 compdef _git git-up=git-fetch
@@ -74,6 +76,8 @@ alias git-svn-dcommit-push='git svn dcommit && git push github master:svntrunk'
 compdef git-svn-dcommit-push=git
 alias gsvnup='git svn fetch && git stash && git svn rebase && git stash pop'
 
+alias gsr='git svn rebase'
+alias gsd='git svn dcommit'
 #
 # Will return the current branch name
 # Usage example: git pull origin $(current_branch)

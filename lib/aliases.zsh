@@ -22,8 +22,6 @@ alias afind='ack-grep -il'
 # "fast find": filter out any dotfiles
 alias ffind='find -mindepth 1 -name ".*" -prune'
 
-alias x=extract
-
 
 # ls
 export LS_OPTIONS='--color=auto -h'

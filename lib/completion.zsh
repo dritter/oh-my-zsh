@@ -1,4 +1,4 @@
-## fixme - the load process here seems a bit bizarre
+# fixme - the load process here seems a bit bizarre
 
 unsetopt menu_complete   # do not autoselect the first completion entry
 unsetopt flowcontrol
@@ -59,6 +59,17 @@ zstyle ':completion:*:*:*:users' ignored-patterns \
 
 # ... unless we really want to.
 zstyle '*' single-ignored show
+
+if [ "x$COMPLETION_WAITING_DOTS" = "xtrue" ]; then
+  expand-or-complete-with-dots() {
+    echo -n "\e[31m......\e[0m"
+    zle expand-or-complete
+    zle redisplay
+  }
+  zle -N expand-or-complete-with-dots
+  bindkey "^I" expand-or-complete-with-dots
+fi
+
 
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' verbose yes
