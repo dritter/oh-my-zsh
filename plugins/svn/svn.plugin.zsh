@@ -82,3 +82,9 @@ function svnsafeup() {
   echo "Updating from revision $currev to $to.."
   svn up -r $to
 }
+
+
+# Aliases for svn
+svnd() { svn diff "$@" | $PAGER }
+svnl() { svn log "$@"  | $PAGER }
+
