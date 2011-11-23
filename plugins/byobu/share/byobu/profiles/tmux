@@ -20,51 +20,45 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
+# Initialize environment, clean up
 set-environment -g BYOBU_BACKEND tmux
 new-window -d byobu-janitor
-
-# Change to Screen's ctrl-a escape sequence
-set-option -g prefix C-a
-unbind-key C-b
-bind-key C-a send-prefix
-bind-key a send-prefix
 set -s escape-time 0
 
-bind-key -n F1 new-window -k -t config byobu-config
-bind-key -n F2 new-window
-bind-key -n F3 previous-window
-bind-key -n S-left previous-window
-bind-key -n F4 next-window
-bind-key -n S-right next-window
-bind-key -n F5 source /usr/share/byobu/profiles/tmuxrc
-bind-key -n F6 detach
-bind-key -n F7 copy-mode
-bind-key -n M-NPage copy-mode \; send-keys NPage
-bind-key -n M-PPage copy-mode -u
-bind-key -n F8 command-prompt -p "(rename-window)" "rename-window %%"
-bind-key -n F9 new-window -a byobu-config
-bind-key -n C-F2 split-window -h
-bind-key -n C-F3 select-pane -L
-bind-key -n C-F4 select-pane -R
-bind-key -n S-F2 split-window -v
-bind-key -n S-F3 select-pane -D
-bind-key -n S-F4 select-pane -U
-bind-key -n S-F5 kill-pane -a
-bind-key -n C-F6 kill-pane
+# Change to Screen's ctrl-a escape sequence
+source /usr/share/doc/tmux/examples/screen-keys.conf
+# On Archlinux, this file is not under the same directory
+source /usr/share/tmux/screen-keys.conf
+
+# Add F12 to the prefix list
+set -g prefix ^A,F12
+
+# Byobu's Keybindings
+source $BYOBU_PREFIX/share/byobu/keybindings/f-keys.tmux
 
 set-option -g set-titles on
 set-option -g set-titles-string '#(whoami)@#H - byobu (#S)'
-set-option -g pane-active-border-fg magenta
-set-option -g pane-border-fg magenta
+set-option -g pane-active-border-bg $BYOBU_ACCENT
+set-option -g pane-active-border-fg $BYOBU_ACCENT
+set-option -g pane-border-fg $BYOBU_LIGHT
+set-option -g history-limit 10000
+set-option -g display-panes-time 150
+set-option -g display-panes-colour $BYOBU_ACCENT
+set-option -g display-panes-active-colour $BYOBU_HIGHLIGHT
+set-option -g clock-mode-colour $BYOBU_ACCENT
+set-option -g clock-mode-style 24
+set-option -g mode-keys vi
+set-option -g mode-bg $BYOBU_ACCENT
+set-option -g mode-fg $BYOBU_LIGHT
 
 set-window-option -g window-status-attr default
-set-window-option -g window-status-bg black
-set-window-option -g window-status-fg white
-set-window-option -g window-status-current-attr default
-set-window-option -g window-status-current-bg white
-set-window-option -g window-status-current-fg black
-set-window-option -g window-status-alert-bg black
-set-window-option -g window-status-alert-fg white
+set-window-option -g window-status-bg $BYOBU_DARK
+set-window-option -g window-status-fg $BYOBU_LIGHT
+set-window-option -g window-status-current-attr reverse
+set-window-option -g window-status-current-bg $BYOBU_DARK
+set-window-option -g window-status-current-fg $BYOBU_LIGHT
+set-window-option -g window-status-alert-bg $BYOBU_DARK
+set-window-option -g window-status-alert-fg $BYOBU_LIGHT
 set-window-option -g window-status-alert-attr bold
 set-window-option -g automatic-rename on
 set-window-option -g aggressive-resize on
@@ -75,13 +69,16 @@ set-window-option -g monitor-activity on
 # BUG: Should *not* hardcode /bin/bash here
 set -g default-terminal "screen-256color"
 set -g terminal-overrides 'xterm*:smcup@:rmcup@'
-set -g default-command /bin/bash
-set -g status-bg black
-set -g status-fg white
+set -g default-command $SHELL
+set -g status-bg $BYOBU_DARK
+set -g status-fg $BYOBU_LIGHT
 set -g status-interval 1
 set -g status-left-length 256
 set -g status-right-length 256
 set -g status-left '#(byobu-status tmux_left)['
 set -g status-right ']#(byobu-status tmux_right)'
-set -g message-bg magenta
+set -g message-bg $BYOBU_ACCENT
 set -g message-fg white
+
+# Allow local overrides
+source $BYOBU_CONFIG_DIR/.tmux.conf

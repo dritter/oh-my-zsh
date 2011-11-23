@@ -20,7 +20,7 @@
 
 PKG="byobu"
 [ -z "${BYOBU_PREFIX}" ] && export BYOBU_PREFIX="/home/daniel/.dotfiles/oh-my-zsh/plugins/byobu"
-. "${BYOBU_PREFIX}/lib/${PKG}/.common"
+. "${BYOBU_PREFIX}/lib/${PKG}/include/common"
 
 # Make sure status is not disabled
 [ -f "$BYOBU_CONFIG_DIR/status.disable" ] && exit 0
@@ -29,9 +29,17 @@ PKG="byobu"
 mkdir -p "$BYOBU_RUN_DIR/status.$BYOBU_BACKEND" "$BYOBU_RUN_DIR/.last.$BYOBU_BACKEND"
 
 # Source configurations
-for i in "${BYOBU_PREFIX}/share/$PKG/status/status" "${BYOBU_PREFIX}/share/$PKG/status/statusrc" "$BYOBU_CONFIG_DIR/status" "$BYOBU_CONFIG_DIR/statusrc" "$BYOBU_CONFIG_DIR/color"; do
+for i in "${BYOBU_PREFIX}/share/$PKG/status/status" "${BYOBU_PREFIX}/share/$PKG/status/statusrc" "$BYOBU_CONFIG_DIR/status" "$BYOBU_CONFIG_DIR/statusrc" "$BYOBU_CONFIG_DIR/color" "$BYOBU_CONFIG_DIR/color.tmux"; do
 	[ -r "$i" ] && . "$i"
 done
+
+# Reload profile, if necessary
+if [ -e "/var/run/screen/S-$USER/$PKG.reload-required" ] || [ -e "$BYOBU_RUN_DIR/reload-required" ]; then
+	if [ "$BYOBU_BACKEND" = "screen" ] && [ -r "$BYOBU_CONFIG_DIR/profile" ]; then
+		# If the forced janitorial steps succeed, try a profile reload
+		byobu-janitor --force && screen -X at 0 source "$BYOBU_CONFIG_DIR/profile" >/dev/null 2>&1
+	fi
+fi
 
 # Get the current timestamp
 get_now; NOW=${_RET}

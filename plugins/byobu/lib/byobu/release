@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-#    release: grab the os/distro release
+#    release: grab the os/distro release version
 #
 #    Copyright (C) 2008 Canonical Ltd.
 #    Copyright (C) 2011 Dustin Kirkland
@@ -24,48 +24,44 @@ __release_detail() {
 }
 
 __release() {
-	local DISTRO="${DISTRO}" issue ver r i
-	if [ -n "$DISTRO" ]; then
+	local RELEASE="${RELEASE}"
+	if [ -n "$RELEASE" ]; then
 		# user defined
 		true
 	elif [ -r "/etc/issue" ]; then
 		# lsb_release is *really* slow;  try to use /etc/issue first
+		local issue
 		read issue < /etc/issue
 		case "$issue" in
 			Ubuntu*)
 				set -- $issue;
-				DISTRO="$1 $2";
+				RELEASE="$2";
 			;;
 			Debian*)
+				local ver
 				read ver < /etc/debian_version
-				DISTRO="Debian $ver"
-			;;
-			*)
-				# assume first 2 fields are what we want
-				set -- $issue;
-				DISTRO="$1 $2";
+				RELEASE="$ver"
 			;;
 		esac
-	elif command -v lsb_release >/dev/null 2>&1; then
+	fi
+	if [ -z "$RELEASE" ] && command -v lsb_release >/dev/null 2>&1; then
 		# If lsb_release is available, use it
-		r=$(lsb_release -s -d)
+		local r=$(lsb_release -s -d)
 		case "$r" in
-			Ubuntu*.*.*)
+			Ubuntu*)
 				# Use the -d if an Ubuntu LTS
-				DISTRO="$r"
+				RELEASE="$r"
 			;;
 			*)
 				# But for other distros the description
 				# is too long, so build from -i and -r
-				i=$(lsb_release -s -i)
+				local i=$(lsb_release -s -i)
 				r=$(lsb_release -s -r)
-				DISTRO="$i $r"
+				RELEASE="$i $r"
 			;;
 		esac
-	else
-		DISTRO="Byobu"
 	fi
-	color bold2; printf "%s" "$DISTRO"; color --
+	color bold2; printf "%s" "$RELEASE"; color --
 }
 
 # vi: syntax=sh ts=4 noexpandtab

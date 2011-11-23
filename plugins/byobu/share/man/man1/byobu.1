@@ -5,7 +5,11 @@ byobu \- wrapper script for seeding a user's byobu configuration and launching s
 .SH SYNOPSIS
 \fBbyobu\fP [screen options]
 
-Options to \fBbyobu\fP are simply passed through \fBscreen\fP(1).
+\fBbyobu\-screen\fP [screen options]
+
+\fBbyobu\-tmux\fP [tmux options]
+
+Options to \fBbyobu\fP are simply passed through \fBscreen\fP(1) or \fBtmux\fP(1).
 
 .SH DESCRIPTION
 \fBbyobu\fP is a script that launches GNU screen in the byobu configuration.  This enables the display of system information and status notifications within two lines at the bottom of the screen session. It also enables multiple tabbed terminal sessions, accessible through simple keystrokes.
@@ -20,7 +24,7 @@ Note that BYOBU_CONFIG_DIR=\fI$XDG_CONFIG_HOME/byobu\fP if defined, and \fI$HOME
 
 \fBarch\fP \- system architecture; displayed on the lower bar toward the left, in the default text color on the default background color
 
-\fBbattery\fP \- battery information; display on the lower bar toward the right; |\-| indicates discharging, |+| indicates charging, |=| indicates fully charged;  when charging or discharging, the current battery capacity as a percentage is displayed;  the colours green, yellow, and red are used to give further indication of the battery's charge state; you may override the detected battery by setting BATTERY=/proc/acpi/battery/BAT0 in \fI$BYOBU_CONFIG_DIR/statusrc\fP
+\fBbattery\fP \- battery information; display on the lower bar toward the right; \- indicates discharging, + indicates charging, = indicates fully charged;  when charging or discharging, the current battery capacity as a percentage is displayed;  the colours green, yellow, and red are used to give further indication of the battery's charge state; you may override the detected battery by setting BATTERY=/proc/acpi/battery/BAT0 in \fI$BYOBU_CONFIG_DIR/statusrc\fP
 
 \fBcpu_count\fP \- the number of cpu's or cores on the system; displayed in the lower bar toward the right in the default text color on the default background, followed by a trailing 'x'
 
@@ -39,6 +43,8 @@ Note that BYOBU_CONFIG_DIR=\fI$XDG_CONFIG_HOME/byobu\fP if defined, and \fI$HOME
 
 \fBdisk_io\fP \- instantaneous read/write througput in kB/s or MB/s over the last 3 seconds; displayed in the lower bar toward the right in white text on a light purple background with a leading '<' sign indicating 'read speed' and '>' sign indicating 'write speed'; override the default monitored disk by specifying an alternate device with MONITORED_DISK=/dev/sdb, and override the default DISK_IO_THRESHOLD=50 (kB/s) in \fI$BYOBU_CONFIG_DIR/statusrc\fP
 
+\fBdistro\fP \- OS/distribution name of the release running on the current system as reported by \fBlsb_release(1)\fP or \fI/etc/issue\fP; displayed in the lower bar in bold black text toward the left on a grey background; you may override the detected release with DISTRO=Whatever in \fI$BYOBU_CONFIG_DIR/statusrc\fP
+
 \fBec2_cost\fP \- an estimation of the cost of the current boot of the system in terms of the Amazon EC2 billing model; displayed in the lower bar toward the right in green text on a black background; there is a leading '~' to indicate that this is an estimation, and the monetary units are US Dollars '$'
 
 \fBraid\fP \- note very prominently if there is a RAID failure detected, in red blinking text on a white background; the term 'RAID' notes that there is something wrong with the RAID, and if there is a rebuild/resync in progress, the percent complete is also shown
@@ -49,7 +55,7 @@ Note that BYOBU_CONFIG_DIR=\fI$XDG_CONFIG_HOME/byobu\fP if defined, and \fI$HOME
 
 \fBhostname\fP \- the hostname of the system; displayed in the upper bar on the far right in bold black text on a grey background; there is a leading '@' symbol if the username status is also enabled
 
-\fBip_address\fP \- the IPv4 address of the system in dotted decimal form; displayed in the upper bar on the far right in bold black text on a grey background;  you can override and display your IPv6 address by setting 'IPV6=1' in \fI$BYOBU_CONFIG_DIR/statusrc\fP
+\fBip_address\fP \- the IPv4 address of the system in dotted decimal form; displayed in the upper bar on the far right in bold black text on a grey background;  you can override and display your IPv6 address by setting 'IPV6=1', and you can show your external ip address by setting 'IP_EXTERNAL=1' in \fI$BYOBU_CONFIG_DIR/statusrc\fP
 
 \fBload_average\fP \- the system load average over the last 1 minute; displayed in the lower bar toward the right in black text on a yellow background
 
@@ -69,7 +75,7 @@ Note that BYOBU_CONFIG_DIR=\fI$XDG_CONFIG_HOME/byobu\fP if defined, and \fI$HOME
 
 \fBreboot_required\fP \- symbol present if a reboot is required following a system update; displayed in the lower bar white text on a blue background by the symbol '(R)'; additionally, reboot_required will print '<F5>' in white text on a blue background, if Byobu requires you to reload your profile to affect some changes; it will also detect if your system is currently in \fBpowernap\fP(8) state and if so print '.zZ'.
 
-\fBrelease\fP \- distribution and version information about the release running on the current system as reported by \fBlsb_release(1)\fP or \fI/etc/issue\fP; displayed in the lower bar in bold black text toward the left on a grey background; you may override the detected release with DISTRO=Whatever in \fI$BYOBU_CONFIG_DIR/statusrc\fP
+\fBrelease\fP \- OS/distribution name of the release running on the current system as reported by \fBlsb_release(1)\fP or \fI/etc/issue\fP; displayed in the lower bar in bold black text toward the left on a grey background; you may override the detected release with RELEASE=Whatever in \fI$BYOBU_CONFIG_DIR/statusrc\fP
 
 \fBservices\fP \- users can configure a list of services to monitor, define the SERVICES variable in \fI$BYOBU_CONFIG_DIR/statusrc\fP, a whitespace separated of services, each service should include the init name of the service, then a pipe, and then an abbreviated name or symbol to display when running (e.g. SERVICES="ssh|ssh apache2|http"); displayed in the lower bar toward the center in cyan on a white background
 
@@ -190,10 +196,12 @@ Users who customize their PS1 prompt need to put this setting in \fI~/.bashrc\fP
 
 If you run \fBbyobu\fP(1) under \fBsudo\fP(8), you \fBmust\fP use the -H option, such that the user's $HOME directory environment variable is set properly.  Otherwise, \fBbyobu\fP(1) will create a bunch of directories in the $SUDO_USER's $HOME, but will be owned by root.  To prevent this from happening, \fBbyobu\fP(1) will simply refuse to run if $USER does not own $HOME.
 
+Byobu requires a suitable \fBulimit\fP(3) values to run.  If you get an error at startup saying, 'pipe: too many open files', then check your ulimit -a values, as your "open files" or "max user processes" are too low.  In this case, you will probably need to run simple \fBscreen\fP(1)
+
 .SH SEE ALSO
 .PD 0
 .TP
-\fBscreen\fP(1), \fBbyobu-config\fP(1), \fBbyobu-export\fP(1), \fBbyobu-status\fP(1), \fBbyobu-status-detail\fB(1), \fBbyobu-enable\fB(1), \fBbyobu-launch\fB(1)
+\fBscreen\fP(1), \fBbyobu-config\fP(1), \fBbyobu-export\fP(1), \fBbyobu-status\fP(1), \fBbyobu-status-detail\fB(1), \fBbyobu-enable\fB(1), \fBbyobu-launch\fB(1), \fBtmux\fP(1)
 .TP
 \fIhttp://launchpad.net/byobu\fP
 .PD
