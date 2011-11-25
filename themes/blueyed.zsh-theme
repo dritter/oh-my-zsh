@@ -67,7 +67,7 @@ prompt_blueyed_precmd () {
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
-    prompt_cwd="${hitext}${cwd}"
+    prompt_cwd="${hitext}${cwd}${normtext}"
 
     # http_proxy defines color of "@" between user and host
     # TODO: use $prompt_extra instead?!
@@ -95,10 +95,10 @@ prompt_blueyed_precmd () {
 
     local -h bracket_open="${lighttext}["
     local -h bracket_close="${lighttext}]"
-    local -h brace_open_cwd="%(#.$alerttext.$normtext){"
     local -h brace_close_cwd="%(#.$alerttext.$normtext)}${normtext}"
+    local -h colon_prefix_cwd="%(#.$alerttext.$normtext):${normtext}"
 
-    local -h prompt_extra
+    local -h prompt_extra rprompt_extra
     # $debian_chroot:
     if [[ -n "$debian_chroot" ]]; then
         prompt_extra+="${alerttext}(dch:$debian_chroot) "
@@ -152,9 +152,11 @@ prompt_blueyed_precmd () {
       DISTRO+=" ($(uname -m))"
     fi
     if [[ -n $DISTRO ]]; then
-      prompt_extra+="[${normtext}$DISTRO] "
+      rprompt_extra+=" ${normtext}[$DISTRO]"
     fi
+
     prompt_extra+="${PR_RESET}"
+    rprompt_extra+="${PR_RESET}"
 
     #local ret_status="%(?:: ${bracket_open}${alerttext}es:%?${bracket_close})"
     local -h ret_status disp
@@ -183,8 +185,8 @@ prompt_blueyed_precmd () {
     local -h    prefix="%{$normtext%}❤ "
 
     # Assemble prompt:
-    local -h rprompt=" $histnr $time${PR_RESET}"
-    local -h prompt="${ret_status}${user}${prompt_at}${host} ${brace_open_cwd} ${prompt_cwd} ${brace_close_cwd} ${prompt_extra}${jobstatus}"
+    local -h rprompt=" $rprompt_extra $histnr $time${PR_RESET}"
+    local -h prompt="${ret_status}${user}${prompt_at}${host}${colon_prefix_cwd}${prompt_cwd} ${prompt_extra}${jobstatus}"
     # right trim:
     prompt=${prompt%% #}
 
