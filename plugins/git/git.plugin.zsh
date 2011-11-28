@@ -11,7 +11,7 @@ alias gcl='git clone --recursive'
 alias gco='git checkout'
 alias gcount='git shortlog -sn'
 alias gcp='git cherry-pick'
-alias gd='git diff'
+alias gd='git diff --submodule'
 alias gdc='git diff --cached'
 gdv() { git diff -w "$@" | view - }
 compdef _git gdv=git-diff
