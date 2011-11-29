@@ -197,7 +197,9 @@ multicat() {
 }
 
 
-# Start a session as root, using a separate environment (~/.rootsession)
+# Start a session as root, using a separate environment (~/.rootsession).
+# NOTE: while "sudo -s HOME=.. …" appears to work best, it failed
+# on a SUSE 10.4 system with "$SHELL: can't open input file: command"
 rootsession() {
   rh=$HOME/.rootsession
   if [[ ! -d $rh ]]; then
@@ -208,10 +210,16 @@ rootsession() {
     cp -a $HOME/.dotfiles $rh
     cd $rh/.dotfiles
     # Install symlinks for dotfiles
-    sudo -s HOME=$rh make install_checkout
+    sudo env HOME=$rh make install_checkout
     cd $OLDPWD
   fi
-  sudo -s HOME=$rh SSH_AUTH_SOCK=$SSH_AUTH_SOCK "$@"
+  if (( $#@ )); then
+    # execute the command/arguments:
+    sudo env HOME=$rh SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL -c "$*"
+  else
+    # interactive session:
+    sudo env HOME=$rh SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL
+  fi
 }
 alias rs=rootsession
 
