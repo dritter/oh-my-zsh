@@ -200,8 +200,30 @@ prompt_blueyed_precmd () {
 ${prompt_vcs}%# ${PR_RESET}"
 }
 
+# Vim mode indicator {{{1
+# Taken from the vi-mode plugin, but without `bindkey -v`.
+function zle-line-init zle-keymap-select {
+  zle reset-prompt
+}
+zle -N zle-line-init
+zle -N zle-keymap-select
 
-# set formats
+# if mode indicator wasn't setup by theme, define default
+if [[ "$MODE_INDICATOR" == "" ]]; then
+  MODE_INDICATOR="%{$fg_bold[red]%}<%{$fg[red]%}<<%{$reset_color%}"
+fi
+
+function vi_mode_prompt_info() {
+  echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
+}
+
+# define right prompt, if it wasn't defined by a theme
+if [[ "$RPS1" == "" && "$RPROMPT" == "" ]]; then
+  RPS1='$(vi_mode_prompt_info)'
+fi
+
+
+# set formats {{{1
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
 FMT_BRANCH="%{$fg_no_bold[white]%}(%s)%{$fg[green]%}%b%u%c" # e.g. master¹²
 FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
