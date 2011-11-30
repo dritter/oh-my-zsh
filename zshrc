@@ -201,6 +201,7 @@ multicat() {
 # NOTE: while "sudo -s HOME=.. …" appears to work best, it failed
 # on a SUSE 10.4 system with "$SHELL: can't open input file: command"
 rootsession() {
+  [[ $UID == 0 ]] && { echo "Already root."; exit 1; }
   rh=$HOME/.rootsession
   if [[ ! -d $rh ]]; then
     # Create home directory for root session
