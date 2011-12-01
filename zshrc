@@ -223,9 +223,9 @@ sudosession() {
   sudohome=$HOME/.sudosession/$user
   if [[ ! -d $sudohome ]]; then
     mkdir -p $sudohome
-    chown $user:$USER $sudohome
     # Copy dotfiles repo from user home
     cp -a $HOME/.dotfiles $sudohome
+    sudo chown $user $sudohome
     cd $sudohome/.dotfiles
     # Install symlinks for dotfiles
     sudo env HOME=$sudohome make install_checkout
