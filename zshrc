@@ -197,33 +197,49 @@ multicat() {
 }
 
 
-# Start a session as root, using a separate environment (~/.rootsession).
+# Start a session as another user (via sudo, default is root),
+# using a separate environment based on ~/.dotfiles (in ~/.sudosession).
 # NOTE: while "sudo -s HOME=.. …" appears to work best, it failed
-# on a SUSE 10.4 system with "$SHELL: can't open input file: command"
-rootsession() {
-  [[ $UID == 0 ]] && { echo "Already root."; return 1; }
-  rh=$HOME/.rootsession
-  if [[ ! -d $rh ]]; then
-    # Create home directory for root session
-    mkdir -p $rh
+#       on a SUSE 10.4 system with "$SHELL: can't open input file: command".
+sudosession() {
+  emulate -L zsh
+  local user=root
+  while [[ $1 == -* ]] ; do
+    case $1 in
+      (-u) shift ; user=$1 ;;
+      (--) shift ; break ;;
+      (-h)
+	printf 'usage: sudosession [-h|-u USER] <cmd>\n'
+                printf '  -h      shows this help text.\n'
+                printf '  -u      set specific user (default: root).\n'
+                return 0
+                ;;
+            (*) printf "unkown option: '%s'\n" "$1" ; return 1 ;;
+    esac
+    shift
+  done
+
+  [[ $USER == $user ]] && { echo "Already $user."; return 1; }
+  sudohome=$HOME/.sudosession/$user
+  if [[ ! -d $sudohome ]]; then
+    mkdir -p $sudohome
+    chown $user:$USER $sudohome
     # Copy dotfiles repo from user home
-    # TODO: maybe just symlink it?! (no separation, but easier to keep in sync)
-    cp -a $HOME/.dotfiles $rh
-    cd $rh/.dotfiles
+    cp -a $HOME/.dotfiles $sudohome
+    cd $sudohome/.dotfiles
     # Install symlinks for dotfiles
-    sudo env HOME=$rh make install_checkout
+    sudo env HOME=$sudohome make install_checkout
     cd $OLDPWD
   fi
   if (( $#@ )); then
     # execute the command/arguments:
-    sudo env HOME=$rh SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL -c "$*"
+    sudo -u $user env HOME=$sudohome SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL -c "$*"
   else
     # interactive session:
-    sudo env HOME=$rh SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL
+    sudo -u $user env HOME=$sudohome SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL
   fi
 }
-alias rs=rootsession
-
+alias ss=sudosession
 
 # connect to qemu system by default
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
