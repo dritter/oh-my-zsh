@@ -239,7 +239,7 @@ sudosession() {
     sudo -u $user env HOME=$sudohome SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL
   fi
 }
-alias ss=sudosession
+alias rs=sudosession  # mnemonic: "root session"
 
 # connect to qemu system by default
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
