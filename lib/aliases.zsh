@@ -93,6 +93,9 @@ wpatch() {
 	echo "wget $PATCH_URL -O- | zless | cat | patch -p1 $@"
 	wget $PATCH_URL -O- | zless | patch -p1 "$@"
 }
+wless() {
+  zless =(wget -q "$@" -O-)
+}
 # auto ssh-add key
 alias ssh='if ! ssh-add -l >/dev/null 2>&1; then ssh-add; fi; ssh'
 
