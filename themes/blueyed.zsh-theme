@@ -304,9 +304,9 @@ zstyle ':vcs_info:*:prompt:*' check-for-changes true
 # zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
-zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH}${FMT_ACTION}" "${FMT_PATH}"
-zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"              "${FMT_PATH}"
-zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                           "%~"
+zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "${FMT_PATH}"
+zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "${FMT_PATH}"
+zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            "%~"
 
 
 #  vim: set ft=zsh ts=4 sw=4 et:
