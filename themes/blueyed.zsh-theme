@@ -262,7 +262,7 @@ function +vi-git-st() {
             || remote_color="%{$fg_bold[blue]%}"
 
         hook_com[branch]="${branch_color}${local_branch}$remote_color@${remote}"
-        [[ -n $gitstatus ]] && hook_com[branch]+="$bracket_open$darkdelim${(j:/:)gitstatus}$bracket_close"
+        [[ -n $gitstatus ]] && hook_com[branch]+="$bracket_open$normtext${(j:/:)gitstatus}$bracket_close"
     fi
 }
 
