@@ -121,7 +121,8 @@ bindkey '\ee' edit-command-line
 [ -x /usr/bin/lesspipe ] && eval $(lesspipe)
 
 # options for less: move jump target to line 5 and handle ANSI color sequences (default, but required with $LESS set?!), for "git diff"
-export LESS="-j5 -R"
+# Also: (smart-)ignore case and do not fold long lines.
+export LESS="-j5 -R -i -S"
 
 # directory shortcuts
 hash -d l=/var/log
