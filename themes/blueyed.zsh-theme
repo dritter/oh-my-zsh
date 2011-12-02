@@ -242,7 +242,7 @@ function +vi-git-st() {
         || branch_color="%{$fg_bold[blue]%}"
 
     if [[ -z ${remote} ]] ; then
-        hook_com[branch]="${branch_color}${local_branch}@local"
+        hook_com[branch]="${branch_color}${local_branch}"
         return
     else
         # for git prior to 1.7
