@@ -94,7 +94,7 @@ prompt_blueyed_precmd () {
     fi
 
     local -h     user="%(#.$isroottext.$normtext)%n"
-    if [ -n "$SSH_TTY" ] || [ "$(who am i | cut -f2  -d\( | cut -f1 -d:)" != "" ]; then
+    if [ -n "$SSH_CLIENT" ] ; then
         local -h     host="${hitext}%m"
     else
         local -h     host="${normtext}%m"
