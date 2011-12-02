@@ -29,8 +29,9 @@ prompt_blueyed_precmd () {
     local -h      yellow="%{$fg_no_bold[yellow]%}"
     local -h        blue="%{$fg_no_bold[blue]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
+    local -h  isroottext="%{$fg_no_bold[red]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
-    local -h   alerttext="%{$fg_bold[red]%}"
+    local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_no_bold[white]%}"
     local -h   darkdelim="$gray"
     # list of colors: cyan, white, yellow, magenta, black, blue, red, grey, green
@@ -92,7 +93,7 @@ prompt_blueyed_precmd () {
         prompt_at="${normtext}@"
     fi
 
-    local -h     user="%(#.$alerttext.$normtext)%n"
+    local -h     user="%(#.$isroottext.$normtext)%n"
     if [ -n "$SSH_TTY" ] || [ "$(who am i | cut -f2  -d\( | cut -f1 -d:)" != "" ]; then
         local -h     host="${hitext}%m"
     else
@@ -101,12 +102,10 @@ prompt_blueyed_precmd () {
     local -h   histnr="${normtext}!${gray}%!"
     local -h     time="${normtext}%*"
 
-    local -h colon_prefix_cwd="%(#.$alerttext.$normtext):${normtext}"
-
     local -h prompt_extra rprompt_extra
     # $debian_chroot:
     if [[ -n "$debian_chroot" ]]; then
-        prompt_extra+="${alerttext}(dch:$debian_chroot) "
+        prompt_extra+="${normtext}(dch:$debian_chroot) "
     fi
     # OpenVZ container ID (/proc/bc is only on the host):
     if [[ -r /proc/user_beancounters && ! -d /proc/bc ]]; then
@@ -164,7 +163,6 @@ prompt_blueyed_precmd () {
       rprompt_extra+=" ${normtext}[$DISTRO]"
     fi
 
-    #local ret_status="%(?:: ${bracket_open}${alerttext}es:%?${bracket_close})"
     local -h ret_status disp
     if [ $exitstatus -ne 0 ] ; then
         disp="es:$exitstatus"
@@ -196,7 +194,7 @@ prompt_blueyed_precmd () {
 
     # Assemble prompt:
     local -h rprompt="$rprompt_extra $histnr $time${PR_RESET}"
-    local -h prompt="${ret_status}${user}${prompt_at}${host}${colon_prefix_cwd} ${prompt_cwd}${prompt_extra}"
+    local -h prompt="${ret_status}${user}${prompt_at}${host} ${prompt_cwd}${prompt_extra}"
     # right trim:
     prompt="${prompt%% #} "
 
