@@ -26,8 +26,8 @@ prompt_blueyed_precmd () {
     local -h    normtext="%{$fg_no_bold[green]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
     local -h        gray="%{$fg_bold[black]%}"
-    local -h      yellow="%{$fg_no_bold[yellow]%}"
     local -h        blue="%{$fg_no_bold[blue]%}"
+    local -h     cwdtext="%{$fg_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
     local -h  isroottext="%{$fg_no_bold[red]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
@@ -40,6 +40,8 @@ prompt_blueyed_precmd () {
     local -h bracket_open="${darkdelim}["
     local -h bracket_close="${darkdelim}]"
 
+    local -h prompt_extra rprompt_extra
+
     if ! vcs_info 'prompt' &> /dev/null; then
         # No vcs_info available, only set cwd
         prompt_vcs=""
@@ -47,6 +49,7 @@ prompt_blueyed_precmd () {
     else
         [[ -n $vcs_info_msg_0_ ]] && prompt_vcs="${PR_RESET}$vcs_info_msg_0_ "
         cwd="${vcs_info_msg_1_%.}"
+        rprompt_extra+="${vcs_info_msg_2_}"
 
         # Check if $cwd (from vcs_info) is in $PWD - which may not be the case with symbolic links
         # (e.g. some SVN symlink in a CVS repo)
@@ -84,7 +87,7 @@ prompt_blueyed_precmd () {
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
-    prompt_cwd="$yellow${cwd}"
+    prompt_cwd="$cwdtext${cwd}"
 
     # http_proxy defines color of "@" between user and host
     if [[ -n $http_proxy ]] ; then
@@ -102,7 +105,6 @@ prompt_blueyed_precmd () {
     local -h   histnr="${normtext}!${gray}%!"
     local -h     time="${normtext}%*"
 
-    local -h prompt_extra rprompt_extra
     # $debian_chroot:
     if [[ -n "$debian_chroot" ]]; then
         prompt_extra+="${normtext}(dch:$debian_chroot) "
@@ -220,6 +222,8 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st
 function +vi-git-stash() {
     local -a stashes
 
+    [[ $1 == 0 ]] || return # do this only once vcs_info_msg_0_.
+
     if [[ -s ${hook_com[base]}/.git/refs/stash ]] ; then
         stashes=$(git stash list 2>/dev/null | wc -l)
         hook_com[misc]+=" $bracket_open$hitext${stashes} stashed$bracket_close"
@@ -230,6 +234,8 @@ function +vi-git-stash() {
 function +vi-git-st() {
     local ahead behind remote
     local -a gitstatus
+
+    [[ $1 == 0 ]] || return # do this only once vcs_info_msg_0_.
 
     # Are we on a remote-tracking branch?
     remote=${$(git rev-parse --verify ${hook_com[branch]}@{upstream} \
@@ -292,7 +298,7 @@ fi
 
 # set formats {{{1
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
-FMT_BRANCH=" %{$fg_no_bold[blue]%}↳ %{$fg_no_bold[blue]%}%s:%b%m%{$fg_no_bold[blue]%}%u%{$fg_bold[magenta]%}%c" # e.g. master¹²
+FMT_BRANCH=" %{$fg_no_bold[blue]%}↳ %{$fg_no_bold[blue]%}%s:%b%{$fg_no_bold[blue]%}%u%{$fg_bold[magenta]%}%c" # e.g. master¹²
 FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
 FMT_PATH="%R%{$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 
@@ -302,9 +308,10 @@ zstyle ':vcs_info:*:prompt:*' check-for-changes true
 # zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
-zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "${FMT_PATH}"
-zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "${FMT_PATH}"
-zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            "%~"
+zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "${FMT_PATH}" "%m"
+zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "${FMT_PATH}" "%m"
+zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            "%~"          ""
+zstyle ':vcs_info:*:prompt:*' max-exports 3
 
 
 #  vim: set ft=zsh ts=4 sw=4 et:
