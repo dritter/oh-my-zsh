@@ -221,7 +221,9 @@ sudosession() {
   done
 
   [[ $USER == $user ]] && { echo "Already $user."; return 1; }
+
   sudohome=$HOME/.sudosession/$user
+  tempfile=$(tempfile -m 0700)
   if [[ ! -d $sudohome ]]; then
     mkdir -p $sudohome
     # Copy dotfiles repo from user home
@@ -232,13 +234,13 @@ sudosession() {
     sudo env HOME=$sudohome make install_checkout
     cd $OLDPWD
   fi
+  echo -n "/usr/bin/env HOME=$sudohome SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL" > $tempfile
   if (( $#@ )); then
     # execute the command/arguments:
-    sudo -u $user env HOME=$sudohome SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL -c "$*"
-  else
-    # interactive session:
-    sudo -u $user env HOME=$sudohome SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL
+    echo " -c '${(qqq)@}'" >> $tempfile
   fi
+  sudo -u $user $tempfile
+  command rm $tempfile
 }
 alias rs=sudosession  # mnemonic: "root session"
 
