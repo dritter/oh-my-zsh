@@ -272,7 +272,6 @@ function +vi-git-st() {
     fi
 }
 
-
 # Vim mode indicator {{{1
 # Taken from the vi-mode plugin, but without `bindkey -v`.
 function zle-line-init zle-keymap-select {
@@ -296,15 +295,12 @@ if [[ "$RPS1" == "" && "$RPROMPT" == "" ]]; then
 fi
 
 
-# set formats {{{1
+# vcs_info styling formats {{{1
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
 FMT_BRANCH=" %{$fg_no_bold[blue]%}↳ %{$fg_no_bold[blue]%}%s:%b%{$fg_no_bold[blue]%}%u%{$fg_bold[magenta]%}%c" # e.g. master¹²
 FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
 FMT_PATH="%R%{$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 
-# check-for-changes can be really slow.
-# you should disable it, if you work with large repositories
-zstyle ':vcs_info:*:prompt:*' check-for-changes true
 # zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
@@ -313,5 +309,8 @@ zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "${FMT
 zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            "%~"          ""
 zstyle ':vcs_info:*:prompt:*' max-exports 3
 
+# check-for-changes can be really slow.
+# you should disable it, if you work with large repositories
+zstyle ':vcs_info:*:prompt:*' check-for-changes true
 
 #  vim: set ft=zsh ts=4 sw=4 et:
