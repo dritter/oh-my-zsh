@@ -223,7 +223,8 @@ sudosession() {
   [[ $USER == $user ]] && { echo "Already $user."; return 1; }
 
   sudohome=$HOME/.sudosession/$user
-  tempfile=$(tempfile -m 0700)
+  tempfile=$(mktemp -t sudosession.XXXXXX)
+  chmod +x $tempfile
   if [[ ! -d $sudohome ]]; then
     mkdir -p $sudohome
     # Copy dotfiles repo from user home
