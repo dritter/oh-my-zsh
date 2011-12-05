@@ -146,6 +146,7 @@ screen() {
     sleep 2
   fi
   if [ -x /usr/bin/tput ] && [ $(/usr/bin/tput colors 2>/dev/null || echo 0) -eq 256 ]; then
+    # ~/.terminfo ships s/screen-256color.
     TERM=$term command screen -T screen-256color "$@"
   else
     TERM=$term command screen "$@"
