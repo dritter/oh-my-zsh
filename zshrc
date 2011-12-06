@@ -264,6 +264,11 @@ if [[ $(hostname -f) = *.verdi4u.de ]]; then
   fi
 fi
 
+# wrap ~/.dotfiles/usr/bin/hub with GITHUB_TOKEN for authentication
+hub() {
+  GITHUB_TOKEN=$(dotfiles-decrypt 'U2FsdGVkX1+t8r0ZPLHFzBSbPrBVLz/VPb7U2+WtJS1PKdVzzsVlmfPcIZdOlJ88HTXx2hVPL8IvkmIThZjCHA==') command hub "$@"
+}
+
 # goodness from grml-etc-core {{{1
 # http://git.grml.org/?p=grml-etc-core.git;a=summary
 
