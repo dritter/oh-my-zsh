@@ -266,7 +266,14 @@ fi
 
 # wrap ~/.dotfiles/usr/bin/hub with GITHUB_TOKEN for authentication
 hub() {
-  GITHUB_TOKEN=$(dotfiles-decrypt 'U2FsdGVkX1+t8r0ZPLHFzBSbPrBVLz/VPb7U2+WtJS1PKdVzzsVlmfPcIZdOlJ88HTXx2hVPL8IvkmIThZjCHA==') command hub "$@"
+  if ! (( $+_ghtoken_ )); then
+    if [[ -f ~/.dotfiles/.passwd ]] ; then
+      _ghtoken_="$(dotfiles-decrypt 'U2FsdGVkX1+t8r0ZPLHFzBSbPrBVLz/VPb7U2+WtJS1PKdVzzsVlmfPcIZdOlJ88HTXx2hVPL8IvkmIThZjCHA==')"
+    else
+      _ghtoken_=
+    fi
+  fi
+  GITHUB_TOKEN=$_ghtoken_ command hub "$@"
 }
 
 # goodness from grml-etc-core {{{1
