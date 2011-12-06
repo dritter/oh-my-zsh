@@ -29,7 +29,7 @@ prompt_blueyed_precmd () {
     local -h        blue="%{$fg_no_bold[blue]%}"
     local -h     cwdtext="%{$fg_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
-    local -h  isroottext="%{$fg_no_bold[red]%}"
+    local -h    roottext="%{$fg_bold[green]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_no_bold[white]%}"
@@ -96,7 +96,7 @@ prompt_blueyed_precmd () {
         prompt_at="${normtext}@"
     fi
 
-    local -h     user="%(#.$isroottext.$normtext)%n"
+    local -h     user="%(#.$roottext.$normtext)%n"
     if [ -n "$SSH_CLIENT" ] ; then
         local -h     host="${hitext}%m"
     else
