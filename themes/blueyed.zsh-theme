@@ -69,7 +69,7 @@ prompt_blueyed_precmd () {
     for i in ${(ps:/:)${cwd}}; do
             if [[ -h "$cur/$i" ]]; then
                     color=$ln_color
-                    colored+="${color}→$i${hitext}/"
+                    colored+="${color}$i${hitext}/"
             else
                     colored+="$i/"
             fi
