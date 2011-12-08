@@ -20,7 +20,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 PKG="byobu"
-[ -z "${BYOBU_PREFIX}" ] && export BYOBU_PREFIX="/home/daniel/.dotfiles/oh-my-zsh/plugins/byobu"
+[ -r "$HOME/.byoburc" ] && . "$HOME/.byoburc"
+[ -z "${BYOBU_PREFIX}" ] && export BYOBU_PREFIX="/usr" || export BYOBU_PREFIX
 . "${BYOBU_PREFIX}/lib/${PKG}/include/common"
 
 # Ensure that all updates get run immediately
@@ -52,10 +53,24 @@ if ! grep -qs "^screen_upper_left=" "$BYOBU_CONFIG_DIR/status"; then
 	rm -f "$BYOBU_CONFIG_DIR/status" "$BYOBU_CONFIG_DIR/statusrc"
 fi
 
+# NOTE: Older version of Screen have an arbitrary limit of only being able
+# to change colors 16 times in this 'hardstatus string'.
+# Whitelist distros where the fix has been released.
+# Also committed in Upstream git, but not yet released.
+#  * http://savannah.gnu.org/bugs/?22146
+MC=1
+if command -v egrep >/dev/null; then
+	if ! command -v tmux >/dev/null; then
+		if egrep -qsi "ubuntu|debian" /etc/issue 2>/dev/null || [ -e "/etc/arch-release" ]; then
+			MC=0
+		fi
+	fi
+fi
+
 # Affects: First runs with no configuration
 # Seed the configuration
 # Setup initial local user configuration
-[ -r "$BYOBU_CONFIG_DIR/color" ] || printf "BACKGROUND=k\nFOREGROUND=w\nMONOCHROME=0" > "$BYOBU_CONFIG_DIR/color"
+[ -r "$BYOBU_CONFIG_DIR/color" ] || printf "BACKGROUND=k\nFOREGROUND=w\nMONOCHROME=$MC" > "$BYOBU_CONFIG_DIR/color"
 [ -r "$BYOBU_CONFIG_DIR/profile" ] || echo "source \$BYOBU_PREFIX/share/$PKG/profiles/common" > "$BYOBU_CONFIG_DIR/profile"
 [ -r "$BYOBU_CONFIG_DIR/profile.tmux" ] || echo "source \$BYOBU_PREFIX/share/$PKG/profiles/tmux" > "$BYOBU_CONFIG_DIR/profile.tmux"
 [ -r "$BYOBU_CONFIG_DIR/keybindings" ] || echo "source \$BYOBU_PREFIX/share/$PKG/keybindings/common" > "$BYOBU_CONFIG_DIR/keybindings"

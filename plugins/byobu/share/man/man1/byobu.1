@@ -91,7 +91,7 @@ Note that BYOBU_CONFIG_DIR=\fI$XDG_CONFIG_HOME/byobu\fP if defined, and \fI$HOME
 
 \fBuptime\fP \- the total system uptime since last boot; displayed in the lower bar toward the right in blue text on a grey background
 
-\fBusers\fP \- the number of remote users logged into the system via sshd, empty if 0 users; displayed in the lower bar toward the right in red text on a grey background with a trailing '#' sign
+\fBusers\fP \- the number of remote users logged into the system via sshd, empty if 0 users; displayed in the lower bar toward the right in red text on a grey background with a trailing '#' sign; set USERS_DISTINCT=1 to instead count the number of distinct users logged into the system (rather than open ssh sessions)
 
 \fBwhoami\fP \- the name of the user who owns the screen session; displayed in the upper bar toward the far right in bold black text on a grey background
 
@@ -177,6 +177,10 @@ byobu keybindings can be user defined in /usr/share/byobu/keybindings/ (or withi
 \fBCtrl-a k\fP \- Kill the current window
 
 \fBCtrl-a ~\fP \- Save the current window's scrollback buffer
+
+.SH "SCROLLBACK, COPY, PASTE MODES"
+
+Each window in Byobu has up to 10,000 lines of scrollback history, which you can enter and navigate using the \fBalt-pgup\fP and \fBalt-pgdn\fP keys.  Exit this scrollback mode by hitting \fBenter\fP.  You can also easily copy and paste text from scrollback mode.  To do so, enter scrollback using \fBalt-pgup\fP or \fBalt-pgdn\fP, press the \fBspacebar\fP to start highlighting text, use \fBup/down/left/right/pgup/pgdn\fP to select the text, and press \fBenter\fP to copy the text.  You can then paste the text using \fBalt-insert\fP or \fBctrl-a-]\fP.
 
 .SH "BUGS"
 
