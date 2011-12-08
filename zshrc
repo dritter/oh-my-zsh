@@ -276,6 +276,8 @@ hub() {
   GITHUB_TOKEN=$_ghtoken_ command hub "$@"
 }
 
+# autoload $ZSH/functions/*(:t)
+
 # goodness from grml-etc-core {{{1
 # http://git.grml.org/?p=grml-etc-core.git;a=summary
 
