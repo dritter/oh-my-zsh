@@ -301,7 +301,7 @@ fi
 
 # vcs_info styling formats {{{1
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
-FMT_BRANCH=" %{$fg_no_bold[blue]%}↳ %{$fg_no_bold[blue]%}%s:%b%{$fg_no_bold[blue]%}%u%{$fg_bold[magenta]%}%c" # e.g. master¹²
+FMT_BRANCH=" %{$fg_no_bold[blue]%}↳ %{$fg_no_bold[blue]%}%s:%b%{$fg_bold[blue]%}%u%{$fg_bold[magenta]%}%c" # e.g. master¹²
 FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
 FMT_PATH="%R%{$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 
