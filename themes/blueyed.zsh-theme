@@ -165,13 +165,13 @@ prompt_blueyed_precmd () {
       rprompt_extra+=("${normtext}[$DISTRO]")
     fi
 
-    local -h ret_status disp
+    local -h disp
     if [ $exitstatus -ne 0 ] ; then
         disp="es:$exitstatus"
         if [ $exitstatus -gt 128 -a $exitstatus -lt 163 ] ; then
             disp+=" (SIG$signals[$exitstatus-127])"
         fi
-        ret_status="${bracket_open}${alerttext}${disp}${bracket_close} "
+        prompt_extra+=("${bracket_open}${alerttext}${disp}${bracket_close}")
     fi
 
     # Running and suspended jobs, parsed via $jobstates
