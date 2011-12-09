@@ -263,9 +263,13 @@ function +vi-git-st() {
 
         remote=${remote%/$local_branch}
 
-        [[ $remote == "origin" ]] \
-            && remote_color="%{$fg_no_bold[blue]%}" \
-            || remote_color="%{$fg_bold[blue]%}"
+        # abbriviate "master@origin" (common/normal)
+        if [[ $remote == "origin" ]] ; then
+          remote=o
+          [[ $local_branch == "master" ]] && local_branch="m"
+        else
+          remote_color="%{$fg_bold[blue]%}"
+        fi
 
         hook_com[branch]="${branch_color}${local_branch}$remote_color@${remote}"
         [[ -n $gitstatus ]] && hook_com[branch]+="$bracket_open$normtext${(j:/:)gitstatus}$bracket_close"
