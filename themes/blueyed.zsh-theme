@@ -188,7 +188,7 @@ prompt_blueyed_precmd () {
         [[ -z $jobstatus ]] || prompt_extra+=("${bracket_open}${lighttext}jobs:${jobstatus}${bracket_close}")
     fi
 
-    local -h    prefix="%{$normtext%}❤ "
+    # local -h    prefix="%{$normtext%}❤ "
 
     # whitespace and reset for extra prompts if non-empty:
     [[ -n $prompt_extra ]]  &&  prompt_extra=" ${(j: :)prompt_extra}$PR_RESET"
@@ -263,7 +263,7 @@ function +vi-git-st() {
 
         remote=${remote%/$local_branch}
 
-        # abbriviate "master@origin" (common/normal)
+        # abbreviate "master@origin" (common/normal)
         if [[ $remote == "origin" ]] ; then
           remote=o
           [[ $local_branch == "master" ]] && local_branch="m"
