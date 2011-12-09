@@ -40,7 +40,7 @@ prompt_blueyed_precmd () {
     local -h bracket_open="${darkdelim}["
     local -h bracket_close="${darkdelim}]"
 
-    local -h prompt_extra rprompt_extra
+    local -ah prompt_extra rprompt_extra
 
     if ! vcs_info 'prompt' &> /dev/null; then
         # No vcs_info available, only set cwd
@@ -49,7 +49,7 @@ prompt_blueyed_precmd () {
     else
         [[ -n $vcs_info_msg_0_ ]] && prompt_vcs="${PR_RESET}$vcs_info_msg_0_ "
         cwd="${vcs_info_msg_1_%.}"
-        rprompt_extra+="${vcs_info_msg_2_}"
+        rprompt_extra+=("${vcs_info_msg_2_}")
 
         # Check if $cwd (from vcs_info) is in $PWD - which may not be the case with symbolic links
         # (e.g. some SVN symlink in a CVS repo)
@@ -107,14 +107,14 @@ prompt_blueyed_precmd () {
 
     # $debian_chroot:
     if [[ -n "$debian_chroot" ]]; then
-        prompt_extra+="${normtext}(dch:$debian_chroot) "
+        prompt_extra+=("${normtext}(dch:$debian_chroot)")
     fi
     # OpenVZ container ID (/proc/bc is only on the host):
     if [[ -r /proc/user_beancounters && ! -d /proc/bc ]]; then
-        prompt_extra+="${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
+        prompt_extra+=("${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')]")
     fi
     if [[ -n $VIRTUAL_ENV ]]; then
-        prompt_extra+="$normtext(venv:$(basename $VIRTUAL_ENV))"
+        prompt_extra+=("$normtext(venv:$(basename $VIRTUAL_ENV))")
     fi
 
 
@@ -162,7 +162,7 @@ prompt_blueyed_precmd () {
       DISTRO+=" ($(uname -m))"
     fi
     if [[ -n $DISTRO ]]; then
-      rprompt_extra+=" ${normtext}[$DISTRO]"
+      rprompt_extra+=("${normtext}[$DISTRO]")
     fi
 
     local -h ret_status disp
@@ -185,18 +185,18 @@ prompt_blueyed_precmd () {
         done
         [[ $suspended -gt 0 ]] && jobstatus+="${hitext}${suspended}${lighttext}s"
         [[ $running -gt 0 ]] && jobstatus+="${hitext}${running}${lighttext}r"
-        [[ -z $jobstatus ]] || prompt_extra+=" ${bracket_open}${lighttext}jobs:${jobstatus}${bracket_close}"
+        [[ -z $jobstatus ]] || prompt_extra+=("${bracket_open}${lighttext}jobs:${jobstatus}${bracket_close}")
     fi
 
     local -h    prefix="%{$normtext%}❤ "
 
     # whitespace and reset for extra prompts if non-empty:
-    [[ -n $prompt_extra ]] && prompt_extra=" $prompt_extra$PR_RESET"
-    [[ -n $rprompt_extra ]] && rprompt_extra="$rprompt_extra$PR_RESET "
+    [[ -n $prompt_extra ]]  &&  prompt_extra=" ${(j: :)prompt_extra}$PR_RESET"
+    [[ -n $rprompt_extra ]] && rprompt_extra="${(j: :)rprompt_extra}$PR_RESET "
 
     # Assemble prompt:
-    local -h rprompt="$rprompt_extra $histnr $time${PR_RESET}"
-    local -h prompt="${ret_status}${user}${prompt_at}${host} ${prompt_cwd}${prompt_extra}"
+    local -h rprompt="$rprompt_extra$histnr $time${PR_RESET}"
+    local -h prompt="${user}${prompt_at}${host} ${prompt_cwd}${ret_status}$prompt_extra"
     # right trim:
     prompt="${prompt%% #} "
 
