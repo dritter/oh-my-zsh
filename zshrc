@@ -238,7 +238,7 @@ sudosession() {
   echo -n "/usr/bin/env HOME=$sudohome SSH_AUTH_SOCK=$SSH_AUTH_SOCK $SHELL" > $tempfile
   if (( $#@ )); then
     # execute the command/arguments:
-    echo -E " -c '${(qqq)@}'" >> $tempfile
+    echo -E " -c '"${(q)*}"'" >> $tempfile
   fi
   sudo -u $user $tempfile
   command rm $tempfile
