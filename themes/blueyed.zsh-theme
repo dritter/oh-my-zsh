@@ -30,6 +30,7 @@ prompt_blueyed_precmd () {
     local -h     cwdtext="%{$fg_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
     local -h    roottext="%{$fg_bold[green]%}"
+    local -h  distrotext="$gray"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_no_bold[white]%}"
@@ -117,53 +118,11 @@ prompt_blueyed_precmd () {
         prompt_extra+=("$normtext(venv:$(basename $VIRTUAL_ENV))")
     fi
 
-
-    # information about release, taken and adopted from byobu:
-    if false && ! (( $+DISTRO )) ; then
-      if [ -r "/etc/issue" ]; then
-        # lsb_release is *really* slow;  try to use /etc/issue first
-        issue=$(grep -m1 "^[A-Za-z]" /etc/issue)
-        case "$issue" in
-          Ubuntu*) DISTRO=${${${issue%%\(*}%%\\*}%% } ;;
-          Debian*) DISTRO="Debian $(</etc/debian_version)" ;;
-          *) if [ -r /etc/SuSE-release ] ; then
-              # TODO: use ${//}
-              DISTRO="SuSE $(fgrep VERSION /etc/SuSE-release | cut -f2 -d= | tr -d ' ').$(fgrep PATCHLEVEL /etc/SuSE-release | cut -f2 -d= | tr -d ' ')"
-            elif [ -r /etc/redhat-release ] ; then
-              DISTRO=$(</etc/redhat-release)
-              DISTRO=${DISTRO/Red Hat Enterprise Linux Server/RHEL}
-              DISTRO=${DISTRO/ Linux/} # for CentOS
-              DISTRO=${DISTRO/release /}
-              DISTRO=${DISTRO/ \(*/}
-            elif ! which lsb_release >/dev/null 2>&1; then
-              DISTRO=$(echo "$issue" | sed "s/ [^0-9]* / /" | awk '{print $1 " " $2}')
-            fi
-          ;;
-        esac
-      fi
-
-      if ! (( $+DISTRO )) && which lsb_release >/dev/null 2>&1; then
-        # If lsb_release is available, use it
-        r=$(lsb_release -s -d)
-        case "$r" in
-          Ubuntu*.*.*)
-            # Use the -d if an Ubuntu LTS
-            DISTRO="$r"
-          ;;
-          *)
-            # But for other distros the description
-            # is too long, so build from -i and -r
-            DISTRO="${(f)$(lsb_release -s -i -r)}"
-            DISTRO=${DISTRO/RedHatEnterpriseServer/RHEL}
-          ;;
-        esac
-      fi
-      (( $+DISTRO )) || DISTRO="unknown"
-      DISTRO+=" ($(uname -m))"
+    # Distribution
+    if ! (( $+DISTRO )); then
+        DISTRO="$(get_distro)"
     fi
-    if [[ -n $DISTRO ]]; then
-      rprompt_extra+=("${normtext}[$DISTRO]")
-    fi
+    rprompt_extra+=("${bracket_open}${distrotext}$DISTRO${bracket_close}")
 
     local -h disp
     if [ $exitstatus -ne 0 ] ; then
