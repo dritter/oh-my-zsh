@@ -244,7 +244,7 @@ sudosession() {
   echo -nE " $SHELL" >> $tempfile
   if (( $#@ )); then
     # execute the command/arguments:
-    echo -E " -c '"${(q)*}"'" >> $tempfile
+    echo -E " -i -c '"${(q)*}"'" >> $tempfile
   fi
   sudo -u $user $tempfile
   command rm $tempfile
