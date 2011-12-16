@@ -250,6 +250,7 @@ sudosession() {
   command rm $tempfile
 }
 alias rs=sudosession  # mnemonic: "root session"
+compdef _command sudosession # complete commands
 
 # connect to qemu system by default
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
