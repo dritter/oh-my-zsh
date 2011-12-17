@@ -30,7 +30,6 @@ prompt_blueyed_precmd () {
     local -h     cwdtext="%{$fg_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
     local -h    roottext="%{$fg_bold[green]%}"
-    local -h  distrotext="$gray"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_no_bold[white]%}"
@@ -117,12 +116,6 @@ prompt_blueyed_precmd () {
     if [[ -n $VIRTUAL_ENV ]]; then
         prompt_extra+=("$normtext(venv:$(basename $VIRTUAL_ENV))")
     fi
-
-    # Distribution
-    if ! (( $+DISTRO )); then
-        DISTRO="$(get_distro)"
-    fi
-    rprompt_extra+=("${bracket_open}${distrotext}$DISTRO${bracket_close}")
 
     local -h disp
     if [ $exitstatus -ne 0 ] ; then
@@ -252,10 +245,15 @@ function vi_mode_prompt_info() {
   echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
 }
 
-# define right prompt, if it wasn't defined by a theme
-if [[ "$RPS1" == "" && "$RPROMPT" == "" ]]; then
-  RPS1='$(vi_mode_prompt_info)'
-fi
+# Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
+RPS1_list+=('$(vi_mode_prompt_info)')
+
+# Distribution
+local -h distrotext="%{$fg_bold[black]%}"
+RPS1_list+=("$distrotext$(get_distro)")
+
+RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
+RPS1="${(j: :)RPS1_list}$PR_RESET"
 
 
 # vcs_info styling formats {{{1
