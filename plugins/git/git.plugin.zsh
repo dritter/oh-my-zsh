@@ -45,6 +45,10 @@ gsmc() {
     echo $summary ; return 4
   fi
   summary=( ${(f)summary} )
+
+  # TODO: check that commits are pushed?!
+  # relevant?! echo $summary | grep -o "Warn: $1 doesn't contain commit" && return 3
+
   git commit -m "Update submodule $1 ${${(ps: :)summary[1]}[3]}."$'\n\n'"${(F)summary}" "$1"
 }
 # "git submodule add":
