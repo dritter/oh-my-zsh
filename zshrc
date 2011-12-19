@@ -224,7 +224,7 @@ sudosession() {
 
   sudohome=$HOME/.sudosession/$user
   tempfile=$(mktemp -t sudosession.XXXXXX)
-  chmod +x $tempfile
+  chmod u+x $tempfile
   if [[ ! -d $sudohome ]]; then
     mkdir -p $sudohome
     # Copy dotfiles repo from user home
@@ -246,8 +246,9 @@ sudosession() {
     # execute the command/arguments:
     echo -E " -i -c '"${(q)*}"'" >> $tempfile
   fi
+  echo 'command rm $0' >> $tempfile
+  sudo chown $user $tempfile
   sudo -u $user $tempfile
-  command rm $tempfile
 }
 alias rs=sudosession  # mnemonic: "root session"
 compdef 'shift words; (( CURRENT-- )); _normal' sudosession
