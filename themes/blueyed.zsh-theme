@@ -246,7 +246,7 @@ function vi_mode_prompt_info() {
 }
 
 # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
-RPS1_list+=('$(vi_mode_prompt_info)')
+RPS1_list=('$(vi_mode_prompt_info)')
 
 # Distribution
 local -h distrotext="%{$fg_bold[black]%}"
