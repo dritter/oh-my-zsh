@@ -246,7 +246,7 @@ sudosession() {
     # execute the command/arguments:
     echo -E " -i -c '"${(q)*}"'" >> $tempfile
   fi
-  echo 'command rm $0' >> $tempfile
+  echo "\ncommand rm \$0" >> $tempfile
   sudo chown $user $tempfile
   sudo -u $user $tempfile
 }
