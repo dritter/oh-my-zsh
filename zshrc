@@ -244,6 +244,7 @@ sudosession() {
   echo -nE " $SHELL" >> $tempfile
   if (( $#@ )); then
     # execute the command/arguments:
+    # TODO: when using `-i` extra care should be taken to check for $PWD being the same!
     echo -E " -i -c '"${(q)*}"'" >> $tempfile
   fi
   echo "\ncommand rm \$0" >> $tempfile
