@@ -252,7 +252,7 @@ sudosession() {
   sudo -u $user $tempfile
 }
 alias rs=sudosession  # mnemonic: "root session"
-compdef 'shift words; (( CURRENT-- )); _normal' sudosession
+compdef "_arguments '-u[user name]:user name:_users' '*::arguments: _normal'" sudosession
 
 # connect to qemu system by default
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
