@@ -287,6 +287,9 @@ hub() {
 
 # autoload $ZSH/functions/*(:t)
 
+# Display "^C" when aborting zle
+TRAPINT() { print -nP %F{red}\^C%f; return 1 }
+
 # goodness from grml-etc-core {{{1
 # http://git.grml.org/?p=grml-etc-core.git;a=summary
 
