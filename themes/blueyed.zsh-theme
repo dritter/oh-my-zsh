@@ -246,14 +246,17 @@ function vi_mode_prompt_info() {
 }
 
 # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
-RPS1_list=('$(vi_mode_prompt_info)')
+# Do not do this when in a midnight commander subshell.
+if [[ $(ps --no-headers --format comm $PPID) != "mc" ]]; then
+    RPS1_list=('$(vi_mode_prompt_info)')
 
-# Distribution
-local -h distrotext="%{$fg_bold[black]%}"
-RPS1_list+=("$distrotext$(get_distro)")
+    # Distribution
+    local -h distrotext="%{$fg_bold[black]%}"
+    RPS1_list+=("$distrotext$(get_distro)")
 
-RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
-RPS1="${(j: :)RPS1_list}$PR_RESET"
+    RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
+    RPS1="${(j: :)RPS1_list}$PR_RESET"
+fi
 
 
 # vcs_info styling formats {{{1
