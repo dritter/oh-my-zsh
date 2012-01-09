@@ -180,7 +180,7 @@ fpdiv() {
 	n=${n%?}
 	whole=${n%${chunk}}
 	part=${n#${whole}}
-	_RET=${whole}${part:+.${part}}
+	_RET=${whole:-0}${part:+.${part}}
 	return
 }
 
@@ -248,6 +248,7 @@ status_freq() {
 		disk_io)	_RET=3 ;;
 		distro)		_RET=9999999 ;;
 		ec2_cost)	_RET=601 ;;
+		entropy)	_RET=5 ;;
 		fan_speed)	_RET=23 ;;
 		hostname)	_RET=607 ;;
 		ip_address)	_RET=127 ;;
