@@ -1,5 +1,11 @@
-# Based on http://kriener.org/articles/2009/06/04/zsh-prompt-magic
-# Some Git ideas from http://eseth.org/2010/git-in-zsh.html (+vi-git-stash, +vi-git-st, ..)
+# blueyed's theme for zsh
+#
+# Features:
+#  - color hostnames according to its hashed value (see color_for_host)
+#
+# Origin:
+#  - Based on http://kriener.org/articles/2009/06/04/zsh-prompt-magic
+#  - Some Git ideas from http://eseth.org/2010/git-in-zsh.html (+vi-git-stash, +vi-git-st, ..)
 #
 # TODO: setup $prompt_cwd in chpwd hook only (currently adding the hook causes infinite recursion via vcs_info)
 
@@ -17,11 +23,12 @@ _strip_escape_codes() {
 
 add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
-    # start profiling, via http://stackoverflow.com/questions/4351244/can-i-profile-my-zshrc-zshenv
-    # PS4='+$(date "+%s:%N") %N:%i> '
-    # exec 3>&2 2>/tmp/startlog.$$
-    # setopt xtrace
+    # Start profiling, via http://stackoverflow.com/questions/4351244/can-i-profile-my-zshrc-zshenv
+      # PS4='+$(date "+%s:%N") %N:%i> '
+      # exec 3>&2 2>/tmp/startlog.$$
+      # setopt xtrace
 
+    # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
     local -h exitstatus=$? # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
     local -h    normtext="%{$fg_no_bold[green]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
@@ -34,12 +41,10 @@ prompt_blueyed_precmd () {
     local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_no_bold[white]%}"
     local -h   darkdelim="$gray"
-    # list of colors: cyan, white, yellow, magenta, black, blue, red, grey, green
-    local -h prompt_cwd prompt_vcs
-    local -h cwd
     local -h bracket_open="${darkdelim}["
     local -h bracket_close="${darkdelim}]"
 
+    local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
     if ! vcs_info 'prompt' &> /dev/null; then
@@ -59,30 +64,29 @@ prompt_blueyed_precmd () {
     fi
 
     # Highlight symbolic links in $cwd
-    # typeset -A color_map
-    # color_map=("${(s:=:)${LS_COLORS//:/=}}" '')
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
-    # fallback to default, if "target" is used
+    # Fallback to default, if "target" is used
     [ "$ln_color" = "target" ] && ln_color="01;36"
     [[ -z $ln_color ]] && ln_color=${fg_bold[cyan]} || ln_color="%{"$'\e'"[${ln_color}m%}"
     local colored="/" cur color i
     for i in ${(ps:/:)${cwd}}; do
-            if [[ -h "$cur/$i" ]]; then
-                    color=$ln_color
-                    colored+="${color}$i${cwdtext}/"
-            else
-                    colored+="$i/"
-            fi
-            cur+="/$i"
+        if [[ -h "$cur/$i" ]]; then
+            color=$ln_color
+            colored+="${color}$i${cwdtext}/"
+        else
+            colored+="$i/"
+        fi
+        cur+="/$i"
     done
+
     # Remove trailing slash, if not in root
     if [[ ${#colored} > 1 ]]; then colored=${colored%%/}; fi
     cwd="${colored/#$HOME/~}"
 
     # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
     if [[ ! -w $PWD ]]; then
-            local cleancwd="$(_strip_escape_codes "$cwd")"
-            cwd="${nonrwtext}${cleancwd}"
+        local cleancwd="$(_strip_escape_codes "$cwd")"
+        cwd="${nonrwtext}${cleancwd}"
     fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
@@ -97,13 +101,12 @@ prompt_blueyed_precmd () {
     fi
 
     local -h     user="%(#.$roottext.$normtext)%n"
+    # Color host name according to its hashed value. Use bold color if connected through SSH.
     if [ -n "$SSH_CLIENT" ] ; then
         local -h     host="%{${fg_bold[$(color_for_host)]}%}%m"
     else
         local -h     host="%{${fg_no_bold[$(color_for_host)]}%}%m"
     fi
-    local -h   histnr="${normtext}!${gray}%!"
-    local -h     time="${normtext}%*"
 
     # $debian_chroot:
     if [[ -n "$debian_chroot" ]]; then
@@ -147,6 +150,8 @@ prompt_blueyed_precmd () {
     [[ -n $rprompt_extra ]] && rprompt_extra="${(j: :)rprompt_extra}$PR_RESET "
 
     # Assemble prompt:
+    local -h  histnr="${normtext}!${gray}%!"
+    local -h    time="${normtext}%*"
     local -h rprompt="$rprompt_extra$histnr $time${PR_RESET}"
     local -h prompt="${user}${prompt_at}${host} ${prompt_cwd}${ret_status}$prompt_extra"
     # right trim:
@@ -161,9 +166,9 @@ prompt_blueyed_precmd () {
     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
 $prompt_vcs%{%(#.${fg_bold[red]}.${fg_bold[green]})%}%# ${PR_RESET}"
 
-    # end profiling
-    # unsetopt xtrace
-    # exec 2>&3 3>&-
+    # End profiling
+        # unsetopt xtrace
+        # exec 2>&3 3>&-
 }
 
 
@@ -174,7 +179,7 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st
 function +vi-git-stash() {
     local -a stashes
 
-    [[ $1 == 0 ]] || return # do this only once vcs_info_msg_0_.
+    [[ $1 == 0 ]] || return # do this only once for vcs_info_msg_0_.
 
     if [[ -s ${hook_com[base]}/.git/refs/stash ]] ; then
         stashes=$(git stash list 2>/dev/null | wc -l)
@@ -259,18 +264,17 @@ if [[ $(ps --no-headers --format comm $PPID) != "mc" ]]; then
 fi
 
 color_for_host() {
-    # c=(cyan white yellow magenta black blue red default green grey)
-    c=(cyan white yellow magenta blue default green)
-    h=$(hostname -f)
-    echo $(hash_value_from_list $h "$c")
+    colors=(cyan white yellow magenta blue default green)
+    host=$(hostname -f)
+    echo $(hash_value_from_list $host "$colors")
 }
 
 # Hash the given value to an item from the given list.
 hash_value_from_list() {
-    v=$1
-    l=(${(s: :)2})
-    index=$(( $(sumcharvals $v) % $#l + 1 ))
-    echo $l[$index]
+    value=$1
+    list=(${(s: :)2})
+    index=$(( $(sumcharvals $value) % $#list + 1 ))
+    echo $list[$index]
 }
 
 # vcs_info styling formats {{{1
