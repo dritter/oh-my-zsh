@@ -98,9 +98,9 @@ prompt_blueyed_precmd () {
 
     local -h     user="%(#.$roottext.$normtext)%n"
     if [ -n "$SSH_CLIENT" ] ; then
-        local -h     host="${hitext}%m"
+        local -h     host="%{${fg_bold[$(color_for_host)]}%}%m"
     else
-        local -h     host="${normtext}%m"
+        local -h     host="%{${fg_no_bold[$(color_for_host)]}%}%m"
     fi
     local -h   histnr="${normtext}!${gray}%!"
     local -h     time="${normtext}%*"
@@ -258,6 +258,20 @@ if [[ $(ps --no-headers --format comm $PPID) != "mc" ]]; then
     RPS1="${(j: :)RPS1_list}$PR_RESET"
 fi
 
+color_for_host() {
+    # c=(cyan white yellow magenta black blue red default green grey)
+    c=(cyan white yellow magenta blue default green)
+    h=$(hostname -f)
+    echo $(hash_value_from_list $h "$c")
+}
+
+# Hash the given value to an item from the given list.
+hash_value_from_list() {
+    v=$1
+    l=(${(s: :)2})
+    index=$(( $(sumcharvals $v) % $#l + 1 ))
+    echo $l[$index]
+}
 
 # vcs_info styling formats {{{1
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
