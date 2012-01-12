@@ -338,6 +338,11 @@ salias llog="$PAGER /var/log/syslog"     # take a look at the syslog
 salias tlog="tail -f /var/log/syslog"    # follow the syslog
 
 
+# Generic aliases
+# Display 10 biggest files/dirs
+alias dusch='du -sch *(D) | sort -rh | head -n11'
+
+
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
