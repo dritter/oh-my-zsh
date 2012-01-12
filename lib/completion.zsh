@@ -77,3 +77,5 @@ zstyle ':completion:*:descriptions' format "%{$fg_no_bold[green]%}%U%B%d:%b%u%{$
 zstyle ':completion:*:warnings' format '%BNo matches for: %d%b'
 zstyle ':completion:*:functions' ignored-patterns '_*'
 
+# Do not group completions (keeps e.g. "host" separated from "file")
+zstyle ':completion:*' group-name ''
