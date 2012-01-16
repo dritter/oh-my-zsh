@@ -341,6 +341,7 @@ salias tlog="tail -f /var/log/syslog"    # follow the syslog
 # Generic aliases
 # Display 10 biggest files/dirs
 alias dusch='du -sch *(D) | sort -rh | head -n11'
+alias phwd='echo $(hostname):$PWD'
 
 
 # Source local rc file if any {{{1
