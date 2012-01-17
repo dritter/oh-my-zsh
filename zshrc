@@ -345,7 +345,7 @@ dusch() {
   du -sch ${~^@:-"*"}(D) | sort -rh | head -n11
 }
 alias dusch='noglob dusch'
-alias phwd='echo $(hostname):$PWD'
+alias phwd='print -rP %m:%/'
 
 
 # Source local rc file if any {{{1
