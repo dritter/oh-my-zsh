@@ -342,7 +342,7 @@ salias tlog="tail -f /var/log/syslog"    # follow the syslog
 # Display 10 biggest files/dirs
 dusch() {
   # setopt extendedglob bareglobqual
-  du -sch $~^@(D) | sort -rh | head -n11
+  du -sch ${~^@:-"*"}(D) | sort -rh | head -n11
 }
 alias dusch='noglob dusch'
 alias phwd='echo $(hostname):$PWD'
