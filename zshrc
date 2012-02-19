@@ -339,10 +339,10 @@ salias tlog="tail -f /var/log/syslog"    # follow the syslog
 
 
 # Generic aliases
-# Display 10 biggest files/dirs
+# Display 20 biggest files/dirs
 dusch() {
   # setopt extendedglob bareglobqual
-  du -sch ${~^@:-"*"}(D) | sort -rh | head -n11
+  du -sch ${~^@:-"*"}(D) | sort -rh | head -n21
 }
 alias dusch='noglob dusch'
 alias phwd='print -rP %m:%/'
