@@ -57,8 +57,10 @@ export_and_send () {
 
 screen_update () {
 	# Ensure that screen's environment variables/values get propagated here
+	# Enable word splitting for zsh:
+	[ "x$ZSH_VERSION" != x ] && setopt local_options sh_word_split
 	tempfile=$(mktemp -q) && {
-		for var in $(echo $VARS_TO_UPDATE); do
+		for var in $VARS_TO_UPDATE; do
 			screen sh -c "echo export $var=\$$var >> \"$tempfile\""
 		done
 		. "$tempfile"
@@ -68,7 +70,9 @@ screen_update () {
 
 tmux_update () {
 	# Ensure that tmux's environment variables/values get propagated here
-	for var in $(echo $VARS_TO_UPDATE); do
+	# Enable word splitting for zsh:
+	[ "x$ZSH_VERSION" != x ] && setopt local_options sh_word_split
+	for var in $VARS_TO_UPDATE; do
 		expr="$(tmux showenv | grep "^$var=")"
 		if [ -n "$expr" ]; then
 			export "$expr"
@@ -77,7 +81,8 @@ tmux_update () {
 }
 
 # Pull environment variables/values from backend and update/export here
-VARS_TO_UPDATE="DISPLAY DBUS_SESSION_BUS_ADDRESS SESSION_MANAGER GPG_AGENT_INFO"
+VARS_TO_UPDATE="DISPLAY DBUS_SESSION_BUS_ADDRESS SESSION_MANAGER GPG_AGENT_INFO XDG_SESSION_COOKIE XDG_SESSION_PATH GNOME_KEYRING_CONTROL GNOME_KEYRING_PID GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID"
+
 case $BYOBU_BACKEND in
 	tmux)
 		tmux_update
