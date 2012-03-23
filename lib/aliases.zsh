@@ -31,8 +31,8 @@ alias la='ls -aF'
 alias ll='ls -lF'
 alias lla='ls -laF'
 alias lll='ll -a --color | less -R'
-lth() { ll --color -t "$@" | head }
-lsh() { ls --color -t "$@" | head }
+lth() { ll --color -t "$@" | head -n20 }
+lsh() { ls --color -t "$@" | head -n20 }
 
 # commands starting with % for pasting from web
 alias %=' '
