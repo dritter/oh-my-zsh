@@ -335,9 +335,9 @@ salias() {
 }
 
 #a1# Take a look at the syslog: \kbd{\$PAGER /var/log/syslog}
-salias llog="$PAGER /var/log/syslog"     # take a look at the syslog
+salias llog="[[ -f /var/log/syslog ]] && $PAGER /var/log/syslog || $PAGER /var/log/messages"     # take a look at the syslog
 #a1# Take a look at the syslog: \kbd{tail -f /var/log/syslog}
-salias tlog="tail -f /var/log/syslog"    # follow the syslog
+salias tlog="[[ -f /var/log/syslog ]] && tail -F /var/log/syslog || tail -F /var/log/messages"    # follow the syslog
 
 
 # Generic aliases
