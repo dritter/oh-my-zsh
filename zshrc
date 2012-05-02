@@ -140,11 +140,13 @@ else
   zle self-insert
 fi
 }
-zle -N rationalise-dot
-bindkey . rationalise-dot
-# without this, typing a . aborts incremental history search
-# "isearch" does not exist in zsh 4.3.6 (Debian Lenny)
-bindkey -M isearch . self-insert 2>/dev/null
+if zmodload zsh/regex 2>/dev/null; then # might not be available (e.g. on DS212+)
+  zle -N rationalise-dot
+  bindkey . rationalise-dot
+  # without this, typing a . aborts incremental history search
+  # "isearch" does not exist in zsh 4.3.6 (Debian Lenny)
+  bindkey -M isearch . self-insert 2>/dev/null
+fi
 
 if [[ "${COLORTERM}" == "gnome-terminal" && "$TERM" == "xterm" ]]; then
     export TERM="xterm-256color"
