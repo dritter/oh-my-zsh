@@ -69,7 +69,7 @@ xrgrep() {
 			break
 		fi
 	done
-	xgrep -R $@ ${dir:-}
+	xgrep -r $@ ${dir:-}
 }
 alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \". /root/.dotfiles/oh-my-zsh/plugins/byobu/byobu.plugin.zsh ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'
 alias o=xdg-open
