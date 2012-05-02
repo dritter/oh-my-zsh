@@ -268,7 +268,7 @@ fi
 
 color_for_host() {
     colors=(cyan white yellow magenta blue default green)
-    host=$(hostname -f)
+    host=$(hostname -f 2>/dev/null || hostname)
     echo $(hash_value_from_list $host "$colors")
 }
 
