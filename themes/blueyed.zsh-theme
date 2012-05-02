@@ -108,8 +108,11 @@ prompt_blueyed_precmd () {
         local -h     host="%{${fg_no_bold[$(color_for_host)]}%}%m"
     fi
 
-    # $debian_chroot:
-    if [[ -n "$debian_chroot" ]]; then
+    # Debian chroot
+    if [[ -z $debian_chroot ]] && [[ -r /etc/debian_chroot ]]; then
+        debian_chroot="$(</etc/debian_chroot)"
+    fi
+    if [[ -n $debian_chroot ]]; then
         prompt_extra+=("${normtext}(dch:$debian_chroot)")
     fi
     # OpenVZ container ID (/proc/bc is only on the host):
