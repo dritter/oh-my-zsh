@@ -255,7 +255,7 @@ function vi_mode_prompt_info() {
 
 # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
 # Do not do this when in a midnight commander subshell.
-if [[ $(ps --no-headers --format comm $PPID) != "mc" ]]; then
+if ! grep -q '^mc\b' /proc/$PPID/cmdline; then
     RPS1_list=('$(vi_mode_prompt_info)')
 
     # Distribution
