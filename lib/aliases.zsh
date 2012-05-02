@@ -50,7 +50,7 @@ xgrep() {
   # build command to use once ("--exclude-dir" might not be supported)
   if [[ -z $_xgrep_cmd ]] ; then
     _xgrep_cmd=(grep)
-    if command grep --help | command grep -q exclude-dir ; then
+    if command grep --help 2>/dev/null | command grep -q exclude-dir ; then
       _xgrep_cmd+=(--exclude-dir=CVS --exclude-dir=.svn --exclude-dir=.bzr --exclude-dir=.git --exclude-dir=.hG)
     fi
   fi
