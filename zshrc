@@ -1,6 +1,11 @@
 # Path to your oh-my-zsh configuration.
 export ZSH=$HOME/.oh-my-zsh
 
+# Start profiling
+# PS4='+$(date "+%s:%N") %N:%i> '
+# exec 3>&2 2>/tmp/startlog.$$
+# setopt xtrace prompt_subst
+
 # Set to the name theme to load.
 # Look in ~/.oh-my-zsh/themes/
 export ZSH_THEME="blueyed"
@@ -358,5 +363,9 @@ alias phwd='print -rP %m:%/'
 if [[ -r /proc/user_beancounters ]] && [[ ! -d /proc/bc ]] && (( $plugins[(I)dirstack] )) && (( $#dirstack )); then
   popd
 fi
+
+# Stop profiling
+# unsetopt xtrace
+# exec 2>&3 3>&-
 
 true # return code 0
