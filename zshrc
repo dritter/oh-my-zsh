@@ -339,10 +339,13 @@ salias() {
     return 0
 }
 
+salias sudopager="$PAGER"
+salias sudotail="tail -F"
+
 #a1# Take a look at the syslog: \kbd{\$PAGER /var/log/syslog}
-salias llog="[[ -f /var/log/syslog ]] && $PAGER /var/log/syslog || $PAGER /var/log/messages"     # take a look at the syslog
+alias llog="[[ -f /var/log/syslog ]] && sudopager /var/log/syslog || sudopager /var/log/messages"     # take a look at the syslog
 #a1# Take a look at the syslog: \kbd{tail -f /var/log/syslog}
-salias tlog="[[ -f /var/log/syslog ]] && tail -F /var/log/syslog || tail -F /var/log/messages"    # follow the syslog
+alias tlog="[[ -f /var/log/syslog ]] && sudotail /var/log/syslog || sudotail /var/log/messages"    # follow the syslog
 
 
 # Generic aliases
