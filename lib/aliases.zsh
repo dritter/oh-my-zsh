@@ -114,8 +114,8 @@ mdc() { mkdir "$@" && cd "$1" }
 _verynice_ionice_cmd=
 get_verynice_cmd() {
   if [[ -z $_verynice_ionice_cmd && -x ${commands[ionice]} ]]; then
-    _verynice_ionice_cmd="ionice -c3" && $=_verynice_ionice true 2>/dev/null \
-    || ( _verynice_ionice_cmd="ionice -c2 -n7" && $=_verynice_ionice true 2>/dev/null ) \
+    _verynice_ionice_cmd="ionice -c3" && $=_verynice_ionice_cmd true 2>/dev/null \
+    || ( _verynice_ionice_cmd="ionice -c2 -n7" && $=_verynice_ionice_cmd true 2>/dev/null ) \
     || _verynice_ionice_cmd=
   fi
 }
