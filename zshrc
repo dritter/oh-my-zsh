@@ -94,7 +94,7 @@ unalias -s d 2>/dev/null
 watch=(notme)
 
 # autojump
-test "$commands[autojump]" && source ~/.dotfiles/autojump/autojump.zsh
+test "$commands[autojump]" && source ~/.dotfiles/autojump/bin/autojump.zsh
 
 # Load bash completion system
 # via http://zshwiki.org/home/convert/bash
