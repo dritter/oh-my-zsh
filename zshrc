@@ -294,6 +294,8 @@ hub() {
 
 # autoload $ZSH/functions/*(:t)
 
+fpath=(~/.dotfiles/lib/zsh-completions $fpath)
+
 # Display "^C" when aborting zle
 TRAPINT() { print -nP %F{red}%B\^C%f%b; return 1 }
 
