@@ -170,29 +170,34 @@ apv() {
     apol $* | grep '^ \*\*\*'
 }
 
-# Bash completion for the above functions:
-# Completing package names or filenames
-if ! which complete &>/dev/null; then
-    autoload -Uz bashcompinit
-    if which bashcompinit &>/dev/null; then
-        bashcompinit
+if [ -n "$ZSH_VERSION" ]; then
+    compdef '_deb_packages uninstalled' ainst apv
+    compdef '_deb_packages uninstalled' amad apol ashow ashowsrc asrc
+else
+    # Bash completion for the above functions:
+    # Completing package names or filenames
+    if ! which complete &>/dev/null; then
+        autoload -Uz bashcompinit
+        if which bashcompinit &>/dev/null; then
+            bashcompinit
+        fi
     fi
-fi
-complete -F _complete_apt_cache_package -o filenames ainst
-complete -F _complete_apt_cache_package -o filenames amad
-complete -F _complete_apt_cache_package -o filenames apol
-complete -F _complete_apt_cache_package -o filenames ashow
-complete -F _complete_apt_cache_package -o filenames ashowsrc
-complete -F _complete_apt_cache_package -o filenames asrc
-complete -F _complete_apt_cache_package -o filenames apv
+    complete -F _complete_apt_cache_package -o filenames ainst
+    complete -F _complete_apt_cache_package -o filenames amad
+    complete -F _complete_apt_cache_package -o filenames apol
+    complete -F _complete_apt_cache_package -o filenames ashow
+    complete -F _complete_apt_cache_package -o filenames ashowsrc
+    complete -F _complete_apt_cache_package -o filenames asrc
+    complete -F _complete_apt_cache_package -o filenames apv
 
-# complete function for apt-cache packages
-# (extracted from /etc/bash/bash_completion)
-# TODO: does not include source package names (e.g. meta-gnome2), useful for e.g. asrc
-_complete_apt_cache_package() {
-    COMPREPLY=( $( apt-cache pkgnames ${COMP_WORDS[COMP_CWORD]} 2> /dev/null ) )
-    return 0
-}
+    # complete function for apt-cache packages
+    # (extracted from /etc/bash/bash_completion)
+    # TODO: does not include source package names (e.g. meta-gnome2), useful for e.g. asrc
+    _complete_apt_cache_package() {
+        COMPREPLY=( $( apt-cache pkgnames ${COMP_WORDS[COMP_CWORD]} 2> /dev/null ) )
+        return 0
+    }
+fi
 
 # Usefule aptitude aliases
 # Source: https://github.com/xtaran/zshrc/commit/a02dc87df6b16d1856e1559150347cf2432e8ad7
