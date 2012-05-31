@@ -174,21 +174,7 @@ if [ -n "$ZSH_VERSION" ]; then
     compdef '_deb_packages uninstalled' ainst apv
     compdef '_deb_packages uninstalled' amad apol ashow ashowsrc asrc
 else
-    # Bash completion for the above functions:
-    # Completing package names or filenames
-    if ! which complete &>/dev/null; then
-        autoload -Uz bashcompinit
-        if which bashcompinit &>/dev/null; then
-            bashcompinit
-        fi
-    fi
-    complete -F _complete_apt_cache_package -o filenames ainst
-    complete -F _complete_apt_cache_package -o filenames amad
-    complete -F _complete_apt_cache_package -o filenames apol
-    complete -F _complete_apt_cache_package -o filenames ashow
-    complete -F _complete_apt_cache_package -o filenames ashowsrc
-    complete -F _complete_apt_cache_package -o filenames asrc
-    complete -F _complete_apt_cache_package -o filenames apv
+    complete -F _complete_apt_cache_package -o filenames ainst amad apol ashow ashowsrc asrc apv
 
     # complete function for apt-cache packages
     # (extracted from /etc/bash/bash_completion)
