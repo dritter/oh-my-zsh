@@ -14,7 +14,11 @@ DIRSTACKFILE=${DIRSTACKFILE:-${HOME}/.zdirs}
 if [[ -f ${DIRSTACKFILE} ]] && [[ ${#dirstack[*]} -eq 0 ]] ; then
     dirstack=( ${(f)"$(< $DIRSTACKFILE)"} )
     # "cd -" won't work after login by just setting $OLDPWD, so
-    [[ -d $dirstack[1] ]] && cd $dirstack[1] && cd $OLDPWD
+    if [[ ${${dirstack[1]}[1,5]} != '/mnt/' ]]; then # skip any /mnt entries, which might hang (e.g. sshfs/cifs without network)
+        if [[ -d $dirstack[1] ]]; then
+            cd $dirstack[1] && cd $OLDPWD
+        fi
+    fi
 fi
 
 chpwd() {
