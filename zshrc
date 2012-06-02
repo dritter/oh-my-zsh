@@ -95,6 +95,7 @@ watch=(notme)
 
 # autojump
 test "$commands[autojump]" && source ~/.dotfiles/autojump/bin/autojump.zsh
+export AUTOJUMP_KEEP_SYMLINKS=1
 
 # Load bash completion system
 # via http://zshwiki.org/home/convert/bash
