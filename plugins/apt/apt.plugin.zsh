@@ -171,8 +171,8 @@ apv() {
 }
 
 if [ -n "$ZSH_VERSION" ]; then
-    compdef '_deb_packages uninstalled' ainst apv
-    compdef '_deb_packages uninstalled' amad apol ashow ashowsrc asrc
+    compdef '_deb_packages uninstalled' ainst
+    compdef '_deb_packages avail' amad apol ashow ashowsrc asrc apv
 else
     complete -F _complete_apt_cache_package -o filenames ainst amad apol ashow ashowsrc asrc apv
 
