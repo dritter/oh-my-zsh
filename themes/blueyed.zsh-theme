@@ -127,7 +127,7 @@ prompt_blueyed_precmd () {
     if [ $exitstatus -ne 0 ] ; then
         disp="es:$exitstatus"
         if [ $exitstatus -gt 128 -a $exitstatus -lt 163 ] ; then
-            disp+=" (SIG$signals[$exitstatus-127])"
+            disp+=" (SIG$signals[$exitstatus-128])"
         fi
         prompt_extra+=("${bracket_open}${alerttext}${disp}${bracket_close}")
     fi
