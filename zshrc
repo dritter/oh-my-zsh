@@ -360,6 +360,8 @@ dusch() {
 alias dusch='noglob dusch'
 alias phwd='print -rP %m:%/'
 
+alias dL='dpkg -L'
+
 
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
