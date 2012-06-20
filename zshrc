@@ -110,7 +110,15 @@ bash_source() {
   source "$@"
 }
 # Load completion from bash, which isn't available in zsh yet.
-test "$commands[vzctl]" && bash_source /etc/bash_completion.d/vzctl.sh
+if [ -n "$commands[vzctl]" ] ; then
+  if ! which complete &>/dev/null; then
+    autoload -Uz bashcompinit
+    if which bashcompinit &>/dev/null; then
+      bashcompinit
+    fi
+  fi
+  bash_source /etc/bash_completion.d/vzctl.sh
+fi
 
 
 # run-help for builtins
