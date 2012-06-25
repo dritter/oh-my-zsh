@@ -23,6 +23,8 @@ export DISABLE_AUTO_UPDATE="true"
 # Example format: plugins=(rails git textmate ruby ighthouse)
 plugins=(git github dirstack svn apt byobu)
 
+fpath=(~/.dotfiles/lib/zsh-completions $fpath)
+
 source $ZSH/oh-my-zsh.sh
 
 # Customize to your needs...
@@ -302,8 +304,6 @@ hub() {
 }
 
 # autoload $ZSH/functions/*(:t)
-
-fpath=(~/.dotfiles/lib/zsh-completions $fpath)
 
 # Display "^C" when aborting zle
 TRAPINT() { print -nP %F{red}%B\^C%f%b; return 1 }
