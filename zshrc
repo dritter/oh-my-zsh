@@ -350,13 +350,43 @@ salias() {
     return 0
 }
 
-salias sudopager="$PAGER"
-salias sudotail="tail -F"
 
-#a1# Take a look at the syslog: \kbd{\$PAGER /var/log/syslog}
-alias llog="[[ -f /var/log/syslog ]] && sudopager /var/log/syslog || sudopager /var/log/messages"     # take a look at the syslog
-#a1# Take a look at the syslog: \kbd{tail -f /var/log/syslog}
-alias tlog="[[ -f /var/log/syslog ]] && sudotail /var/log/syslog || sudotail /var/log/messages"    # follow the syslog
+# tlog/llog: tail/less /v/l/{syslog,messages} and use sudo if necessary
+callwithsudoifnecessary_first() {
+  cmd=$1; shift
+  for file do
+    if [[ -f $file ]]; then
+      if [[ -r $file ]]; then
+	$=cmd $file
+      else
+	sudo $=cmd $file
+      fi
+      return
+    fi
+  done
+}
+# Call command ($1) with all arguments, and use sudo if any file argument is not readable
+# This is useful for: `tf ~l/squid3/*.log`
+callwithsudoifnecessary_all() {
+  cmd=$1; shift
+  for file do
+    if [[ -f $file ]] && ! [[ -r $file ]]; then
+      sudo $=cmd "$@"
+      return $?
+    fi
+  done
+  # all readable:
+  $=cmd "$@"
+}
+tlog() {
+  callwithsudoifnecessary_first "tail -F" /var/log/syslog /var/log/messages
+}
+llog() {
+  callwithsudoifnecessary_first less /var/log/syslog /var/log/messages
+}
+tf() {
+  callwithsudoifnecessary_all "tail -F" "$@"
+}
 
 
 # Generic aliases
