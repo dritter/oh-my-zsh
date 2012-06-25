@@ -96,7 +96,7 @@ unalias -s d 2>/dev/null
 watch=(notme)
 
 # autojump
-test "$commands[autojump]" && source ~/.dotfiles/autojump/bin/autojump.zsh
+source ~/.dotfiles/autojump/bin/autojump.zsh
 export AUTOJUMP_KEEP_SYMLINKS=1
 
 # Load bash completion system
