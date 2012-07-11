@@ -308,6 +308,10 @@ hub() {
 # Display "^C" when aborting zle
 TRAPINT() { print -nP %F{red}%B\^C%f%b; return 1 }
 
+# exit zsh like vim
+alias :q=exit
+alias ZZ=exit
+
 # goodness from grml-etc-core {{{1
 # http://git.grml.org/?p=grml-etc-core.git;a=summary
 
