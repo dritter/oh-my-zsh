@@ -256,8 +256,8 @@ sudosession() {
   # Create temporary file to be executed
   echo -nE "/usr/bin/env HOME=$sudohome" > $tempfile
   # Keep special environment vars (like sudo's envkeep)
-  for i in SSH_AUTH_SOCK http_proxy https_proxy ftp_proxy no_proxy; do
-    echo -nE " $i=${(P)i}" >> $tempfile
+  for i in SSH_AUTH_SOCK SSH_CLIENT http_proxy https_proxy ftp_proxy no_proxy; do
+    echo -nE " $i='${(P)i}'" >> $tempfile
   done
   echo -nE " $SHELL" >> $tempfile
   if (( $#@ )); then
