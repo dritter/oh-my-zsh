@@ -49,7 +49,7 @@ gsmc() {
   # TODO: check that commits are pushed?!
   # relevant?! echo $summary | grep -o "Warn: $1 doesn't contain commit" && return 3
 
-  git commit -m "Update submodule $1 ${${(ps: :)summary[1]}[3]}."$'\n\n'"${(F)summary}" "$1"
+  git commit -m "Update submodule $1 ${${(ps: :)summary[1]}[3]}"$'\n\n'"${(F)summary}" "$1"
 }
 # "git submodule add":
 gsma() {
@@ -60,7 +60,7 @@ gsma() {
   git submodule add "$1" "$2" && \
   summary=$(git submodule summary "$2") && \
   summary=( ${(f)summary} ) && \
-  git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}."$'\n\n'"${(F)summary}" "$2" .gitmodules && \
+  git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}"$'\n\n'"${(F)summary}" "$2" .gitmodules && \
   git submodule update --init --recursive "$2"
 }
 gsmrm() {
