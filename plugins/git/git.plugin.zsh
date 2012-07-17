@@ -55,7 +55,7 @@ gsmc() {
 gsma() {
   git diff --cached --exit-code > /dev/null || {
     echo "Index is not clean."
-    exit 1
+    return 1
   }
   git submodule add "$1" "$2" && \
   summary=$(git submodule summary "$2") && \
