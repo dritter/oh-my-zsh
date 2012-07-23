@@ -249,6 +249,7 @@ sudosession() {
   tempfile=$(mktemp -t sudosession.XXXXXX)
   chmod u+x $tempfile
   if [[ ! -d $sudohome ]]; then
+    echo "Creating $sudohome..."
     mkdir -p $sudohome
     # Copy dotfiles repo from user home
     cp -a $HOME/.dotfiles $sudohome
