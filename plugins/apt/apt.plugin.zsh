@@ -127,7 +127,9 @@ _apt_cache_madison_grep_wrapper() {
     /bin/sh -c "$COMMAND $COMMAND_ARG"
 }
 
-alias asearch="apt-cache search"
+asearch() {
+    apt-cache search $* | sort | less -XF
+}
 alias amad="apt-cache madison"
 alias apol="apt-cache policy"
 alias afs="apt-file search"
