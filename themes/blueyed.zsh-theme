@@ -18,7 +18,10 @@ PR_RESET="%{${reset_color}%}";
 
 # Remove any ANSI color codes (via www.commandlinefu.com/commands/view/3584/)
 _strip_escape_codes() {
-    echo "${(%)1}" | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
+    [[ -n $commands[gsed] ]] && sed=gsed || sed=sed # gsed with coreutils on MacOS
+    # XXX: does not work with MacOS default sed either?!
+    # echo "${(%)1}" | sed "s/\x1B\[\([0-9]\{1,3\}\(;[0-9]\{1,3\}\)?\)?[m|K]//g"
+    echo "${(%)1}" | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
 }
 
 add-zsh-hook precmd prompt_blueyed_precmd
