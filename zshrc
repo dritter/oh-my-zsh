@@ -181,6 +181,11 @@ path+=(/var/lib/gems/1.8/bin/)
 # Add superuser binaries to path
 path+=(/sbin /usr/sbin)
 
+# Add GNU coreutils to path on MacOS
+if [[ -n $commands[brew] ]]; then
+  path=($(brew --prefix coreutils)/libexec/gnubin $path)
+fi
+
 # make path/PATH entries unique
 typeset -U path
 
