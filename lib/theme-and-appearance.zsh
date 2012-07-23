@@ -8,12 +8,20 @@ if [ "$DISABLE_LS_COLORS" != "true" ]; then
   # Find the option for using colors in ls, depending on the version: Linux or BSD
   ls --color -d . &>/dev/null 2>&1 && alias ls='ls --color=tty' || alias ls='ls -G'
 
-  # setup LS_COLORS (Linux)
-  : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
-  if [ -f $DIRCOLORS_FILE ] ; then
-    eval $(dircolors -b $DIRCOLORS_FILE)
-  else
-    eval $(dircolors -b)
+  # setup LS_COLORS
+  # (dircolors on GNU/Linux, gdircolors with coreutils on MacOS)
+  for i in dircolors gdircolors; do
+    if [ $commands[$i] ]; then
+      dircolors=$i ; break
+    fi
+  done
+  if [ -n "$dircolors" ]; then
+    : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
+    if [ -f $DIRCOLORS_FILE ] ; then
+      eval $($dircolors -b $DIRCOLORS_FILE)
+    else
+      eval $($dircolors -b)
+    fi
   fi
 fi
 
