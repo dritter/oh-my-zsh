@@ -268,7 +268,6 @@ else
     is_mc_shell=1
   fi
 fi
-is_mc_shell=0
 if [[ "$is_mc_shell" == "0" ]]; then
     RPS1_list=('$(vi_mode_prompt_info)')
 
