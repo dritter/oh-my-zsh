@@ -175,20 +175,6 @@ if ! tput longname &> /dev/null; then
 	export TERM
 fi
 
-# Add binaries from gems to path
-path+=(/var/lib/gems/1.8/bin/)
-
-# Add superuser binaries to path
-path+=(/sbin /usr/sbin)
-
-# Add GNU coreutils to path on MacOS
-if [[ -n $commands[brew] ]]; then
-  path=($(brew --prefix coreutils)/libexec/gnubin $path)
-fi
-
-# make path/PATH entries unique
-typeset -U path
-
 setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
 
 # Setup vimpager as pager:
