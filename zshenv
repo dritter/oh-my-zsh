@@ -16,6 +16,12 @@ fi
 
 path=(~/.dotfiles/usr/bin ~/bin /usr/local/bin /usr/local/sbin $path)
 
+# Add /usr/local/*/bin to path (e.g. /usr/local/apache2/bin, @bp)
+for i in /usr/local/*/bin ; do
+  path+=("$(readlink -f $i)")
+done
+unset i
+
 # make path/PATH entries unique
 typeset -U path
 
