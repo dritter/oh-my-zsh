@@ -4,7 +4,7 @@ setopt noglobalrcs
 # PATH handling (both for login, interactive and "other" shells):
 
 # Add binaries from gems to path
-path+=(/var/lib/gems/1.8/bin/)
+path+=(/var/lib/gems/*/bin(NA))
 
 # Add superuser binaries to path
 path+=(/sbin /usr/sbin)
@@ -16,11 +16,8 @@ fi
 
 path=(~/.dotfiles/usr/bin ~/bin /usr/local/bin /usr/local/sbin $path)
 
-# Add /usr/local/*/bin to path (e.g. /usr/local/apache2/bin, @bp)
-for i in /usr/local/*/bin ; do
-  path+=("$(readlink -f $i)")
-done
-unset i
+# Add /usr/local/*/bin to path (e.g. /usr/local/apache2/bin, this is used @bp)
+path+=(/usr/local/*/bin(NA))
 
 # make path/PATH entries unique
 typeset -U path
