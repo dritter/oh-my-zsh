@@ -371,6 +371,9 @@ llog() {
 tf() {
   callwithsudoifnecessary_all "tail -F" "$@"
 }
+lf() {
+  callwithsudoifnecessary_all less "$@"
+}
 
 
 # Generic aliases
