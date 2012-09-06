@@ -23,7 +23,7 @@ export DISABLE_AUTO_UPDATE="true"
 # Example format: plugins=(rails git textmate ruby ighthouse)
 plugins=(git github dirstack svn apt)
 
-fpath=(~/.dotfiles/lib/zsh-completions $fpath)
+fpath=(~/.dotfiles/lib/zsh-completions/src $fpath)
 
 source $ZSH/oh-my-zsh.sh
 
