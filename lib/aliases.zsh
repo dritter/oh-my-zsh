@@ -53,8 +53,13 @@ xgrep() {
     if command grep --help 2>/dev/null | command grep -q exclude-dir ; then
       _xgrep_cmd+=(--exclude-dir=CVS --exclude-dir=.svn --exclude-dir=.bzr --exclude-dir=.git --exclude-dir=.hG)
     fi
+    # _xgrep_cmd+=(--binary-files=without-match)
+    for i in avi mp gif gz jpeg jpg JPG png pptx rar swf tif wma xls xlsx zip ; do
+      _xgrep_cmd+=(--exclude="*.$i")
+    done
+    _xgrep_cmd+=(--exclude=tags)
   fi
-  $=_xgrep_cmd $@
+  $=_xgrep_cmd "$@"
 }
 # xrgrep: recursive xgrep, path is optional (defaults to current dir)
 xrgrep() {
@@ -69,7 +74,7 @@ xrgrep() {
 			break
 		fi
 	done
-	xgrep -r $@ ${dir:-}
+	xgrep -r "$@" ${dir:-}
 }
 alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"BYOBU_PREFIX=/root/.dotfiles/lib/byobu/usr ; PATH=\\\$BYOBU_PREFIX/bin:\\\$PATH ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'
 function o() {
