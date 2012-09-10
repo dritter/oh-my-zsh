@@ -17,7 +17,11 @@ fi
 path=(~/.dotfiles/usr/bin ~/bin /usr/local/bin /usr/local/sbin $path)
 
 # Add /usr/local/*/bin to path (e.g. /usr/local/apache2/bin, this is used @bp)
-path+=(/usr/local/*/bin(NA))
+path+=(/usr/local/*/bin(NA) /opt/*/bin(NA))
+
+# Add any custom directories, which might exist
+path+=(/opt/eclipse(NA))
+
 
 # make path/PATH entries unique
 typeset -U path
