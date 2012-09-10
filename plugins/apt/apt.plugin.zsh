@@ -128,7 +128,7 @@ _apt_cache_madison_grep_wrapper() {
 }
 
 asearch() {
-    apt-cache search $* | sort | less -XF
+    apt-cache search "$@" | sort | less -XF
 }
 alias amad="apt-cache madison"
 alias apol="apt-cache policy"
@@ -150,26 +150,26 @@ fi
 # Install source package, supports grepping in $2 to fetch a specific version
 # E.g. "asrc -g gutsy hello" will become "apt-get source hello=2.2-2"
 asrc() {
-    _apt_cache_madison_grep_wrapper "apt-get source" "Sources" $*
+    _apt_cache_madison_grep_wrapper "apt-get source" "Sources" "$@"
 }
 ainst() {
     if [[ $UID = 0 ]]; then
-        _apt_cache_madison_grep_wrapper "aptitude install" "Packages" $*
+        _apt_cache_madison_grep_wrapper "aptitude install" "Packages" "$@"
     else
-        _apt_cache_madison_grep_wrapper "sudo aptitude install" "Packages" $*
+        _apt_cache_madison_grep_wrapper "sudo aptitude install" "Packages" "$@"
     fi
     # rebuild zsh cache of known programs
     which rehash > /dev/null && rehash
 }
 ashow() {
-    _apt_cache_madison_grep_wrapper "apt-cache show" "" $* | less
+    _apt_cache_madison_grep_wrapper "apt-cache show" "" "$@" | less
 }
 ashowsrc() {
-    _apt_cache_madison_grep_wrapper "apt-cache showsrc" "" $* | less
+    _apt_cache_madison_grep_wrapper "apt-cache showsrc" "" "$@" | less
 }
 # Display currently installed version of a package
 apv() {
-    apol $* | grep '^ \*\*\*'
+    apol "$@" | grep '^ \*\*\*'
 }
 
 if [ -n "$ZSH_VERSION" ]; then
