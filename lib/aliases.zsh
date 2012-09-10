@@ -72,7 +72,13 @@ xrgrep() {
 	xgrep -r $@ ${dir:-}
 }
 alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"BYOBU_PREFIX=/root/.dotfiles/lib/byobu/usr ; PATH=\\\$BYOBU_PREFIX/bin:\\\$PATH ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'
-alias o=xdg-open
+function o() {
+  if [ $commands[xdg-open] ]; then
+    xdg-open "$@"
+  else
+    open "$@" # MacOS
+  fi
+}
 alias 7zpwd="7z a -mx0 -mhe=on -p"
 alias ag="ack-grep"
 alias lh="ls -alt | head"
