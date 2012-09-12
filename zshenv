@@ -3,9 +3,6 @@ setopt noglobalrcs
 
 # PATH handling (both for login, interactive and "other" shells):
 
-# Add binaries from gems to path
-path+=(/var/lib/gems/*/bin(NA))
-
 # Add superuser binaries to path
 path+=(/sbin /usr/sbin)
 
@@ -16,11 +13,18 @@ fi
 
 path=(~/.dotfiles/usr/bin ~/bin /usr/local/bin /usr/local/sbin $path)
 
-# Add /usr/local/*/bin to path (e.g. /usr/local/apache2/bin, this is used @bp)
-path+=(/usr/local/*/bin(NA) /opt/*/bin(NA))
+# Add various "bin" directories to $path
+# (e.g. /usr/local/apache2/bin is used @bp)
+for i in /usr/local/*(N/:A) /opt/*(N/:A) /var/lib/gems/*(N/:A) ; do
+  test -d $i/bin || continue
+  path+=($i/bin)
+done
 
 # Add any custom directories, which might exist
-path+=(/opt/eclipse(NA))
+for i in /opt/eclipse ; do
+  test -d $i || continue
+  path+=($i)
+done
 
 
 # make path/PATH entries unique
