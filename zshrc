@@ -146,17 +146,8 @@ hash -d l=/var/log
 
 # just type '...' to get '../..'
 # Originally by grml, improved by Mikachu
-rationalise-dot() {
-local MATCH
-if [[ $LBUFFER =~ '(^|/| |	|'$'\n''|\||;|&)\.\.$' ]]; then
-  LBUFFER+=/
-  zle self-insert
-  zle self-insert
-else
-  zle self-insert
-fi
-}
 if zmodload zsh/regex 2>/dev/null; then # might not be available (e.g. on DS212+)
+  autoload -Uz rationalise-dot  # in ~/.dotfiles/oh-my-zsh/functions/rationalise-dot
   zle -N rationalise-dot
   bindkey . rationalise-dot
   # without this, typing a . aborts incremental history search
