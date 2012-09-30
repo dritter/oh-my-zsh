@@ -149,8 +149,8 @@ veryrenice() {
 
 # Mercurial
 alias hgu="hg pull -u"
-hgl() { hg log -G "$@" | $PAGER } # -G via graphlog extension
-hgd() { hg diff "$@"   | $PAGER }
+alias hgl="hg log -G" # -G via graphlog extension
+alias hgd="hg diff"
 alias hgc="hg commit"
 
 # Quickly lookup entry in Wikipedia.
