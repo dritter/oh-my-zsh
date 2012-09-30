@@ -53,35 +53,62 @@ alias debverprevubuntu="dpkg-parsechangelog --format rfc822 --count 1000 | grep 
 alias sdebuild='debuild -S -k3FE63E00 -v$(debverprevubuntu)'
 alias bts='DEBEMAIL=debian-bugs@thequod.de bts --sendmail "/usr/sbin/sendmail -f$DEBEMAIL -t"'
 # alias m=less
+
+# xgrep: grep with extra (excluding) options
 xgrep() {
-  # build command to use once ("--exclude-dir" might not be supported)
-  if [[ -z $_xgrep_cmd ]] ; then
-    _xgrep_cmd=(grep)
-    if command grep --help 2>/dev/null | command grep -q exclude-dir ; then
-      _xgrep_cmd+=(--exclude-dir=CVS --exclude-dir=.svn --exclude-dir=.bzr --exclude-dir=.git --exclude-dir=.hG)
-    fi
-    # _xgrep_cmd+=(--binary-files=without-match)
-    for i in avi mp gif gz jpeg jpg JPG png pptx rar swf tif wma xls xlsx zip ; do
-      _xgrep_cmd+=(--exclude="*.$i")
-    done
-    _xgrep_cmd+=(--exclude=tags)
-  fi
-  $=_xgrep_cmd "$@"
+  _xgrep_cmd_local_extra_opts=(-maxdepth 0)
+  xrgrep "$@"
+  unset _xgrep_cmd_local_extra_opts
 }
 # xrgrep: recursive xgrep, path is optional (defaults to current dir)
 xrgrep() {
-	# Get number of (non-option) args: for args >= 2 we do not use the default dir.
-	local nbargs=0 inopts=1 dir=.
-	for i in $@; do
-		if [[ $i == '--' ]]; then inopts=0
-		elif [[ $inopts == 0 ]] || [[ $i != -* ]]; then ((nbargs++))
-		fi
-		if (( nbargs >= 2 )); then
-			dir=
-			break
-		fi
-	done
-	xgrep -r "$@" ${dir:-}
+  # Get grep pattern and find's path from args
+  # Any options are being passed to grep.
+  local inopts findpath grepopts greppattern
+  findpath=() # init appears to be required to prevent leading space from "$findpath" passed to `find`
+  for i in $@; do
+    if [[ $i == '--' ]]; then inopts=0
+    elif [[ $inopts == 0 ]] || [[ $i != -* ]]; then
+      if [[ -z $greppattern ]]; then
+        greppattern=$i
+      else
+        findpath+=($i)
+      fi
+    else grepopts+=($i)
+    fi
+  done
+  [[ -z $findpath ]] && findpath=('.')
+
+  # echo "findpath: $findpath" ; echo "grepopts: $grepopts" ; echo "greppattern: $greppattern"
+
+  # build command to use once
+  if [[ -z $_xgrep_cmd ]] ; then
+    _xgrep_exclude_dirs=(CVS .svn .bzr .git .hg)
+    _xgrep_exclude_exts=(avi mp gif gz jpeg jpg JPG png pptx rar swf tif wma xls xlsx zip)
+    _xgrep_exclude_files=(tags)
+
+    if [[ -n $_xgrep_cmd_local_extra_opts ]]; then
+      _xgrep_cmd=($_xgrep_cmd_local_extra_opts)
+    else
+      _xgrep_cmd=()
+    fi
+
+    _xgrep_cmd+=(-xdev -type d \()
+    for i in $_xgrep_exclude_dirs; do _xgrep_cmd+=(-name $i) done
+    _xgrep_cmd+=(\) -prune)
+
+    _xgrep_cmd+=(-o -type f \()
+    for i in $_xgrep_exclude_exts; do _xgrep_cmd+=(-name '\*.$i') done
+    _xgrep_cmd+=(\) -prune)
+
+    _xgrep_cmd+=(-o -type f \()
+    for i in $_xgrep_exclude_files; do _xgrep_cmd+=(-name $i) done
+    _xgrep_cmd+=(\) -prune)
+
+    _xgrep_cmd+=(-o -print0)
+  fi
+  # echo "find \"$findpath\" $_xgrep_cmd | xargs -0 -r grep \"$greppattern\" $grepopts"
+  find "$findpath" $=_xgrep_cmd | xargs -0 -r grep "$greppattern" $grepopts
 }
 alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"BYOBU_PREFIX=/root/.dotfiles/lib/byobu/usr ; PATH=\\\$BYOBU_PREFIX/bin:\\\$PATH ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'
 function o() {
