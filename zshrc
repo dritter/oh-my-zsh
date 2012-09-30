@@ -368,10 +368,10 @@ lf() {
 
 
 # Generic aliases
-# Display 20 biggest files/dirs
+# Display files sorted by size
 dusch() {
   # setopt extendedglob bareglobqual
-  du -sch ${~^@:-"*"}(D) | sort -rh | head -n21
+  du -sch ${~^@:-"*"}(D) | sort -rh
 }
 alias dusch='noglob dusch'
 alias phwd='print -rP %m:%/'
