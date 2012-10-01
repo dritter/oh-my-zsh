@@ -16,7 +16,7 @@ if [ "$DISABLE_LS_COLORS" != "true" ]; then
     fi
   done
   if [ -n "$dircolors" ]; then
-    : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
+    : ${DIRCOLORS_FILE:=~/.dotfiles/lib/dircolors-solarized/dircolors.256dark}
     if [ -f $DIRCOLORS_FILE ] ; then
       eval $($dircolors -b $DIRCOLORS_FILE)
     else
