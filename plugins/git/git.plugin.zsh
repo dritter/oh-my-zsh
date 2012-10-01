@@ -65,11 +65,20 @@ gsmrm() {
   [ x$1 = x ] && { echo "Remove which submodule?"; return 1;}
   [ -d "$1" ] || { echo "Submodule $1 not found."; return 2;}
   [ -f .gitmodules ] || { echo ".gitmodules not found."; return 3;}
-  # remove submodule entry from .gitmodules
-  tempfile=$(tempfile)
-  awk "/^\[submodule \"${1//\//\\/}\"\]/{g=1;next} /^\[/ {g=0} !g" .gitmodules >> $tempfile
-  mv $tempfile .gitmodules
+  git diff --cached --exit-code > /dev/null || { echo "Index is not clean."; return 1 ; }
+  # remove submodule entry from .gitmodules and .git/config (after init/sync)
+  git config -f .git/config --remove-section submodule.$1
+  git config -f .gitmodules --remove-section submodule.$1
+  # tempfile=$(tempfile)
+  # awk "/^\[submodule \"${1//\//\\/}\"\]/{g=1;next} /^\[/ {g=0} !g" .gitmodules >> $tempfile
+  # mv $tempfile .gitmodules
   git rm --cached $1
+  git add .gitmodules
+  # Add the module to the `migrate` task in the Makefile and increase its name:
+  grep -q "rm_bundles=.*$1" Makefile || sed -i "s:	rm_bundles=\"[^\"]*:\0 $1:" Makefile
+  i=$(( $(grep '^.stamps/submodules_rm' Makefile | cut -f3 -d. | cut -f1 -d:) + 1 ))
+  sed -i "s~\(.stamps/submodules_rm\).[0-9]\+~\1.$i~" Makefile
+  echo "You might want to 'rm $1' now or run the migrate task."
 }
 
 # Git and svn mix
