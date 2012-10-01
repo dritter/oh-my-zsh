@@ -19,13 +19,13 @@ alias sl=ls # often screw this up
 
 alias afind='ack-grep -il'
 
-# "fast find in current dir": filter out any dotfiles
+# "fast find in current dir": filter out any hidden directories
 ffind() {
   # if the first argument is a dir, use it for `find`
   if [[ -d $1 ]] ; then dir=$1; shift ; else dir=. ; fi
   # use '-name' by default, if there is only one (non-dir) arg
   (( $# == 1 )) && args=(-name $@) || args=$@
-  cmd=(find $dir -mindepth 1 -name ".*" -prune -o \( "$args" -print \))
+  cmd=(find $dir -mindepth 1 \( -type d -name ".*" -prune \) -o \( "$args" -print \))
   # echo $cmd >&2
   $=cmd
 }
