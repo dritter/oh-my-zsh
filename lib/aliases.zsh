@@ -94,21 +94,22 @@ xrgrep() {
     fi
 
     _xgrep_cmd+=(-xdev -type d \()
-    for i in $_xgrep_exclude_dirs; do _xgrep_cmd+=(-name $i) done
+    _xgrep_cmd+=(-name ${(pj: -o -name :)_xgrep_exclude_dirs})
     _xgrep_cmd+=(\) -prune)
 
     _xgrep_cmd+=(-o -type f \()
-    for i in $_xgrep_exclude_exts; do _xgrep_cmd+=(-name '\*.$i') done
+    _xgrep_cmd+=(-name \*.${(pj: -o -name *.:)_xgrep_exclude_exts})
     _xgrep_cmd+=(\) -prune)
 
     _xgrep_cmd+=(-o -type f \()
-    for i in $_xgrep_exclude_files; do _xgrep_cmd+=(-name $i) done
+    _xgrep_cmd+=(-name ${(pj: -o -name :)_xgrep_exclude_files})
     _xgrep_cmd+=(\) -prune)
 
     _xgrep_cmd+=(-o -print0)
   fi
-  # echo "find \"$findpath\" $_xgrep_cmd | xargs -0 -r grep \"$greppattern\" $grepopts"
-  find "$findpath" $=_xgrep_cmd | xargs -0 -r grep "$greppattern" $grepopts
+  _findcmd=(find $findpath $=_xgrep_cmd)
+  _xargscmd=(xargs -0 -r grep $greppattern $grepopts)
+  $=_findcmd | $_xargscmd
 }
 alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"BYOBU_PREFIX=/root/.dotfiles/lib/byobu/usr ; PATH=\\\$BYOBU_PREFIX/bin:\\\$PATH ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'
 function o() {
