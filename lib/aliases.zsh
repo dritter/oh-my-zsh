@@ -24,9 +24,22 @@ ffind() {
   # if the first argument is a dir, use it for `find`
   if [[ -d $1 ]] ; then dir=$1; shift ; else dir=. ; fi
   # use '-name' by default, if there is only one (non-dir) arg
-  (( $# == 1 )) && args=(-name $@) || args=$@
-  cmd=(find $dir -mindepth 1 \( -type d -name ".*" -prune \) -o \( "$args" -print \))
-  # echo $cmd >&2
+  args=()
+  if (( $# == 1 )) || [[ $1 != -* ]] ; then
+    args=(-name $@ -print)
+  fi
+  if (( $# > 1 )); then
+    _has_cmd=0
+    for arg ; do
+      if [[ $arg == -* ]]; then
+        _has_cmd=1
+        break
+      fi
+    done
+    [[ $_has_cmd == 0 ]] && args+=(-print)
+  fi
+  cmd=(find $dir -mindepth 1 \( -type d -name ".*" -prune \) -o \( "$args" \))
+  echo $cmd >&2
   $=cmd
 }
 
