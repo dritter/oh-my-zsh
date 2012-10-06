@@ -38,11 +38,14 @@ gsmc() {
   [ x$1 = x ] && { echo "Commit update to which submodule?"; return 1;}
   [ -d "$1" ] || { echo "Submodule $1 not found."; return 2;}
   summary=$(git submodule summary "$1" 2>&1)
+  if [[ $? != 0 ]]; then
+    echo "Error with 'git submodule summary $1':\n$summary"; return 3
+  fi
   if [[ $summary == "" ]] ; then
-    echo "Submodule $1 not changed."; return 3
+    echo "Submodule $1 not changed."; return 4
   fi
   if [[ $summary == fatal:* ]] ; then
-    echo $summary ; return 4
+    echo $summary ; return 5
   fi
   summary=( ${(f)summary} )
 
