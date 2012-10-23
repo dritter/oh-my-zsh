@@ -70,7 +70,7 @@ prompt_blueyed_precmd () {
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
     # Fallback to default, if "target" is used
     [ "$ln_color" = "target" ] && ln_color="01;36"
-    [[ -z $ln_color ]] && ln_color=${fg_bold[cyan]} || ln_color="%{"$'\e'"[${ln_color}m%}"
+    [[ -z $ln_color ]] && ln_color="%{${fg_bold[cyan]}%}" || ln_color="%{"$'\e'"[${ln_color}m%}"
     local colored="/" cur color i
     for i in ${(ps:/:)${cwd}}; do
         if [[ -h "$cur/$i" ]]; then
