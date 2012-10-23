@@ -44,6 +44,7 @@ ffind() {
 }
 
 # ls
+DISABLE_LS_COLORS=true # disable omz feature detection which causes later aliasing of `ls`
 export LS_OPTIONS='--color=auto -h'
 alias ls='ls ${=LS_OPTIONS}'
 alias l='ls -F'
