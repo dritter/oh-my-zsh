@@ -65,31 +65,38 @@ prompt_blueyed_precmd () {
             cwd=$PWD
         fi
     fi
+    # Replace $HOME with ~ (before highlighting symlinks - home contains a symlink for admin on synology diskstation)
+    cwd="${cwd/#$HOME/~}"
 
     # Highlight symbolic links in $cwd
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
     # Fallback to default, if "target" is used
     [ "$ln_color" = "target" ] && ln_color="01;36"
     [[ -z $ln_color ]] && ln_color="%{${fg_bold[cyan]}%}" || ln_color="%{"$'\e'"[${ln_color}m%}"
-    local colored="/" cur color i
-    for i in ${(ps:/:)${cwd}}; do
-        if [[ -h "$cur/$i" ]]; then
-            color=$ln_color
-            colored+="${color}$i${cwdtext}/"
-        else
-            colored+="$i/"
-        fi
-        cur+="/$i"
+    local colored cur color i cwd_split
+    colored=()
+    # split $cwd at '/'
+    cwd_split=(${(ps:/:)${cwd}})
+    if [[ $cwd[1] == '/' ]]; then
+      cur="/"
+      colored=('')
+    fi
+    for i in $cwd_split; do
+      cur+="$i"
+      if [[ -h $cur ]]; then
+        colored+=("${ln_color}${i}${cwdtext}")
+      else
+        colored+=($i)
+      fi
+      cur+="/"
     done
+    # join (possibly colored) parts with slash
+    cwd="${(pj:/:)colored}"
 
-    # Remove trailing slash, if not in root
-    if [[ ${#colored} > 1 ]]; then colored=${colored%%/}; fi
-    cwd="${colored/#$HOME/~}"
-
+    # Mark non-writable cwd
     # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
     if [[ ! -w $PWD ]]; then
-        local cleancwd="$(_strip_escape_codes "$cwd")"
-        cwd="${nonrwtext}${cleancwd}"
+        cwd="${nonrwtext}${cwd}"
     fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
