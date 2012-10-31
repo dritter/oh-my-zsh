@@ -56,7 +56,7 @@ prompt_blueyed_precmd () {
         cwd=$PWD
     else
         [[ -n $vcs_info_msg_0_ ]] && prompt_vcs="${PR_RESET}$vcs_info_msg_0_ "
-        cwd="${vcs_info_msg_1_%.}"
+        cwd=$(_strip_escape_codes ${vcs_info_msg_1_%.})
         rprompt_extra+=("${vcs_info_msg_2_}")
 
         # Check if $cwd (from vcs_info) is in $PWD - which may not be the case with symbolic links
