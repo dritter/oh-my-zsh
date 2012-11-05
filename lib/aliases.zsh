@@ -78,8 +78,9 @@ xrgrep() {
   # Get grep pattern and find's path from args
   # Any options are being passed to grep.
   local inopts findpath grepopts greppattern
+  inopts=1
   findpath=() # init appears to be required to prevent leading space from "$findpath" passed to `find`
-  for i in $@; do
+  for i in "$@"; do
     if [[ $i == '--' ]]; then inopts=0
     elif [[ $inopts == 0 ]] || [[ $i != -* ]]; then
       if [[ -z $greppattern ]]; then
@@ -96,7 +97,7 @@ xrgrep() {
 
   # build command to use once
   if [[ -z $_xgrep_cmd ]] ; then
-    _xgrep_exclude_dirs=(CVS .svn .bzr .git .hg .evocache)
+    _xgrep_exclude_dirs=(CVS .svn .bzr .git .hg .evocache media asset) # "media, asset" with betterplace (tb)
     _xgrep_exclude_exts=(avi mp gif gz jpeg jpg JPG png pptx rar swf tif wma xls xlsx zip)
     _xgrep_exclude_files=(tags)
 
@@ -121,13 +122,11 @@ xrgrep() {
     _xgrep_cmd+=(-o -print0)
   fi
   _findcmd=(find $findpath $=_xgrep_cmd)
-  # _xargscmd=(xargs -0 -r grep $greppattern $grepopts)
   _xargscmd=(xargs -0 -r grep -e "$greppattern" $grepopts)
   # echo "greppattern: $greppattern" >&2
   # echo "grepopts   : $grepopts" >&2
   # echo "_findcmd   : $_findcmd" >&2
   # echo "_xargscmd  : $_xargscmd" >&2
-
   $=_findcmd | $_xargscmd
 }
 alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"BYOBU_PREFIX=/root/.dotfiles/lib/byobu/usr ; PATH=\\\$BYOBU_PREFIX/bin:\\\$PATH ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'
