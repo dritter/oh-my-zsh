@@ -119,7 +119,7 @@ xrgrep() {
     _xgrep_cmd+=(-name ${(pj: -o -name :)_xgrep_exclude_files})
     _xgrep_cmd+=(\) -prune)
 
-    _xgrep_cmd+=(-o -print0)
+    _xgrep_cmd+=(-o -type f -print0)
   fi
   _findcmd=(find $findpath $=_xgrep_cmd)
   _xargscmd=(xargs -0 -r grep -e "$greppattern" $grepopts)
