@@ -191,10 +191,17 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st
 # Show count of stashed changes
 function +vi-git-stash() {
     local -a stashes
+    local gitdir
 
     [[ $1 == 0 ]] || return # do this only once for vcs_info_msg_0_.
 
-    if [[ -s ${hook_com[base]}/.git/refs/stash ]] ; then
+    # Resolve git dir (necessary for submodules)
+    gitdir=${hook_com[base]}/.git
+    if [[ -f $gitdir ]]; then
+        gitdir=$(git rev-parse --resolve-git-dir $gitdir)
+    fi
+
+    if [[ -s $gitdir/refs/stash ]] ; then
         stashes=$(git stash list 2>/dev/null | wc -l)
         hook_com[misc]+=" $bracket_open$hitext${stashes} stashed$bracket_close"
     fi
