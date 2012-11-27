@@ -74,24 +74,28 @@ prompt_blueyed_precmd () {
     [ "$ln_color" = "target" ] && ln_color="01;36"
     [[ -z $ln_color ]] && ln_color="%{${fg_bold[cyan]}%}" || ln_color="%{"$'\e'"[${ln_color}m%}"
     local colored cur color i cwd_split
-    colored=()
-    # split $cwd at '/'
-    cwd_split=(${(ps:/:)${cwd}})
-    if [[ $cwd[1] == '/' ]]; then
-      cur="/"
-      colored=('')
+    if [[ $cwd == '/' ]]; then
+        cwd='/'
+    else
+        colored=()
+        # split $cwd at '/'
+        cwd_split=(${(ps:/:)${cwd}})
+        if [[ $cwd[1] == '/' ]]; then
+            cur='/'
+            colored=('')
+        fi
+        for i in $cwd_split; do
+            cur+="$i"
+            if [[ -h $cur ]]; then
+                colored+=("${ln_color}${i}${cwdtext}")
+            else
+                colored+=($i)
+            fi
+            cur+='/'
+        done
+        # join (possibly colored) parts with slash
+        cwd="${(pj:/:)colored}"
     fi
-    for i in $cwd_split; do
-      cur+="$i"
-      if [[ -h $cur ]]; then
-        colored+=("${ln_color}${i}${cwdtext}")
-      else
-        colored+=($i)
-      fi
-      cur+="/"
-    done
-    # join (possibly colored) parts with slash
-    cwd="${(pj:/:)colored}"
 
     # Mark non-writable cwd
     # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
