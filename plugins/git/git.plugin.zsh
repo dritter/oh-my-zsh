@@ -56,6 +56,8 @@ gsmc() {
 }
 # "git submodule add":
 gsma() {
+  [ x$1 = x ] && { echo "Add which submodule?"; return 1;}
+  [ x$2 = x ] && { echo "Where to add submodule?"; return 2;}
   git diff --cached --exit-code > /dev/null || { echo "Index is not clean."; return 1 ; }
   git submodule add "$1" "$2" && \
   summary=$(git submodule summary "$2") && \
