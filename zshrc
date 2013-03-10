@@ -332,9 +332,9 @@ callwithsudoifnecessary_first() {
   for file do
     if [[ -f $file ]]; then
       if [[ -r $file ]]; then
-	$=cmd $file
+	${(Q)${(z)cmd}} $file
       else
-	sudo $=cmd $file
+	sudo ${(Q)${(z)cmd}} $file
       fi
       return
     fi
@@ -346,12 +346,12 @@ callwithsudoifnecessary_all() {
   cmd=$1; shift
   for file do
     if [[ -f $file ]] && ! [[ -r $file ]]; then
-      sudo $=cmd "$@"
+      sudo ${(Q)${(z)cmd}} "$@"
       return $?
     fi
   done
   # all readable:
-  $=cmd "$@"
+  ${(Q)${(z)cmd}} "$@"
 }
 tlog() {
   callwithsudoifnecessary_first "tail -F" /var/log/syslog /var/log/messages
