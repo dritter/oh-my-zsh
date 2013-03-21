@@ -378,6 +378,9 @@ alias phwd='print -rP %m:%/'
 
 alias dL='dpkg -L'
 
+# Make aliases work with sudo; source: http://serverfault.com/a/178956/14449
+alias sudo='sudo '
+
 
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
