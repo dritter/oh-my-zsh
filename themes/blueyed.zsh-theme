@@ -85,7 +85,8 @@ prompt_blueyed_precmd () {
             colored=('')
         fi
         for i in $cwd_split; do
-            cur+="$i"
+            # expand "~" to make the "-h" test work
+            [[ $i == '~' ]] && cur+=$HOME || cur+=$i
             if [[ -h $cur ]]; then
                 colored+=("${ln_color}${i}${cwdtext}")
             else
