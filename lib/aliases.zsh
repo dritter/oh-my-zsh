@@ -21,26 +21,40 @@ alias afind='ack-grep -il'
 
 # "fast find in current dir": filter out any hidden directories
 ffind() {
+  local debug=0
+  if [[ $1 == '-d' ]]; then
+    debug=1
+    shift
+  fi
   # if the first argument is a dir, use it for `find`
   if [[ -d $1 ]] ; then dir=$1; shift ; else dir=. ; fi
-  # use '-name' by default, if there is only one (non-dir) arg
   args=()
-  if (( $# == 1 )) || [[ $1 != -* ]] ; then
-    args=(-name $@ -print)
+  _has_cmd=0
+  # Use '-iname' (as wildcard) by default, if there is one (non-dir/non-command) argument
+  if (( $# == 1 )); then
+    args=(-iname "*$1*" -print)
+  elif (( $# > 0 )) && [[ $1 != -* ]] ; then
+    args=(-iname "*$1*" ${@:2})
+  else
+    args=($@)
   fi
-  if (( $# > 1 )); then
-    _has_cmd=0
-    for arg ; do
-      if [[ $arg == -* ]]; then
-        _has_cmd=1
-        break
-      fi
-    done
-    [[ $_has_cmd == 0 ]] && args+=(-print)
-  fi
-  cmd=(find $dir -mindepth 1 \( -type d -name ".*" -prune \) -o \( "$args" \))
-  echo $cmd >&2
-  $=cmd
+
+  # if (( $# > 1 )) && [[ $_has_cmd == 0 ]]; then
+  #   for arg ; do
+  #     if [[ $arg == -* ]]; then
+  #       _has_cmd=1
+  #       break
+  #     fi
+  #   done
+  #   [[ $_has_cmd == 0 ]] && args+=(-print)
+  # fi
+  # If args are empty, use -print (use case: find every file, but hidden ones)
+  [[ $#args == 0 ]] && args=(-print)
+  (( $debug )) && echo "DEBUG: args: $args ($#args)" >&2
+  cmd=(find $dir -mindepth 1 \( -type d -name ".*" -prune \) -o \( $args \))
+  # cmd=(find $dir \( ${args} \))
+  (( $debug )) && echo "DEBUG: cmd:  ${(Q)${(z)cmd}}" >&2
+  $cmd
 }
 
 # ls
