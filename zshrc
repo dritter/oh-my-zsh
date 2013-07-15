@@ -283,6 +283,17 @@ TRAPINT() { print -nP %F{red}%B\^C%f%b; return 1 }
 alias :q=exit
 alias ZZ=exit
 
+# change to repository root (starting in parent directory)
+# use the first entry of the globbing
+RR() {
+  local a
+  a=( (../)#/.(git|hg|svn|bzr)(:h) )
+  if (( $#a )); then
+    cd $a[1]
+  fi
+}
+
+
 # goodness from grml-etc-core {{{1
 # http://git.grml.org/?p=grml-etc-core.git;a=summary
 
