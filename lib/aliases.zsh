@@ -49,7 +49,12 @@ ffind() {
   #   [[ $_has_cmd == 0 ]] && args+=(-print)
   # fi
   # If args are empty, use -print (use case: find every file, but hidden ones)
-  [[ $#args == 0 ]] && args=(-print)
+  if [[ $#args == 0 ]]; then
+    args=(-print)
+  elif [[ $args[$#args] != -* ]]; then
+    # no command as last arg: use print
+    args+=(-print)
+  fi
   (( $debug )) && echo "DEBUG: args: $args ($#args)" >&2
   cmd=(find $dir -mindepth 1 \( -type d -name ".*" -prune \) -o \( $args \))
   # cmd=(find $dir \( ${args} \))
