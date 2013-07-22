@@ -27,14 +27,20 @@ ffind() {
     shift
   fi
   # if the first argument is a dir, use it for `find`
-  if [[ -d $1 ]] ; then dir=$1; shift ; else dir=. ; fi
+  if [[ -d $1 ]] ; then
+    dir=$1; shift
+    (( $debug )) && echo "DEBUG: finding in $dir" >&2
+  else; dir=. ; fi
+
   args=()
   _has_cmd=0
   # Use '-iname' (as wildcard) by default, if there is one (non-dir/non-command) argument
-  if (( $# == 1 )); then
-    args=(-iname "*$1*" -print)
-  elif (( $# > 0 )) && [[ $1 != -* ]] ; then
-    args=(-iname "*$1*" ${@:2})
+  if (( $# > 0 )) && [[ $1 != -* ]]; then
+    if (( $# == 1 )) ; then
+      args=(-iname "*$1*" -print)
+    else
+      args=(-iname "*$1*" ${@:2})
+    fi
   else
     args=($@)
   fi
