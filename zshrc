@@ -341,14 +341,15 @@ salias() {
 callwithsudoifnecessary_first() {
   cmd=$1; shift
   for file do
-    if [[ -f $file ]]; then
+    # NOTE: `test -f` fails if the parent dir is not readable, e.g. /var/log/audit/audit.log
+    # if [[ -f $file ]]; then
       if [[ -r $file ]]; then
 	${(Q)${(z)cmd}} $file
       else
 	sudo ${(Q)${(z)cmd}} $file
       fi
       return
-    fi
+    # fi
   done
 }
 # Call command ($1) with all arguments, and use sudo if any file argument is not readable
@@ -356,7 +357,8 @@ callwithsudoifnecessary_first() {
 callwithsudoifnecessary_all() {
   cmd=$1; shift
   for file do
-    if [[ -f $file ]] && ! [[ -r $file ]]; then
+    # NOTE: `test -f` fails if the parent dir is not readable, e.g. /var/log/audit/audit.log
+    if ! [[ -r $file ]]; then
       sudo ${(Q)${(z)cmd}} "$@"
       return $?
     fi
