@@ -46,9 +46,15 @@ function omz_termsupport_preexec {
   local jobspec
   local -a newtyped
   if [[ $typed[1] == fg ]] ; then
-    # set typed to jobtext for first argument. If there are more, add "(+x jobs)"
-    jobspec=${typed[2]:-%+} ;
+    # Set typed to jobtext for first argument. If there are more, add "(+x jobs)".
+    # Use jobspec from $typed[2] if not empty and it does not start with "[;&|]" (starting next command)
+    if [[ -n "$typed[2]" ]] && [[ $typed[2] != [\;\&\|]* ]]; then
+      jobspec=${typed[2]}
+    else
+      jobspec='%+'
+    fi
     newtyped=(${(z)${jobtexts[$jobspec]}})
+    # XXX: ???
     if (( ${+typed[3]} )) ; then
       newtyped+=(" (+ $(( ${#typed}-2 )) jobs)")
     fi
