@@ -21,7 +21,8 @@ _strip_escape_codes() {
     [[ -n $commands[gsed] ]] && sed=gsed || sed=sed # gsed with coreutils on MacOS
     # XXX: does not work with MacOS default sed either?!
     # echo "${(%)1}" | sed "s/\x1B\[\([0-9]\{1,3\}\(;[0-9]\{1,3\}\)?\)?[m|K]//g"
-    echo "${(%)1}" | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
+    # echo "${(%)1}" | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
+    echo $1 | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
 }
 
 add-zsh-hook precmd prompt_blueyed_precmd
@@ -35,48 +36,40 @@ prompt_blueyed_precmd () {
     local -h exitstatus=$? # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
     local -h    normtext="%{$fg_no_bold[green]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
-    local -h        gray="%{$fg_bold[black]%}"
+    local -h        grey="%{$fg_bold[grey]%}"
     local -h        blue="%{$fg_no_bold[blue]%}"
     local -h     cwdtext="%{$fg_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
-    local -h    roottext="%{$fg_bold[green]%}"
+    local -h    warntext="%{$fg_bold[red]%}"
+    local -h    roottext="%{$fg_bold[red]%}"
+    local -h    repotext="%{$fg_bold[green]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_no_bold[white]%}"
-    local -h   darkdelim="$gray"
+    local -h   darkdelim="$grey"
     local -h bracket_open="${darkdelim}["
     local -h bracket_close="${darkdelim}]"
 
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
-    if ! vcs_info 'prompt' &> /dev/null; then
+    if (( $ZSH_DISABLE_VCS_INFO )) || ! vcs_info 'prompt' &> /dev/null; then
         # No vcs_info available, only set cwd
         prompt_vcs=""
-        cwd=$PWD
     else
         [[ -n $vcs_info_msg_0_ ]] && prompt_vcs="${PR_RESET}$vcs_info_msg_0_ "
-        cwd=$(_strip_escape_codes ${vcs_info_msg_1_%.})
-        rprompt_extra+=("${vcs_info_msg_2_}")
-
-        # Check if $cwd (from vcs_info) is in $PWD - which may not be the case with symbolic links
-        # (e.g. some SVN symlink in a CVS repo)
-        if [[ ${cwd#$PWD} = $cwd ]]; then
-            cwd=$PWD
-        fi
+        rprompt_extra+=("${vcs_info_msg_1_}")
     fi
-    # Replace $HOME with ~ (before highlighting symlinks - home contains a symlink for admin on synology diskstation)
-    cwd="${cwd/#$HOME/~}"
 
-    # Highlight symbolic links in $cwd
+    cwd=${(%):-%~} # 'print -P "%~"'
+
+    # Highlight different types in segments of $cwd
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
     # Fallback to default, if "target" is used
     [ "$ln_color" = "target" ] && ln_color="01;36"
     [[ -z $ln_color ]] && ln_color="%{${fg_bold[cyan]}%}" || ln_color="%{"$'\e'"[${ln_color}m%}"
     local colored cur color i cwd_split
-    if [[ $cwd == '/' ]]; then
-        cwd='/'
-    else
+    if [[ $cwd != '/' ]]; then
         colored=()
         # split $cwd at '/'
         cwd_split=(${(ps:/:)${cwd}})
@@ -86,9 +79,22 @@ prompt_blueyed_precmd () {
         fi
         for i in $cwd_split; do
             # expand "~" to make the "-h" test work
-            [[ $i == '~' ]] && cur+=$HOME || cur+=$i
-            if [[ -h $cur ]]; then
+            cur+=${~i}
+            # color repository root
+            if [[ ":$cur" = $vcs_info_msg_2_ ]]; then
+                colored+=("${repotext}${i}${cwdtext}")
+                # color Git repo (not root according to vcs_info then)
+            elif [[ -d $cur/.git ]]; then
+                colored+=("${repotext}${i}${cwdtext}")
+            # color symlink segment
+            elif [[ -h $cur ]]; then
                 colored+=("${ln_color}${i}${cwdtext}")
+            # color non-existing segment
+            elif [[ ! -e $cur ]]; then
+                colored+=("${warntext}${i}${cwdtext}")
+            # color non-writable segment
+            elif [[ ! -w $cur ]]; then
+                colored+=("${nonrwtext}${i}${cwdtext}")
             else
                 colored+=($i)
             fi
@@ -98,11 +104,10 @@ prompt_blueyed_precmd () {
         cwd="${(pj:/:)colored}"
     fi
 
-    # Mark non-writable cwd
-    # TODO: test for not existing, too (in case dir gets deleted from somewhere else)
-    if [[ ! -w $PWD ]]; then
-        cwd="${nonrwtext}${cwd}"
-    fi
+    # Mark non-writable cwd (done for segments above)
+    # if [[ ! -w $PWD ]]; then
+    #     cwd="${nonrwtext}${cwd}"
+    # fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
@@ -138,6 +143,33 @@ prompt_blueyed_precmd () {
         prompt_extra+=("$normtext(venv:$(basename $VIRTUAL_ENV))")
     fi
 
+    # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
+    # Do not do this when in a midnight commander subshell.
+    [ -z "${MC_SID+x}" ]; is_mc_shell=$?
+    # if [ -f /proc/$PPID/cmdline ]; then
+    #   if grep -q '^mc\b' /proc/$PPID/cmdline; then
+    #     is_mc_shell=1
+    #   fi
+    # else
+    #   if [[ $(ps -o comm= $PPID) == "mc" ]]; then
+    #     is_mc_shell=1
+    #   fi
+    # fi
+    if [[ "$is_mc_shell" == "0" ]]; then
+        RPS1_list=('$(vi_mode_prompt_info)')
+
+        # Distribution (if on a remote system)
+        if [ -n "$SSH_CLIENT" ] ; then
+            RPS1_list+=("%{$fg_bold[black]%}$(get_distro)")
+        fi
+
+        RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
+        RPS1="${(j: :)RPS1_list}$PR_RESET"
+    else
+        prompt_extra+=("$normtext(mc)")
+    fi
+
+    # exit status
     local -h disp
     if [ $exitstatus -ne 0 ] ; then
         disp="es:$exitstatus"
@@ -167,22 +199,32 @@ prompt_blueyed_precmd () {
     [[ -n $prompt_extra ]]  &&  prompt_extra=" ${(j: :)prompt_extra}$PR_RESET"
     [[ -n $rprompt_extra ]] && rprompt_extra="${(j: :)rprompt_extra}$PR_RESET "
 
+    # tmux pane / identifier
+    # [[ -n "$TMUX_PANE" ]] && rprompt_extra+=("${TMUX_PANE//\%/%%}")
+    # history number
+    rprompt_extra+=("${normtext}!${grey}%!")
+    # time
+    rprompt_extra+=("${normtext}%*")
+
     # Assemble prompt:
-    local -h  histnr="${normtext}!${gray}%!"
-    local -h    time="${normtext}%*"
-    local -h rprompt="$rprompt_extra$histnr $time${PR_RESET}"
-    local -h prompt="${user}${prompt_at}${host} ${prompt_cwd}${ret_status}$prompt_extra"
+    local -h rprompt="$rprompt_extra${PR_RESET}"
+    local -h prompt="${user}${prompt_at}${host} ${prompt_cwd}$prompt_extra"
     # right trim:
     prompt="${prompt%% #} "
 
-    # Attach $rprompt to $prompt, aligned to $COLUMNS (terminal width)
+    # Attach $rprompt to $prompt, aligned to $TERMWIDTH
     local -h TERMWIDTH=$((${COLUMNS}-1))
     local -h rprompt_len=${#${(%)"$(_strip_escape_codes $rprompt)"}}
     local -h prompt_len=${#${(%)"$(_strip_escape_codes $prompt)"}}
-    PR_FILLBAR="$gray\${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
+    PR_FILLBAR="$grey${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
 
     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
 $prompt_vcs%{%(#.${fg_bold[red]}.${fg_bold[green]})%}%# ${PR_RESET}"
+
+    # When invoked from gvim ('zsh -i') make it less hurting
+    if [[ -n $MYGVIMRC ]]; then
+        PROMPT=$(_strip_escape_codes $PROMPT)
+    fi
 
     # End profiling
         # unsetopt xtrace
@@ -207,7 +249,7 @@ function +vi-git-stash() {
     fi
 
     if [[ -s $gitdir/refs/stash ]] ; then
-        stashes=$(git stash list 2>/dev/null | wc -l)
+        stashes=$(git --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
         hook_com[misc]+=" $bracket_open$hitext${stashes} stashed$bracket_close"
     fi
 }
@@ -275,36 +317,14 @@ function vi_mode_prompt_info() {
   echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
 }
 
-# Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
-# Do not do this when in a midnight commander subshell.
-is_mc_shell=0
-if [ -f /proc/$PPID/cmdline ]; then
-  if grep -q '^mc\b' /proc/$PPID/cmdline; then
-    is_mc_shell=1
-  fi
-else
-  if [[ $(ps -o comm= $PPID) == "mc" ]]; then
-    is_mc_shell=1
-  fi
-fi
-if [[ "$is_mc_shell" == "0" ]]; then
-    RPS1_list=('$(vi_mode_prompt_info)')
-
-    # Distribution
-    local -h distrotext="%{$fg_bold[black]%}"
-    RPS1_list+=("$distrotext$(get_distro)")
-
-    RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
-    RPS1="${(j: :)RPS1_list}$PR_RESET"
-fi
-
 color_for_host() {
     colors=(cyan white yellow magenta blue default green)
-    host=$(hostname -f 2>/dev/null || hostname)
-    echo $(hash_value_from_list $host "$colors")
+    # NOTE: do not use `hostname -f`, which is slow with wacky network
+    echo $(hash_value_from_list $HOST "$colors")
 }
 
 # Hash the given value to an item from the given list.
+# Note: if strange errors happen here, it is because of some DEBUG echo in ~/.zshenv/zshrc probably.
 hash_value_from_list() {
     value=$1
     list=(${(s: :)2})
@@ -316,18 +336,14 @@ hash_value_from_list() {
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
 FMT_BRANCH=" %{$fg_no_bold[blue]%}↳ %{$fg_no_bold[blue]%}%s:%b%{$fg_bold[blue]%}%u%{$fg_bold[magenta]%}%c" # e.g. master¹²
 FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
-FMT_PATH="%R%{$fg[yellow]%}/%S"   # e.g. ~/repo/subdir
 
 # zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
-zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "${FMT_PATH}" "%m"
-zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "${FMT_PATH}" "%m"
-zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            "%~"          ""
+zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" ":%R" # prepend ':' to make it not get used in %~ shortening
+zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" ":%R" # --"--
+zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   ""
 zstyle ':vcs_info:*:prompt:*' max-exports 3
 
-# check-for-changes can be really slow.
-# you should disable it, if you work with large repositories
-zstyle ':vcs_info:*:prompt:*' check-for-changes true
 
 #  vim: set ft=zsh ts=4 sw=4 et:
