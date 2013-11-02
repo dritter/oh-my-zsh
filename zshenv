@@ -52,6 +52,9 @@ done
 typeset -U path
 
 
-export EDITOR=vim
+[ -x /usr/local/bin/vim ] && export EDITOR=/usr/local/bin/vim || export EDITOR=vim
 export GPGKEY='3FE63E00'
+
+# Source local env file if any
+[ -f ~/.zshenv.local ] && source ~/.zshenv.local
 
