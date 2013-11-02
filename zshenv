@@ -1,31 +1,52 @@
 setopt noglobalrcs
 
-
 # PATH handling (both for login, interactive and "other" shells):
 
+# Use wrappers to append/prepend PATH elements only if they are
+# missing. This helps to keep VirtualEnv's path at the front.
+# (in case of using tmux after `workon`, where each window spawns a new shell)
+append_path_if_not_in_already() {
+  for i; do
+    # echo "Check: $i" >> /tmp/O
+    (( ${path[(i)$i]} <= ${#path} )) && continue
+    # echo "Add: $i" >> /tmp/O
+    path+=($i)
+  done
+}
+prepend_path_if_not_in_already() {
+  for i; do
+    # echo "Check: $i" >> /tmp/O
+    (( ${path[(i)$i]} <= ${#path} )) && continue
+    # echo "Prepend: $i" >> /tmp/O
+    path=($i $path)
+  done
+}
+
 # Add superuser binaries to path
-path+=(/sbin /usr/sbin)
+append_path_if_not_in_already /sbin /usr/sbin
 
 # Add GNU coreutils to path on MacOS
 if [[ -n $commands[brew] ]]; then
-  path=($(brew --prefix coreutils)/libexec/gnubin $path)
+  prepend_path_if_not_in_already $(brew --prefix coreutils)/libexec/gnubin
 fi
 
-path=(~/.dotfiles/usr/bin ~/bin /usr/local/bin /usr/local/sbin $path)
+prepend_path_if_not_in_already ~/.dotfiles/usr/bin ~/bin /usr/local/bin /usr/local/sbin
 
 # Add various "bin" directories to $path
 # (e.g. /usr/local/apache2/bin is used @bp)
+# TODO: might add both /usr/local/apache2_2.2.16/bin /usr/local/apache2_2.2.24/bin to path!
+#       Reverse-sort as a workaround?
+#       Or only use symlinks (apache2 points there)
 for i in /usr/local/*(N/:A) /opt/*(N/:A) /var/lib/gems/*(N/:A) ; do
   test -d $i/bin || continue
-  path+=($i/bin)
+  append_path_if_not_in_already $i/bin
 done
 
 # Add any custom directories, which might exist
 for i in /opt/eclipse ; do
   test -d $i || continue
-  path+=($i)
+  append_path_if_not_in_already $i
 done
-
 
 # make path/PATH entries unique
 typeset -U path
