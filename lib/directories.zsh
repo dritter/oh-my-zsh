@@ -1,5 +1,6 @@
 # Changing/making/removing directory
-setopt auto_name_dirs
+# Do not set autonamedirs: it will use all vars for '%~' expansion!
+# setopt auto_name_dirs
 setopt auto_pushd
 setopt pushd_ignore_dups
 
