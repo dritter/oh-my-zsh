@@ -51,7 +51,13 @@ export RI="--format ansi"
 
 # directory based VCS before repo based ones (e.g. CVS in $HOME, the latter using Git)
 zstyle ':vcs_info:*' enable cvs svn bzr hg git
-zstyle ':vcs_info:bzr:*' use-simple true
+# check-for-changes can be really slow.
+# you should disable it, if you work with large repositories
+zstyle ':vcs_info:*:prompt:*' check-for-changes true
+zstyle ':vcs_info:*' get-revision true
+# zstyle ':vcs_info:bzr:*' use-simple true
+zstyle ':vcs_info:(bzr|hg|svn):*' use-simple false
+zstyle ':vcs_info:*:prompt:*' hgrevformat '%r'
 
 
 # Incremental search
