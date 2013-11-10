@@ -117,19 +117,20 @@ prompt_blueyed_precmd () {
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
     prompt_cwd="$cwdtext${cwd}"
 
-    # http_proxy defines color of "@" between user and host
-    if [[ -n $http_proxy ]] ; then
-        prompt_at="${hitext}@"
-    else
-        prompt_at="${normtext}@"
-    fi
+    local userathost
+    if [[ -n $SSH_CLIENT ]]; then
+        local -h     user="%(#.$roottext.$normtext)%n"
 
-    local -h     user="%(#.$roottext.$normtext)%n"
-    # Color host name according to its hashed value. Use bold color if connected through SSH.
-    if [ -n "$SSH_CLIENT" ] ; then
-        local -h     host="%{${fg_bold[$(color_for_host)]}%}%m"
-    else
+        # http_proxy defines color of "@" between user and host
+        if [[ -n $http_proxy ]] ; then
+            prompt_at="${hitext}@"
+        else
+            prompt_at="${normtext}@"
+        fi
+
         local -h     host="%{${fg_no_bold[$(color_for_host)]}%}%m"
+
+        userathost="${user}${prompt_at}${host} "
     fi
 
     # Debian chroot
@@ -212,7 +213,7 @@ prompt_blueyed_precmd () {
 
     # Assemble prompt:
     local -h rprompt="$rprompt_extra${PR_RESET}"
-    local -h prompt="${user}${prompt_at}${host} ${prompt_cwd}$prompt_extra"
+    local -h prompt="${userathost}${prompt_cwd}$prompt_extra"
     # right trim:
     prompt="${prompt%% #} "
 
@@ -223,7 +224,7 @@ prompt_blueyed_precmd () {
     PR_FILLBAR="$grey${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
 
     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
-$prompt_vcs%{%(#.${fg_bold[red]}.${fg_bold[green]})%}%# ${PR_RESET}"
+$prompt_vcs%{%(#.${fg_bold[red]}.${fg_bold[green]})%}%(#.$roottext.$normtext)❯${PR_RESET} "
 
     # When invoked from gvim ('zsh -i') make it less hurting
     if [[ -n $MYGVIMRC ]]; then
