@@ -169,7 +169,7 @@ function o() {
   fi
 }
 alias 7zpwd="7z a -mx0 -mhe=on -p"
-alias ag="ack-grep"
+# alias ag="ack-grep" # `ag` is a command by itself
 alias lh="ls -alt | head"
 
 
