@@ -70,38 +70,42 @@ prompt_blueyed_precmd () {
     [[ -z $ln_color ]] && ln_color="%{${fg_bold[cyan]}%}" || ln_color="%{"$'\e'"[${ln_color}m%}"
     local colored cur color i cwd_split
     if [[ $cwd != '/' ]]; then
-        colored=()
         # split $cwd at '/'
         cwd_split=(${(ps:/:)${cwd}})
         if [[ $cwd[1] == '/' ]]; then
+            # starting at root
             cur='/'
-            colored=('')
         fi
         for i in $cwd_split; do
             # expand "~" to make the "-h" test work
             cur+=${~i}
             # color repository root
             if [[ ":$cur" = $vcs_info_msg_2_ ]]; then
-                colored+=("${repotext}${i}${cwdtext}")
+                color=${repotext}
                 # color Git repo (not root according to vcs_info then)
             elif [[ -d $cur/.git ]]; then
-                colored+=("${repotext}${i}${cwdtext}")
+                color=${repotext}
             # color symlink segment
             elif [[ -h $cur ]]; then
-                colored+=("${ln_color}${i}${cwdtext}")
+                color=${ln_color}
             # color non-existing segment
             elif [[ ! -e $cur ]]; then
-                colored+=("${warntext}${i}${cwdtext}")
+                color=${warntext}
             # color non-writable segment
             elif [[ ! -w $cur ]]; then
-                colored+=("${nonrwtext}${i}${cwdtext}")
+                color=${nonrwtext}
             else
-                colored+=($i)
+                color=${cwdtext}
+            fi
+            # add slash, if not the first segment, or cwd starts with "/"
+            if [[ -n $colored ]] || [[ $cwd[1] == '/' ]]; then
+                colored+=${color}/${i}
+            else
+                colored+=${color}${i}
             fi
             cur+='/'
         done
-        # join (possibly colored) parts with slash
-        cwd="${(pj:/:)colored}"
+        cwd=${colored}
     fi
 
     # Mark non-writable cwd (done for segments above)
