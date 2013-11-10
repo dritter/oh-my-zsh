@@ -102,7 +102,8 @@ xgrep() {
 xrgrep() {
   # Get grep pattern and find's path from args
   # Any options are being passed to grep.
-  local inopts findpath grepopts greppattern
+  local inopts findpath grepopts greppattern debug
+  debug=0
   inopts=1
   findpath=() # init appears to be required to prevent leading space from "$findpath" passed to `find`
   for i in "$@"; do
@@ -113,7 +114,12 @@ xrgrep() {
       else
         findpath+=($i)
       fi
-    else grepopts+=($i)
+    else
+      if [[ $i == '--debug' ]]; then
+	debug=1
+      else
+	grepopts+=($i)
+      fi
     fi
   done
   [[ -z $findpath ]] && findpath=('.')
@@ -122,8 +128,8 @@ xrgrep() {
 
   # build command to use once
   if [[ -z $_xgrep_cmd ]] ; then
-    _xgrep_exclude_dirs=(CVS .svn .bzr .git .hg .evocache media asset) # "media, asset" with betterplace (tb)
-    _xgrep_exclude_exts=(avi mp gif gz jpeg jpg JPG png pptx rar swf tif wma xls xlsx zip)
+    _xgrep_exclude_dirs=(CVS .svn .bzr .git .hg .evocache media asset cache) # "media, asset, cache" with betterplace (tb)
+    _xgrep_exclude_exts=(avi mp gif gz jpeg jpg JPG png pptx rar swf sw\? tif wma xls xlsx zip) # sw?=vim swap files
     _xgrep_exclude_files=(tags)
 
     if [[ -n $_xgrep_cmd_local_extra_opts ]]; then
