@@ -1,6 +1,7 @@
 # Aliases
 #alias g='git' # used for 'gvim --remote'
 alias ga='git add'
+alias gap='git add --patch'
 alias gae='git add --edit'
 alias gb='git branch'
 alias gba='git branch -a'
@@ -13,9 +14,32 @@ alias gcount='git shortlog -sn'
 alias gcp='git cherry-pick'
 alias gd='git diff --submodule'
 alias gdc='git diff --cached'
+# `git diff` against upstream (usually origin/master)
+gdo() {
+  _git_against_upstream diff "$@"
+}
+compdef _git gdo=git-diff
+# `git log` against upstream (usually origin/master)
+glo() {
+  [ x$1 = x ] && opt='--stat' || opt="$@"
+  _git_against_upstream log "$opt"
+}
+compdef _git glo=git-log
+_git_against_upstream() {
+  [ x$1 = x ] && { echo "Missing command."; return 1; }
+  u=$(git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD))
+  [ x$u = x ] && { echo "No upstream setup for tracking."; return 2; }
+  cmd=(git $@ $u..HEAD)
+  echo $cmd
+  $cmd
+}
 gdv() { git diff -w "$@" | view - }
 compdef _git gdv=git-diff
+alias gdt='git difftool'
+alias gdtc='git difftool --cached'
+alias gf='git fetch'
 alias gl='git l'
+alias glp='gl -p'
 alias glg='git log --stat --max-count=5'
 alias glgg='git log --graph --max-count=5'
 alias gls='git ls-files'
@@ -57,9 +81,13 @@ gsmc() {
 }
 # "git submodule add":
 gsma() {
+  local -h gitroot
   [ x$1 = x ] && { echo "Add which submodule?"; return 1;}
   [ x$2 = x ] && { echo "Where to add submodule?"; return 2;}
   git diff --cached --exit-code > /dev/null || { echo "Index is not clean."; return 1 ; }
+  # test for clean .gitmodules
+  gitroot=$(readlink -f ./$(git rev-parse --show-cdup))
+  git diff --exit-code $gitroot/.gitmodules > /dev/null || { echo ".gitmodules is not clean."; return 2 ; }
   git submodule add "$1" "$2" && \
   summary=$(git submodule summary "$2") && \
   summary=( ${(f)summary} ) && \
@@ -106,8 +134,20 @@ function current_branch() {
 # these aliases take advantage of the previous function
 alias ggpull='git pull origin $(current_branch)'
 compdef ggpull=git
-alias ggpush='git push origin $(current_branch)'
-compdef ggpush=git
+ggpush() {
+  local branch=$(current_branch)
+  [[ -z $branch ]] && { echo "No current branch (according to 'current_branch').\nAre you maybe in a rebase, or not in a Git repo?"; return 1; }
+  # TODO: git push ${1-@{u}} $branch
+  git push ${1-origin} $branch
+}
+# TODO: refactor with ggpush (only '-f' is different)
+ggpushf() {
+  local branch=$(current_branch)
+  [[ -z $branch ]] && { echo "No current branch (according to 'current_branch').\nAre you maybe in a rebase, or not in a Git repo?"; return 1; }
+  # TODO: git push -f ${1-@{u}} $branch
+  git push -f ${1-origin} $branch
+}
+compdef ggpushf=git
 alias ggpnp='git pull origin $(current_branch) && git push origin $(current_branch)'
 compdef ggpnp=git
 # Setup wrapper for git's editor. It will use just core.editor for other
