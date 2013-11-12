@@ -50,14 +50,44 @@ export RI="--format ansi"
 
 
 # directory based VCS before repo based ones (e.g. CVS in $HOME, the latter using Git)
-zstyle ':vcs_info:*' enable cvs svn bzr hg git
-# check-for-changes can be really slow.
-# you should disable it, if you work with large repositories
-zstyle ':vcs_info:*:prompt:*' check-for-changes true
+# zstyle ':vcs_info:*' enable cvs svn bzr hg git
+# zstyle ':vcs_info:*' enable hg bzr git
+zstyle ':vcs_info:*' enable git
 zstyle ':vcs_info:*' get-revision true
 # zstyle ':vcs_info:bzr:*' use-simple true
 zstyle ':vcs_info:(bzr|hg|svn):*' use-simple false
 zstyle ':vcs_info:*:prompt:*' hgrevformat '%r'
+
+# check-for-changes can be really slow.
+# Enable it depending on the current dir's filesystem type.
+autoload -U add-zsh-hook
+add-zsh-hook chpwd _zshrc_vcs_check_for_changes_hook
+_zshrc_vcs_check_for_changes_hook() {
+  local -h check_for_changes
+  if [[ -n $ZSH_CHECK_FOR_CHANGES ]]; then
+    # override per env:
+    check_for_changes=$ZSH_CHECK_FOR_CHANGES
+  elif df -t sshfs -t nfs -t cifs . &>/dev/null; then
+    zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'
+    if [[ $? == 0 ]]; then
+      echo "on slow fs: check_for_changes => false"
+      zstyle ':vcs_info:*:prompt:*' check-for-changes false
+    fi
+  else
+    zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'
+    local rv=$?
+    if [[ $rv != 0 ]]; then
+      if [[ $rv == 1 ]]; then
+	# was false (and not unset):
+	echo "on fast fs: check_for_changes => true"
+      fi
+      zstyle ':vcs_info:*:prompt:*' check-for-changes true
+    fi
+  fi
+}
+# init
+_zshrc_vcs_check_for_changes_hook
+
 
 
 # Incremental search
