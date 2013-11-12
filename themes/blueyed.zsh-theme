@@ -258,12 +258,12 @@ function +vi-git-stash() {
     # Resolve git dir (necessary for submodules)
     gitdir=${hook_com[base]}/.git
     if [[ -f $gitdir ]]; then
-        gitdir=$(git rev-parse --resolve-git-dir $gitdir)
+        gitdir=$(command git rev-parse --resolve-git-dir $gitdir)
     fi
 
     if [[ -s $gitdir/refs/stash ]] ; then
-        stashes=$(git --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
-        hook_com[misc]+=" $bracket_open$hitext${stashes} stashed$bracket_close"
+        stashes=$(command git --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
+        hook_com[misc]+="$bracket_open$hitext${stashes} stashed$bracket_close"
     fi
 }
 
@@ -279,7 +279,7 @@ function +vi-git-st() {
     fi
 
     # Are we on a remote-tracking branch?
-    remote=${$(git rev-parse --verify ${hook_com[branch]}@{upstream} \
+    remote=${$(command git rev-parse --verify ${hook_com[branch]}@{upstream} \
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
 
     local_branch=${hook_com[branch]}
@@ -293,13 +293,13 @@ function +vi-git-st() {
         return
     else
         # for git prior to 1.7
-        # ahead=$(git rev-list origin/${hook_com[branch]}..HEAD | wc -l)
-        ahead=$(git rev-list ${hook_com[branch]}@{upstream}..HEAD 2>/dev/null | wc -l)
+        # ahead=$(command git rev-list origin/${hook_com[branch]}..HEAD | wc -l)
+        ahead=$(command git rev-list ${hook_com[branch]}@{upstream}..HEAD 2>/dev/null | wc -l)
         (( $ahead )) && gitstatus+=( "${normtext}+${ahead}" )
 
         # for git prior to 1.7
-        # behind=$(git rev-list HEAD..origin/${hook_com[branch]} | wc -l)
-        behind=$(git rev-list HEAD..${hook_com[branch]}@{upstream} 2>/dev/null | wc -l)
+        # behind=$(command git rev-list HEAD..origin/${hook_com[branch]} | wc -l)
+        behind=$(command git rev-list HEAD..${hook_com[branch]}@{upstream} 2>/dev/null | wc -l)
         (( $behind )) && gitstatus+=( "${alerttext}-${behind}" )
 
         remote=${remote%/$local_branch}
