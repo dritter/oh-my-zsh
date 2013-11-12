@@ -12,6 +12,8 @@ if [ "$commands[(I)hub]" ] && [ "$commands[(I)ruby]" ]; then
             command git "$@"
         fi
     }
+    # use the git command for vcs_info, instead of hub!
+    zstyle ':vcs_info:git:*:-all-' command $(whence -p git)
 fi
 
 # Functions #################################################################
