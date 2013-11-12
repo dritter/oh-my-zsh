@@ -57,7 +57,10 @@ prompt_blueyed_precmd () {
         # No vcs_info available, only set cwd
         prompt_vcs=""
     else
-        [[ -n $vcs_info_msg_0_ ]] && prompt_vcs="${PR_RESET}$vcs_info_msg_0_ "
+        prompt_vcs="${PR_RESET}$vcs_info_msg_0_"
+        if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
+            prompt_vcs+=' ?'
+        fi
         rprompt_extra+=("${vcs_info_msg_1_}")
     fi
 
@@ -246,6 +249,11 @@ function +vi-git-stash() {
     local gitdir
 
     [[ $1 == 0 ]] || return # do this only once for vcs_info_msg_0_.
+    # return if check-for-changes is false:
+    if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
+        hook_com[misc]+="$bracket_open$hitext? stashed$bracket_close"
+        return
+    fi
 
     # Resolve git dir (necessary for submodules)
     gitdir=${hook_com[base]}/.git
@@ -265,6 +273,10 @@ function +vi-git-st() {
     local -a gitstatus
 
     [[ $1 == 0 ]] || return # do this only once vcs_info_msg_0_.
+    # return if check-for-changes is false:
+    if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
+        return
+    fi
 
     # Are we on a remote-tracking branch?
     remote=${$(git rev-parse --verify ${hook_com[branch]}@{upstream} \
