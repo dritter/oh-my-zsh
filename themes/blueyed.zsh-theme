@@ -227,7 +227,7 @@ prompt_blueyed_precmd () {
     PR_FILLBAR="$grey${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
 
     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
-$prompt_vcs%{%(#.${fg_bold[red]}.${fg_bold[green]})%}%(#.$roottext.$normtext)❯${PR_RESET} "
+$prompt_vcs%(#.$roottext.$normtext)❯${PR_RESET} "
 
     # When invoked from gvim ('zsh -i') make it less hurting
     if [[ -n $MYGVIMRC ]]; then
