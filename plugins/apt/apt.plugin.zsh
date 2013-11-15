@@ -2,8 +2,8 @@
 #
 # asearch:   apt-cache search
 # aup:       apt-get update
-# aupgrade:  aptitude upgrade -V
-# asup:      apt-get update -qq && aptitude safe-upgrade
+# aupgrade:  aptitude upgrade -V --full-resolver
+# asup:      apt-get update -qq && aptitude upgrade -V --full-resolver
 # apurge:    aptitude purge
 # afs:       apt-file search
 # amad:      apt-cache madison
@@ -12,7 +12,7 @@
 #
 # The following support '-g PATTERN' (via apt-cache madison).
 # "asrc -g lucid hello" => "apt-get source hello=2.4-3"
-# ainst:     aptitude install
+# ainst:     aptitude install -V
 # asrc:      apt-get source
 # ashow:     apt-cache show
 # ashowsrc:  apt-cache showsrc
@@ -135,15 +135,15 @@ alias apol="apt-cache policy"
 alias afs="apt-file search"
 if [[ $UID = 0 ]]; then
     alias aup="LANG=C apt-get update"
-    alias aupgrade="aptitude upgrade -V"
+    alias aupgrade="aptitude upgrade -V --full-resolver"
     alias apurge="aptitude purge"
-    alias asup="LANG=C verynice apt-get update -qq && verynice aptitude safe-upgrade -V"
+    alias asup="LANG=C verynice apt-get update -qq && verynice aptitude upgrade -V --full-resolver"
     alias afsu="apt-file update"
 else
     alias aup="LANG=C sudo apt-get update"
-    alias aupgrade="sudo aptitude upgrade -V"
+    alias aupgrade="sudo aptitude upgrade -V --full-resolver"
     alias apurge="sudo aptitude purge"
-    alias asup="LANG=C verynice sudo apt-get update -q2 && verynice sudo aptitude safe-upgrade -V"
+    alias asup="LANG=C verynice sudo apt-get update -q2 && verynice sudo aptitude upgrade -V --full-resolver"
     alias afsu="sudo apt-file update"
 fi
 
@@ -154,9 +154,9 @@ asrc() {
 }
 ainst() {
     if [[ $UID = 0 ]]; then
-        _apt_cache_madison_grep_wrapper "aptitude install" "Packages" "$@"
+        _apt_cache_madison_grep_wrapper "aptitude install -V" "Packages" "$@"
     else
-        _apt_cache_madison_grep_wrapper "sudo aptitude install" "Packages" "$@"
+        _apt_cache_madison_grep_wrapper "sudo aptitude install -V" "Packages" "$@"
     fi
     # rebuild zsh cache of known programs
     which rehash > /dev/null && rehash
