@@ -335,9 +335,12 @@ function vi_mode_prompt_info() {
 }
 
 color_for_host() {
-    colors=(cyan white yellow magenta blue default green)
+    # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
+    colors=(cyan yellow magenta blue green)
+
     # NOTE: do not use `hostname -f`, which is slow with wacky network
-    echo $(hash_value_from_list $HOST "$colors")
+    # %M resolves to the full hostname
+    echo $(hash_value_from_list ${(%):-%M} "$colors")
 }
 
 # Hash the given value to an item from the given list.
