@@ -100,6 +100,12 @@ gsmrm() {
   [ -d "$1" ] || { echo "Submodule $1 not found."; return 2;}
   [ -f .gitmodules ] || { echo ".gitmodules not found."; return 3;}
   git diff --cached --exit-code > /dev/null || { echo "Index is not clean."; return 1 ; }
+  # test for clean .gitmodules
+  git diff --exit-code .gitmodules > /dev/null || { echo ".gitmodules is not clean."; return 2 ; }
+  if [[ -f Makefile ]]; then
+    git diff --exit-code Makefile > /dev/null || { echo "Makefile is not clean."; return 2 ; }
+  fi
+
   # remove submodule entry from .gitmodules and .git/config (after init/sync)
   git config -f .git/config --remove-section submodule.$1
   git config -f .gitmodules --remove-section submodule.$1
@@ -108,10 +114,15 @@ gsmrm() {
   # mv $tempfile .gitmodules
   git rm --cached $1
   git add .gitmodules
-  # Add the module to the `migrate` task in the Makefile and increase its name:
-  grep -q "rm_bundles=.*$1" Makefile || sed -i "s:	rm_bundles=\"[^\"]*:\0 $1:" Makefile
-  i=$(( $(grep '^.stamps/submodules_rm' Makefile | cut -f3 -d. | cut -f1 -d:) + 1 ))
-  sed -i "s~\(.stamps/submodules_rm\).[0-9]\+~\1.$i~" Makefile
+  
+  if [[ -f Makefile ]]; then
+    # Add the module to the `migrate` task in the Makefile and increase its name:
+    grep -q "rm_bundles=.*$1" Makefile || sed -i "s:	rm_bundles=\"[^\"]*:\0 $1:" Makefile
+    i=$(( $(grep '^.stamps/submodules_rm' Makefile | cut -f3 -d. | cut -f1 -d:) + 1 ))
+    sed -i "s~\(.stamps/submodules_rm\).[0-9]\+~\1.$i~" Makefile
+    git add Makefile
+  fi
+  echo "NOTE: changes staged, not committed."
   echo "You might want to 'rm $1' now or run the migrate task."
 }
 
