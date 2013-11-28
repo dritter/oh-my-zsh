@@ -404,10 +404,6 @@ zstyle ':completion:tmux-pane-words-(prefix|anywhere):*' menu yes select interac
 zstyle ':completion:tmux-pane-words-anywhere:*' matcher-list 'b:=* m:{A-Za-z}={a-zA-Z}'
 # }}}
 
-# zstyle ':completion:*' menu yes select=1 select=long-list interactive
-# zstyle ':completion:*' menu yes select=1 select=long-list
-zstyle ':completion:*' menu auto select search
-
 # goodness from grml-etc-core {{{1
 # http://git.grml.org/?p=grml-etc-core.git;a=summary
 

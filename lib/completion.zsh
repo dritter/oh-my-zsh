@@ -24,7 +24,7 @@ zstyle ':completion:*:default' list-colors ''
 # should this be in keybindings?
 bindkey -M menuselect '^o' accept-and-infer-next-history
 
-zstyle ':completion:*:*:*:*:*' menu select
+zstyle ':completion:*' menu auto select search
 zstyle ':completion:*:*:kill:*' menu yes select
 zstyle ':completion:*:kill:*'   force-list always
 zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;34=0=01'
