@@ -144,23 +144,38 @@ function current_branch() {
 
 # these aliases take advantage of the previous function
 alias ggpull='git pull origin $(current_branch)'
-compdef ggpull=git
+compdef _git ggpull=git-pull
+
 ggpush() {
-  local branch=$(current_branch)
-  [[ -z $branch ]] && { echo "No current branch (according to 'current_branch').\nAre you maybe in a rebase, or not in a Git repo?"; return 1; }
+  local -h remote branch
+  local -ha args git_opts
+
+  # get args (skipping options)
+  for i; do
+    [[ $i == -* ]] && git_opts+=($i) || args+=($i)
+    [[ $i == -h ]] && { echo "Usage: ggpush [--options...] [remote (Default: origin)] [branch (Default: current)]"; return; }
+  done
+
+  branch=${args[2]-$(current_branch)}
+  remote=${args[1]}
+  if [[ -z $remote ]]; then
+    # XXX: may resolve to "origin/develop" for new local branches..
+    remote=${$(command git rev-parse --verify $branch@{upstream} \
+        --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
+    remote=${remote%/$branch}
+  fi
+
+  echo "$remote:$branch"
+  [[ -z $branch ]] && { echo "No current branch (given or according to 'current_branch').\nAre you maybe in a rebase, or not in a Git repo?"; return 1; }
+
   # TODO: git push ${1-@{u}} $branch
-  git push ${1-origin} $branch
+  git push $=git_opts $remote $branch
 }
-# TODO: refactor with ggpush (only '-f' is different)
-ggpushf() {
-  local branch=$(current_branch)
-  [[ -z $branch ]] && { echo "No current branch (according to 'current_branch').\nAre you maybe in a rebase, or not in a Git repo?"; return 1; }
-  # TODO: git push -f ${1-@{u}} $branch
-  git push -f ${1-origin} $branch
-}
-compdef ggpushf=git
+compdef _git ggpush=git-push
+
 alias ggpnp='git pull origin $(current_branch) && git push origin $(current_branch)'
 compdef ggpnp=git
+#
 # Setup wrapper for git's editor. It will use just core.editor for other
 # files (e.g. patch editing in `git add -p`).
 export GIT_EDITOR=vim-for-git
