@@ -1,10 +1,31 @@
+# TODO: trap on Ctrl-D / exit if there are stashed changes in a directory (similar to background processes)
+#       (similar to CHECK_JOBS)
+# TODO: alias/function to trash a file (mv it to ~/.local/share/Trash/…)
+#
+
+# # Skip this, if in a subshell (e.g. in tmux)
+# if [[ -n $SHLVL ]] && [[ $SHLVL > 1 ]]; then
+#   return
+# fi
+
 # Path to your oh-my-zsh configuration.
 export ZSH=$HOME/.oh-my-zsh
 
 # Start profiling
-# PS4='+$(date "+%s:%N") %N:%i> '
-# exec 3>&2 2>/tmp/startlog.$$
-# setopt xtrace prompt_subst
+zsh_profile_start() {
+  PS4='+$(date "+%s:%N") %N:%i> '
+  exec 3>&2 2>/tmp/zsh-profile.log.$$
+  setopt xtrace prompt_subst
+  zmodload zsh/zprof
+}
+# Stop profiling
+zsh_profile_stop() {
+  unsetopt xtrace
+  exec 2>&3 3>&-
+  zprof
+}
+
+# zsh_profile_start
 
 # Set to the name theme to load.
 # Look in ~/.oh-my-zsh/themes/
@@ -124,6 +145,7 @@ edit-command-output() {
 zle -N edit-command-output
 
 # Make files executable via associated apps
+# XXX: slow?!
 autoload -U zsh-mime-setup
 zsh-mime-setup
 # Do not break invoke-rc.d completion
@@ -133,6 +155,8 @@ watch=(notme)
 
 # autojump
 source ~/.dotfiles/autojump/bin/autojump.zsh
+# XXX: _j() has been removed in autojump!?! commit 49a0d70
+# fpath=(~/.dotfiles/oh-my-zsh/functions $fpath)
 export AUTOJUMP_KEEP_SYMLINKS=1
 
 # Load bash completion system
@@ -176,9 +200,10 @@ bindkey '\ee' edit-command-line
 # Also: (smart-)ignore case and do not fold long lines.
 export LESS="-j5 -R -i -S"
 
-# directory shortcuts
+# named directories/shortcuts (~l => /var/log)
+# local ones in ~/.zshrc.local
 hash -d l=/var/log
-
+hash -d d=~/Downloads
 
 # just type '...' to get '../..'
 # Originally by grml, improved by Mikachu
@@ -275,7 +300,8 @@ sudosession() {
   # Create temporary file to be executed
   echo -nE "/usr/bin/env HOME=$sudohome" > $tempfile
   # Keep special environment vars (like sudo's envkeep)
-  for i in SSH_AUTH_SOCK SSH_CLIENT http_proxy https_proxy ftp_proxy no_proxy; do
+  # Experimental: keep original $PATH (required/useful to keep byobu from bootstrap-byobu in there)
+  for i in SSH_AUTH_SOCK SSH_CLIENT http_proxy https_proxy ftp_proxy no_proxy PATH; do
     echo -nE " $i='${(P)i}'" >> $tempfile
   done
   echo -nE " $SHELL" >> $tempfile
@@ -295,6 +321,7 @@ compdef "_arguments '-u[user name]:user name:_users' '*::arguments: _normal'" su
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 
 # Special treatment for verdi4u machines
+# WARNING: '-f' might be slow!!
 # if [[ $(hostname -f 2>/dev/null) = *.verdi4u.de ]]; then
 #   # Get recent python into $PATH for autojump
 #   # (the first python from /opt != 2.4/2.5)
@@ -313,11 +340,20 @@ export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 # autoload $ZSH/functions/*(:t)
 
 # Display "^C" when aborting zle
+# XXX: behaves funny when aborting Ctrl-R
+# Mikachu | well, you can set some private parameter when you enter isearch and unset it when you leave, and check for it in the trap
+# Mikachu | ie, use the zle-isearch-exit and zle-isearch-update widgets
 TRAPINT() { print -nP %F{red}%B\^C%f%b; return 1 }
 
 # exit zsh like vim
 alias :q=exit
 alias ZZ=exit
+
+alias map='xargs -n1 -r'
+
+# autoload run-help helpers, e.g. run-help-git
+autoload -U /usr/share/zsh/functions/Misc/run-help-*(:t)
+
 
 # change to repository root (starting in parent directory)
 # use the first entry of the globbing
@@ -329,6 +365,48 @@ RR() {
   fi
 }
 
+
+adbpush() {
+  for i; do
+    echo "Pushing $i to /sdcard/$i:t"
+    adb push $i /sdcard/$i:t
+  done
+}
+
+# complete words from tmux pane(s) {{{1
+# Source: http://blog.plenz.com/2012-01/zsh-complete-words-from-tmux-pane.html
+# Gist: https://gist.github.com/blueyed/6856354
+_tmux_pane_words() {
+  local expl
+  local -a w
+  if [[ -z "$TMUX_PANE" ]]; then
+    _message "not running inside tmux!"
+    return 1
+  fi
+  # capture current pane first
+  w=( ${(u)=$(tmux capture-pane -J -p)} )
+  for i in $(tmux list-panes -F '#P'); do
+    # skip current pane (handled above)
+    [[ "$TMUX_PANE" = "$i" ]] && continue
+    w+=( ${(u)=$(tmux capture-pane -J -p -t $i)} )
+  done
+  _wanted values expl 'words from current tmux pane' compadd -a w
+}
+
+zle -C tmux-pane-words-prefix   complete-word _generic
+zle -C tmux-pane-words-anywhere complete-word _generic
+bindkey '^X^Tt' tmux-pane-words-prefix
+bindkey '^X^TT' tmux-pane-words-anywhere
+zstyle ':completion:tmux-pane-words-(prefix|anywhere):*' completer _tmux_pane_words
+zstyle ':completion:tmux-pane-words-(prefix|anywhere):*' ignore-line current
+# display the (interactive) menu on first execution of the hotkey
+zstyle ':completion:tmux-pane-words-(prefix|anywhere):*' menu yes select interactive
+zstyle ':completion:tmux-pane-words-anywhere:*' matcher-list 'b:=* m:{A-Za-z}={a-zA-Z}'
+# }}}
+
+# zstyle ':completion:*' menu yes select=1 select=long-list interactive
+# zstyle ':completion:*' menu yes select=1 select=long-list
+zstyle ':completion:*' menu auto select search
 
 # goodness from grml-etc-core {{{1
 # http://git.grml.org/?p=grml-etc-core.git;a=summary
@@ -408,6 +486,9 @@ tlog() {
 llog() {
   callwithsudoifnecessary_first less /var/log/syslog /var/log/messages
 }
+llog1() {
+  callwithsudoifnecessary_first less /var/log/syslog.1 /var/log/messages.1
+}
 tf() {
   callwithsudoifnecessary_all "tail -F" "$@"
 }
@@ -420,19 +501,20 @@ lf() {
 # Display files sorted by size
 dusch() {
   # setopt extendedglob bareglobqual
-  du -sch ${~^@:-"*"}(D) | sort -rh
+  du -sch -- ${~^@:-"*"}(D) | sort -rh
 }
 alias dusch='noglob dusch'
 alias phwd='print -rP %m:%/'
 
 alias dL='dpkg -L'
+alias dS='dpkg -S'
 
 # Make aliases work with sudo; source: http://serverfault.com/a/178956/14449
 alias sudo='sudo '
 
-
-# Source local rc file if any {{{1
-[ -f ~/.zshrc.local ] && source ~/.zshrc.local
+viack() {
+  vi -c "Ack '$*'"
+}
 
 
 # OpenVZ container: change to previous directory (via dirstack plugin) {{{1
@@ -440,8 +522,58 @@ if [[ -r /proc/user_beancounters ]] && [[ ! -d /proc/bc ]] && (( $plugins[(I)dir
   popd
 fi
 
-# Stop profiling
-# unsetopt xtrace
-# exec 2>&3 3>&-
+incognito() {
+  unset HISTFILE
+  DIRSTACKFILE=/dev/null
+  autoload -U add-zsh-hook
+  add-zsh-hook -d preexec autojump_preexec
+  add-zsh-hook -d precmd  _zsh_persistent_history_precmd_hook
+}
+
+export GPG_TTY=$(tty)
+
+
+# Source zsh-syntax-highlighting when not in Vim's shell
+if [[ -z $VIM ]]; then
+  # https://github.com/zsh-users/zsh-syntax-highlighting#readme
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
+  #ZSH_HIGHLIGHT_HIGHLIGHTERS+=(root)
+  # XXX: slow?!
+  source ~/.dotfiles/lib/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi
+
+
+# Add hook to adjust settings for slow dirs (e.g. ~/.gvfs/mtp/…)
+autoload -U add-zsh-hook
+_zsh_chpwd_handle_slow_dirs() {
+  if [[ $PWD == ~/.gvfs/mtp/* ]]; then
+    ZSH_DISABLE_VCS_INFO=1
+    (( $ZSH_DISABLE_HIGHLIGHT )) || ZSH_HIGHLIGHT_MAXLENGTH=0
+  else
+    ZSH_DISABLE_VCS_INFO=0
+    (( $ZSH_DISABLE_HIGHLIGHT )) || ZSH_HIGHLIGHT_MAXLENGTH=300
+  fi
+}
+add-zsh-hook chpwd _zsh_chpwd_handle_slow_dirs 2>/dev/null || {
+  echo 'zsh-syntax-highlighting: failed loading add-zsh-hook.' >&2
+}
+zsh_disable_highlighting() {
+  local v=${1=1}
+  ZSH_DISABLE_HIGHLIGHT=$v
+  ZSH_HIGHLIGHT_MAXLENGTH=$(($v ? 0 : 300))
+}
+
+
+# disable XON/XOFF flow control; this is required to make C-s work in Vim
+stty -ixon
+
+# gruvbox color enhancements
+~/.vim/bundle/colorscheme-gruvbox/gruvbox_256palette.sh
+
+# Source local rc file if any {{{1
+[ -f ~/.zshrc.local ] && source ~/.zshrc.local
+
+
+# zsh_profile_stop
 
 true # return code 0
