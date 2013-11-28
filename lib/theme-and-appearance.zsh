@@ -26,6 +26,10 @@ if [ "$DISABLE_LS_COLORS" != "true" ]; then
     else
       eval $($dircolors -b)
     fi
+    # use these colors, overwriting the default in ./completion.zsh
+    # zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+    # Prefix common prefix (source: http://www.reddit.com/r/zsh/comments/msps0/color_partial_tab_completions_in_zsh/c367xqo)
+    zstyle -e ':completion:*:default' list-colors 'reply=("${PREFIX:+=(#bi)($PREFIX:t)(?)*==02=01}:${(s.:.)LS_COLORS}")'
   fi
 fi
 

@@ -18,7 +18,8 @@ else
   zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 fi
 
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+# gets overridden with $LS_COLORS value in ./theme-and-appearance.zsh eventually
+zstyle ':completion:*:default' list-colors ''
 
 # should this be in keybindings?
 bindkey -M menuselect '^o' accept-and-infer-next-history
