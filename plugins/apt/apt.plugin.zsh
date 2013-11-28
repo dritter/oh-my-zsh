@@ -80,21 +80,26 @@ _apt_cache_madison_grep_wrapper() {
                 # build regexp for versions:
                 CAND_VERS=${(j:|:)${(f)${CAND_VERS//./\\.}//+/\\+}}
                 [ $DEBUG ] && echo "CAND_VERS=\"$CAND_VERS\""
+                [ $DEBUG ] && echo "APT_MADISON=\"$APT_MADISON\""
                 # Now filter madison output by matching version and Sources or Packages:
-                PACKAGE=$( echo "$APT_MADISON" | awk "\$3 ~ /^($CAND_VERS)\$/ && \$7 == \"$SELECTION\"" )
+                # NOTE: look at the last field of `apt-cache madison` output for "Source"/"Package"
+                #       (it is $7 for Source, and $8 for Package (which contains an arch field at $7)
+                PACKAGE=$( echo "$APT_MADISON" | awk "\$3 ~ /^($CAND_VERS)\$/ && \$NF == \"$SELECTION\"" )
                 # Test: PACKAGE=$( echo "$PACKAGE" | sort -R )
-                [ $DEBUG ] && echo "PACKAGES=\"$PACKAGE\""
-
-                # Sort $PACKAGE using Dpkg::Version::version_compare on the version column
-                PACKAGE=$( echo "$PACKAGE" | perl -e '
-                use Dpkg::Version qw(version_compare);
-                @data = (<>);
-                @sorted = map $_->[0], sort { version_compare($a->[1], $b->[1]) } map [$_, /\|\s+(\S+)/], @data;
-                @parts = split(/\s+\|\s+/, @sorted[-1]);
-                $s = "$parts[0]=$parts[1]";
-                $s =~ s/^\s+//;
-                print $s' )
                 [ $DEBUG ] && echo "PACKAGE=\"$PACKAGE\""
+
+                if [[ -n $PACKAGE ]]; then
+                    # Sort $PACKAGE using Dpkg::Version::version_compare on the version column
+                    PACKAGE=$( echo "$PACKAGE" | perl -e '
+                    use Dpkg::Version qw(version_compare);
+                    @data = (<>);
+                    @sorted = map $_->[0], sort { version_compare($a->[1], $b->[1]) } map [$_, /\|\s+(\S+)/], @data;
+                    @parts = split(/\s+\|\s+/, @sorted[-1]);
+                    $s = "$parts[0]=$parts[1]";
+                    $s =~ s/^\s+//;
+                    print $s' )
+                    [ $DEBUG ] && echo "PACKAGE=\"$PACKAGE\""
+                fi
             fi
         fi
         if [[ -z $PACKAGE ]]; then
