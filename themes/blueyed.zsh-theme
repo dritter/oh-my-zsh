@@ -33,20 +33,23 @@ prompt_blueyed_precmd () {
       # setopt xtrace
 
     # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
+    # See `colors-table` for a list.
     local -h exitstatus=$? # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
-    local -h    normtext="%{$fg_no_bold[green]%}"
+    local -h    normtext="%{$fg_no_bold[default]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
-    local -h        grey="%{$fg_bold[grey]%}"
+    local -h    histtext="%{$fg_no_bold[default]%}"
+    local -h  distrotext="%{$fg_bold[green]%}"
     local -h        blue="%{$fg_no_bold[blue]%}"
-    local -h     cwdtext="%{$fg_bold[white]%}"
+    local -h     cwdtext="%{$fg_no_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
     local -h    warntext="%{$fg_bold[red]%}"
     local -h    roottext="%{$fg_bold[red]%}"
-    local -h    repotext="%{$fg_bold[green]%}"
+    local -h    repotext="%{$fg_no_bold[green]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
-    local -h   lighttext="%{$fg_no_bold[white]%}"
-    local -h   darkdelim="$grey"
+    local -h   lighttext="%{$fg_bold[white]%}"
+    local -h  prompttext="%{$fg_bold[magenta]%}"
+    local -h   darkdelim="%{$fg_no_bold[black]%}"
     local -h bracket_open="${darkdelim}["
     local -h bracket_close="${darkdelim}]"
 
@@ -65,6 +68,10 @@ prompt_blueyed_precmd () {
     fi
 
     cwd=${(%):-%~} # 'print -P "%~"'
+    if [[ $cwd = /home/* ]]; then
+        # manually shorten /home/foo => ~foo
+        cwd=\~"${cwd[7,-1]}"
+    fi
 
     # Highlight different types in segments of $cwd
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
@@ -83,9 +90,9 @@ prompt_blueyed_precmd () {
             # expand "~" to make the "-h" test work
             cur+=${~i}
             # color repository root
-            if [[ ":$cur" = $vcs_info_msg_2_ ]]; then
+            if [[ "$cur" = $vcs_info_msg_2_ ]]; then
                 color=${repotext}
-                # color Git repo (not root according to vcs_info then)
+            # color Git repo (not root according to vcs_info then)
             elif [[ -d $cur/.git ]]; then
                 color=${repotext}
             # color symlink segment
@@ -111,10 +118,9 @@ prompt_blueyed_precmd () {
         cwd=${colored}
     fi
 
-    # Mark non-writable cwd (done for segments above)
-    # if [[ ! -w $PWD ]]; then
-    #     cwd="${nonrwtext}${cwd}"
-    # fi
+    if [[ $~cur == $vcs_info_msg_2_*  ]]; then
+        rprompt_extra+=(${repotext}${vcs_info_msg_2_:t})
+    fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
@@ -148,7 +154,7 @@ prompt_blueyed_precmd () {
         prompt_extra+=("${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')]")
     fi
     if [[ -n $VIRTUAL_ENV ]]; then
-        prompt_extra+=("$normtext(venv:$(basename $VIRTUAL_ENV))")
+        prompt_extra+=("%fⓔ ${VIRTUAL_ENV##*/} ")
     fi
 
     # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
@@ -168,7 +174,7 @@ prompt_blueyed_precmd () {
 
         # Distribution (if on a remote system)
         if [ -n "$SSH_CLIENT" ] ; then
-            RPS1_list+=("%{$fg_bold[black]%}$(get_distro)")
+            RPS1_list+=("$distrotext$(get_distro)")
         fi
 
         RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
@@ -203,16 +209,17 @@ prompt_blueyed_precmd () {
 
     # local -h    prefix="%{$normtext%}❤ "
 
-    # whitespace and reset for extra prompts if non-empty:
-    [[ -n $prompt_extra ]]  &&  prompt_extra=" ${(j: :)prompt_extra}$PR_RESET"
-    [[ -n $rprompt_extra ]] && rprompt_extra="${(j: :)rprompt_extra}$PR_RESET "
-
     # tmux pane / identifier
     # [[ -n "$TMUX_PANE" ]] && rprompt_extra+=("${TMUX_PANE//\%/%%}")
     # history number
-    rprompt_extra+=("${normtext}!${grey}%!")
+    rprompt_extra+=("${normtext}!${histtext}%!")
     # time
     rprompt_extra+=("${normtext}%*")
+
+    # printf ':%s\n' $rprompt_extra
+    # whitespace and reset for extra prompts if non-empty:
+    [[ -n $prompt_extra ]]  &&  prompt_extra=" ${(j: :)prompt_extra}$PR_RESET"
+    [[ -n $rprompt_extra ]] && rprompt_extra="${(j: :)rprompt_extra}$PR_RESET"
 
     # Assemble prompt:
     local -h rprompt="$rprompt_extra${PR_RESET}"
@@ -224,10 +231,13 @@ prompt_blueyed_precmd () {
     local -h TERMWIDTH=$((${COLUMNS}-1))
     local -h rprompt_len=${#${(%)"$(_strip_escape_codes $rprompt)"}}
     local -h prompt_len=${#${(%)"$(_strip_escape_codes $prompt)"}}
-    PR_FILLBAR="$grey${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
+    PR_FILLBAR="%f${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
 
+# NOTE: Konsole has problems with rendering the special sign if it's colored!
+#     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
+# $prompt_vcs%f❯ "
     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
-$prompt_vcs%(#.$roottext.$normtext)❯${PR_RESET} "
+$prompt_vcs%(#.$roottext.$prompttext)❯${PR_RESET} "
 
     # When invoked from gvim ('zsh -i') make it less hurting
     if [[ -n $MYGVIMRC ]]; then
@@ -360,8 +370,8 @@ FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
 # zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
-zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" ":%R" # prepend ':' to make it not get used in %~ shortening
-zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" ":%R" # --"--
+zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" "%R"
+zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" "%R"
 zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   ""
 zstyle ':vcs_info:*:prompt:*' max-exports 3
 
