@@ -39,8 +39,11 @@ prompt_blueyed_precmd () {
     local -h      hitext="%{$fg_bold[magenta]%}"
     local -h    histtext="%{$fg_no_bold[default]%}"
     local -h  distrotext="%{$fg_bold[green]%}"
+    local -h  jobstext_s="%{$fg_bold[magenta]%}"
+    local -h  jobstext_r="%{$fg_bold[magenta]%}"
+    local -h exiterrtext="%{$fg_no_bold[red]%}"
     local -h        blue="%{$fg_no_bold[blue]%}"
-    local -h     cwdtext="%{$fg_no_bold[white]%}"
+    local -h     cwdtext="%{$fg_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
     local -h    warntext="%{$fg_bold[red]%}"
     local -h    roottext="%{$fg_bold[red]%}"
@@ -153,8 +156,15 @@ prompt_blueyed_precmd () {
     if [[ -r /proc/user_beancounters && ! -d /proc/bc ]]; then
         prompt_extra+=("${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')]")
     fi
+    # virtualenv
     if [[ -n $VIRTUAL_ENV ]]; then
         prompt_extra+=("%fⓔ ${VIRTUAL_ENV##*/} ")
+    fi
+    # django settings module
+    if [[ -n $DJANGO_SETTINGS_MODULE ]]; then
+        if [[ $DJANGO_SETTINGS_MODULE != 'project.settings.local' ]]; then
+            prompt_extra+=("%fdj:${DJANGO_SETTINGS_MODULE##*.} ")
+        fi
     fi
 
     # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
@@ -190,7 +200,8 @@ prompt_blueyed_precmd () {
         if [ $exitstatus -gt 128 -a $exitstatus -lt 163 ] ; then
             disp+=" (SIG$signals[$exitstatus-128])"
         fi
-        prompt_extra+=("${bracket_open}${alerttext}${disp}${bracket_close}")
+        # TODO: might make this informative only (to the right) and use a different prompt sign color to indicate $? != 0
+        prompt_extra+=("${bracket_open}${exiterrtext}${disp}${bracket_close}")
     fi
 
     # Running and suspended jobs, parsed via $jobstates
@@ -202,9 +213,9 @@ prompt_blueyed_precmd () {
             if [[ $j[1,7] == "running" ]] ; then (( running++ )) ; continue; fi
             # "done" is ignored
         done
-        [[ $suspended -gt 0 ]] && jobstatus+="${hitext}${suspended}${lighttext}s"
-        [[ $running -gt 0 ]] && jobstatus+="${hitext}${running}${lighttext}r"
-        [[ -z $jobstatus ]] || prompt_extra+=("${bracket_open}${lighttext}jobs:${jobstatus}${bracket_close}")
+        [[ $suspended -gt 0 ]] && jobstatus+="${jobstext_s}${suspended}s"
+        [[ $running -gt 0 ]] && jobstatus+="${jobstext_r}${running}r"
+        [[ -z $jobstatus ]] || prompt_extra+=("${bracket_open}${normtext}jobs:${jobstatus}${bracket_close}")
     fi
 
     # local -h    prefix="%{$normtext%}❤ "
