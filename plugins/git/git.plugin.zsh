@@ -81,13 +81,14 @@ gsmc() {
 }
 # "git submodule add":
 gsma() {
-  local -h gitroot
   [ x$1 = x ] && { echo "Add which submodule?"; return 1;}
   [ x$2 = x ] && { echo "Where to add submodule?"; return 2;}
   git diff --cached --exit-code > /dev/null || { echo "Index is not clean."; return 1 ; }
   # test for clean .gitmodules
-  gitroot=$(readlink -f ./$(git rev-parse --show-cdup))
-  git diff --exit-code $gitroot/.gitmodules > /dev/null || { echo ".gitmodules is not clean."; return 2 ; }
+  local -h gitroot=$(readlink -f ./$(git rev-parse --show-cdup))
+  if [[ -f $gitroot/.gitmodules ]]; then
+    git diff --exit-code $gitroot/.gitmodules > /dev/null || { echo ".gitmodules is not clean."; return 2 ; }
+  fi
   git submodule add "$1" "$2" && \
   summary=$(git submodule summary "$2") && \
   summary=( ${(f)summary} ) && \
