@@ -2,39 +2,65 @@
 #http://www.faqs.org/docs/Linux-mini/Xterm-Title.html#ss3.1
 #Fully support screen, iterm, and probably most modern xterm and rxvt
 #Limited support for Apple Terminal (Terminal can't set window or tab separately)
+# NOTE: '${(%):-%~}' => short PWD, with named dirs
 function title {
   [ "$DISABLE_AUTO_TITLE" != "true" ] || return
+  [[ -z $2 ]] && 2=$1
   1=${(pj: :)${(f)1}}
   2=${(pj: :)${(f)2}}
+  # 1="1:$1"; 2="2:$2"
   # echo "title:1:$1" ; echo "title:2:$2"
-  if [[ $TERM == screen* ]]; then 
-    local PREFIX SUFFIX RELPWD
-    # Get OpenVZ container ID (/proc/bc is only on the host):
-    if [[ -r /proc/user_beancounters ]]; then
-      if [[ ! -d /proc/bc ]]; then
-        # container
-        PREFIX="[$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
-        SUFFIX=" ($PWD)"
-      elif [[ $(pwd -P) == /var/lib/vz/private/[0-9]* ]]; then
-        # HN, in container dir
-        RELPWD=${$(pwd -P)#/var/lib/vz/private/}
-        SUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
+
+  # Append user@host if on ssh
+  if [[ -n $SSH_CLIENT  ]]; then
+    2+=" (${(%):-%n@%m})"
+  fi
+
+  if [[ $TERM == screen* ]]; then
+    if (($+TMUX)); then
+      # tmux window name (escape sequence also for screen hardstatus, but irrelevant here)
+      # Available as #W in tmux, defaults to current command
+      # We use the window_name (CMD with CWD)
+
+      local rename_window=0
+      if [[ $(tmux show-window-options -v automatic-rename) != "off" ]]; then
+        # auto-rename on (default)
+        rename_window=1
+      else
+        # auto-rename off (is the case after first own rename)
+        local tmux_cur_title="$(tmux display-message -p '#W')"
+        # if ! (($+_tmux_title_auto_set)); then
+        if [[ $_tmux_title_auto_set == $tmux_cur_title ]]; then
+          # still our autoset value, change it:
+          rename_window=1
+        fi
+        # fi
+      fi
+      if [[ $rename_window == 1 ]]; then
+        print -Pn $'\ek$1\e\\'
+        _tmux_title_auto_set=$1
       fi
     fi
-    SUFFIX=${SUFFIX:- (${PWD/#$HOME/\~})}
-    print -Pn $'\ek$PREFIX$2$SUFFIX\e\\' #set screen hardstatus, usually truncated at 20 chars
+
+    # Term title (available as #T in tmux)
+    print -Pn $'\e]2;$2\a'
+    print -Pn $'\e]1;$1\a'
+
   elif [[ $TERM == xterm* ]] || [[ $TERM == rxvt* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
-    print -Pn $'\e]0;$2 (%~)\a' #set window name
-    print -Pn $'\e]1;$1\a' #set icon (=tab) name (will override window name on broken terminal)
+    # ESC]0;stringBEL -- Set icon name and window title to string
+    # ESC]1;stringBEL -- Set icon name to string
+    # ESC]2;stringBEL -- Set window title to string
+    print -Pn $'\e]2;$2\a' # set window name
+    print -Pn $'\e]1;$1\a' # set icon (=tab) name (will override window name on broken terminal)
   fi
 }
 
 ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<..<%~%<<" #15 char left truncated PWD
-ZSH_THEME_TERM_TITLE_IDLE="%n@%m"
+ZSH_THEME_TERM_TITLE_IDLE="%~"
 
 #Appears when you have the prompt
 function omz_termsupport_precmd {
-  title $ZSH_THEME_TERM_TAB_TITLE_IDLE $ZSH_THEME_TERM_TITLE_IDLE
+  title ${(%)ZSH_THEME_TERM_TAB_TITLE_IDLE} ${(%)ZSH_THEME_TERM_TITLE_IDLE}
 }
 
 #Appears at the beginning of (and during) of command execution
@@ -63,8 +89,39 @@ function omz_termsupport_preexec {
     newtyped=(${(z)${jobtexts[$jobspec]}})
   fi
   (( $#newtyped )) && typed=($newtyped)
-  local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
-  title "$CMD" "${typed:gs/%/%%/}" # let the terminal app itself handle cropping
+
+  # Get the cmd out of what was typed:
+  # local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
+  local cmd_index=${typed[(wi)^(*=*|sudo|ssh|-*)]} # cmd name only, or if this is sudo or ssh, the next cmd
+  local CMD="$typed[$cmd_index]"
+
+  # For special cases like "make", append the arg
+  local -a cmds_with_arg
+  cmds_with_arg=(make man)
+  if (( ${cmds_with_arg[(i)$CMD]} <= ${#cmds_with_arg} )); then
+    CMD+=" $typed[$cmd_index+1]"
+  fi
+  # local window_name="$CMD [${(%):-%~}]"
+  local window_name="$CMD"
+
+  local window_title="${typed:gs/%/%%/}"
+  local PREFIX SUFFIX RELPWD
+  # Get OpenVZ container ID (/proc/bc is only on the host):
+  if [[ -r /proc/user_beancounters ]]; then
+    if [[ ! -d /proc/bc ]]; then
+      # container
+      PREFIX="[$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
+      SUFFIX=" (${(%):-%~})"
+    elif [[ $(pwd -P) == /var/lib/vz/private/[0-9]* ]]; then
+      # HN, in container dir
+      RELPWD=${$(pwd -P)#/var/lib/vz/private/}
+      SUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
+    fi
+  fi
+  SUFFIX=${SUFFIX:- [${(%):-%~}]}
+  window_title+=$SUFFIX
+
+  title $window_name $window_title # let the terminal app itself handle cropping
 }
 
 autoload -U add-zsh-hook
