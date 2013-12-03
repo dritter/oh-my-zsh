@@ -42,7 +42,10 @@ export DISABLE_AUTO_UPDATE="true"
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Example format: plugins=(rails git textmate ruby ighthouse)
-plugins=(git github dirstack svn apt)
+plugins=(git github dirstack svn apt grunt)
+
+# grunt-zsh-completion
+zstyle ':completion::complete:grunt::options:' show_grunt_path yes
 
 fpath=(~/.dotfiles/lib/zsh-completions/src $fpath)
 
