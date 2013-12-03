@@ -569,6 +569,10 @@ stty -ixon
 # gruvbox color enhancements
 ~/.vim/bundle/colorscheme-gruvbox/gruvbox_256palette.sh
 
+# tmuxifier
+eval "$(tmuxifier init -)"
+alias tt=tmuxifier
+
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
