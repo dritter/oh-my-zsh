@@ -1,0 +1,3 @@
+[submodule "plugins/grunt-zsh-completion"]
+	path = plugins/grunt
+	url = git://github.com/yonchu/grunt-zsh-completion.git
