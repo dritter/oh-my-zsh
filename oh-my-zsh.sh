@@ -1,7 +1,6 @@
 # Check for updates on initial load...
-if [ "$DISABLE_AUTO_UPDATE" != "true" ]
-then
-  /usr/bin/env ZSH=$ZSH zsh $ZSH/tools/check_for_upgrade.sh
+if [ "$DISABLE_AUTO_UPDATE" != "true" ]; then
+  /usr/bin/env ZSH=$ZSH DISABLE_UPDATE_PROMPT=$DISABLE_UPDATE_PROMPT zsh $ZSH/tools/check_for_upgrade.sh
 fi
 
 # Initializes Oh My Zsh
@@ -11,7 +10,9 @@ fpath=($ZSH/functions $ZSH/completions $fpath)
 
 # Load all of the config files in ~/oh-my-zsh that end in .zsh
 # TIP: Add files you don't want in git to .gitignore
-for config_file ($ZSH/lib/*.zsh) source $config_file
+for config_file ($ZSH/lib/*.zsh); do
+  source $config_file
+done
 
 # Set ZSH_CUSTOM to the path where your custom config files
 # and plugins exists, or else we will use the default custom/
@@ -19,21 +20,30 @@ if [[ -z "$ZSH_CUSTOM" ]]; then
     ZSH_CUSTOM="$ZSH/custom"
 fi
 
+
+is_plugin() {
+  local base_dir=$1
+  local name=$2
+  test -f $base_dir/plugins/$name/$name.plugin.zsh \
+    || test -f $base_dir/plugins/$name/_$name
+}
 # Add all defined plugins to fpath. This must be done
 # before running compinit.
-plugin=${plugin:=()}
 for plugin ($plugins); do
-  if [ -f $ZSH_CUSTOM/plugins/$plugin/$plugin.plugin.zsh ]; then
+  if is_plugin $ZSH_CUSTOM $plugin; then
     fpath=($ZSH_CUSTOM/plugins/$plugin $fpath)
-  elif [ -f $ZSH/plugins/$plugin/$plugin.plugin.zsh ]; then
+  elif is_plugin $ZSH $plugin; then
     fpath=($ZSH/plugins/$plugin $fpath)
   fi
 done
 
+
+# Save the location of the current completion dump file.
+ZSH_COMPDUMP="${ZDOTDIR:-${HOME}}/.zcompdump-${SHORT_HOST}-${ZSH_VERSION}"
+
 # Load and run compinit
 autoload -U compinit
-compinit -i
-
+compinit -i -d "${ZSH_COMPDUMP}"
 
 # Load all of the plugins that were defined in ~/.zshrc
 for plugin ($plugins); do
@@ -45,11 +55,13 @@ for plugin ($plugins); do
 done
 
 # Load all of your custom configurations from custom/
-for config_file ($ZSH_CUSTOM/*.zsh) source $config_file
+for config_file ($ZSH_CUSTOM/*.zsh(N)); do
+  source $config_file
+done
+unset config_file
 
 # Load the theme
-if [ "$ZSH_THEME" = "random" ]
-then
+if [ "$ZSH_THEME" = "random" ]; then
   themes=($ZSH/themes/*zsh-theme)
   N=${#themes[@]}
   ((N=(RANDOM%N)+1))
