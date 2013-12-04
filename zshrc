@@ -2,6 +2,7 @@
 #       (similar to CHECK_JOBS)
 # TODO: alias/function to trash a file (mv it to ~/.local/share/Trash/…)
 #
+# NOTE: $path adjustment is done in .zshenv
 
 # # Skip this, if in a subshell (e.g. in tmux)
 # if [[ -n $SHLVL ]] && [[ $SHLVL > 1 ]]; then
@@ -355,7 +356,11 @@ alias ZZ=exit
 alias map='xargs -n1 -r'
 
 # autoload run-help helpers, e.g. run-help-git
-autoload -U /usr/share/zsh/functions/Misc/run-help-*(:t)
+local run_helpers
+run_helpers=/usr/share/zsh/functions/Misc/run-help-*(N:t)
+if [[ -n $run_helpers ]]; then
+  autoload -U $run_helpers
+fi
 
 
 # change to repository root (starting in parent directory)
