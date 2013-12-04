@@ -23,7 +23,9 @@ function title {
       # We use the window_name (CMD with CWD)
 
       local rename_window=0
-      if [[ $(tmux show-window-options -v automatic-rename) != "off" ]]; then
+      # get option value (fallback for tmux 1.6)
+      local tmux_auto_rename=$(tmux show-window-options -v automatic-rename 2>/dev/null) || $(tmux show-window-options | grep '^automatic-rename' | cut -f2 -d\ )
+      if [[ $tmux_auto_rename != "off" ]]; then
         # auto-rename on (default)
         rename_window=1
       else
