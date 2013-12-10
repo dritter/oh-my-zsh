@@ -7,6 +7,7 @@ alias po='popd'
 alias _='sudo'
 
 #alias g='grep -in'
+alias psgrep='ps aux | grep'
 
 # Show history
 alias history='fc -l 1'
@@ -27,7 +28,7 @@ ffind() {
     shift
   fi
   # if the first argument is a dir, use it for `find`
-  if [[ -d $1 ]] ; then
+  if [[ $# -gt 1 ]] && [[ -d $1 ]] ; then
     dir=$1; shift
     (( $debug )) && echo "DEBUG: finding in $dir" >&2
   else; dir=. ; fi
@@ -62,14 +63,21 @@ ffind() {
     args+=(-print)
   fi
   (( $debug )) && echo "DEBUG: args: $args ($#args)" >&2
-  cmd=(find $dir -mindepth 1 \( -type d -name ".*" -prune \) -o \( $args \))
+  cmd=(find $dir -mindepth 1 \( \
+      \( -type d -name ".*" \) \
+      -o \( -type d -name _build \) \
+      -o \( -type d -name node_modules \) \
+      -o \( -type d -name bower_components \) \
+      -o -name \*.pyc \
+      -o -regex '.*\.sw[po]' \
+    \) -prune -o \( $args \))
   # cmd=(find $dir \( ${args} \))
   (( $debug )) && echo "DEBUG: cmd:  ${(Q)${(z)cmd}}" >&2
   $cmd
 }
 
 # ls
-export LS_OPTIONS='--color=auto -h'
+export LS_OPTIONS='--color=auto -h --hide=*.pyc'
 alias ls='ls ${=LS_OPTIONS}'
 alias l='ls -F'
 alias la='ls -aF'
@@ -152,12 +160,15 @@ xrgrep() {
 
     _xgrep_cmd+=(-o -type f -print0)
   fi
-  _findcmd=(find $findpath $=_xgrep_cmd)
+  _findcmd=(find -L $findpath $=_xgrep_cmd)
   _xargscmd=(xargs -0 -r grep -e "$greppattern" $grepopts)
-  # echo "greppattern: $greppattern" >&2
-  # echo "grepopts   : $grepopts" >&2
-  # echo "_findcmd   : $_findcmd" >&2
-  # echo "_xargscmd  : $_xargscmd" >&2
+  if (( $debug )) ; then
+    echo "greppattern: $greppattern" >&2
+    echo "grepopts   : $grepopts" >&2
+    # escape _findcmd to be copy'n'pastable
+    echo "_findcmd   : ${${${_findcmd//\(/\\(}//)/\\)}//\*/\\*}" >&2
+    echo "_xargscmd  : $_xargscmd" >&2
+  fi
   $=_findcmd | $_xargscmd
 }
 alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"BYOBU_PREFIX=/root/.dotfiles/lib/byobu/usr ; PATH=\\\$BYOBU_PREFIX/bin:\\\$PATH ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'

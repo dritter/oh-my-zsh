@@ -32,11 +32,16 @@ zstyle ':completion:*:*:*:*:processes' command "ps -u `whoami` -o pid,user,comm 
 
 
 # disable named-directories autocompletion
-zstyle ':completion:*:cd:*' tag-order local-directories directory-stack path-directories
+# NOTE: should have been this probably
+# zstyle ':completion:*:cd:*' tag-order !named-directories
+# zstyle ':completion:*:cd:*' tag-order local-directories directory-stack path-directories
 cdpath=(.)
 
 # Use caching so that commands like apt and dpkg complete are usable
 zstyle ':completion::complete:*' use-cache 1
+
+# Complete hosts from IP addresses, too
+zstyle ':completion:*' use-ip true
 
 # Don't complete uninteresting users
 zstyle ':completion:*:*:*:users' ignored-patterns \
@@ -66,7 +71,13 @@ zstyle ':completion:*' use-cache on
 zstyle ':completion:*' verbose yes
 zstyle ':completion:*:descriptions' format "%{$fg_no_bold[green]%}%U%B%d:%b%u%{$reset_color%}"
 zstyle ':completion:*:warnings' format '%BNo matches for: %d%b'
-zstyle ':completion:*:functions' ignored-patterns '_*'
+
+# zstyle ':completion:*:functions' ignored-patterns '_*'
+# Complete _functions if nothing else matched:
+zstyle ':completion:*:*:-command-:*' tag-order \
+  'functions:-non-comp *' functions
+zstyle ':completion:*:functions-non-comp' ignored-patterns '_*'
+
 
 # Do not group completions (keeps e.g. "host" separated from "file")
 zstyle ':completion:*' group-name ''
