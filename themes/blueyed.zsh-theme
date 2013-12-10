@@ -43,7 +43,7 @@ prompt_blueyed_precmd () {
     local -h  jobstext_r="%{$fg_bold[magenta]%}"
     local -h exiterrtext="%{$fg_no_bold[red]%}"
     local -h        blue="%{$fg_no_bold[blue]%}"
-    local -h     cwdtext="%{$fg_bold[white]%}"
+    local -h     cwdtext="%{$fg_no_bold[white]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
     local -h    warntext="%{$fg_bold[red]%}"
     local -h    roottext="%{$fg_bold[red]%}"
@@ -158,12 +158,12 @@ prompt_blueyed_precmd () {
     fi
     # virtualenv
     if [[ -n $VIRTUAL_ENV ]]; then
-        prompt_extra+=("%fⓔ ${VIRTUAL_ENV##*/} ")
+        rprompt_extra+=("%fⓔ ${VIRTUAL_ENV##*/}")
     fi
     # django settings module
     if [[ -n $DJANGO_SETTINGS_MODULE ]]; then
         if [[ $DJANGO_SETTINGS_MODULE != 'project.settings.local' ]]; then
-            prompt_extra+=("%fdj:${DJANGO_SETTINGS_MODULE##*.} ")
+            rprompt_extra+=("%fdj:${DJANGO_SETTINGS_MODULE##*.}")
         fi
     fi
 
@@ -222,10 +222,12 @@ prompt_blueyed_precmd () {
 
     # tmux pane / identifier
     # [[ -n "$TMUX_PANE" ]] && rprompt_extra+=("${TMUX_PANE//\%/%%}")
-    # history number
-    rprompt_extra+=("${normtext}!${histtext}%!")
-    # time
-    rprompt_extra+=("${normtext}%*")
+    if (( $COLUMNS > 80 )); then
+        # history number
+        rprompt_extra+=("${normtext}!${histtext}%!")
+        # time
+        rprompt_extra+=("${normtext}%*")
+    fi
 
     # printf ':%s\n' $rprompt_extra
     # whitespace and reset for extra prompts if non-empty:
@@ -240,8 +242,8 @@ prompt_blueyed_precmd () {
 
     # Attach $rprompt to $prompt, aligned to $TERMWIDTH
     local -h TERMWIDTH=$((${COLUMNS}-1))
-    local -h rprompt_len=${#${(%)"$(_strip_escape_codes $rprompt)"}}
-    local -h prompt_len=${#${(%)"$(_strip_escape_codes $prompt)"}}
+    local -h rprompt_len=${#${"$(_strip_escape_codes ${(%)rprompt})"}}
+    local -h prompt_len=${#${"$(_strip_escape_codes ${(%)prompt})"}}
     PR_FILLBAR="%f${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
 
 # NOTE: Konsole has problems with rendering the special sign if it's colored!
