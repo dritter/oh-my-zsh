@@ -576,8 +576,29 @@ zsh_disable_highlighting() {
 # disable XON/XOFF flow control; this is required to make C-s work in Vim
 stty -ixon
 
-# gruvbox color enhancements
-~/.vim/bundle/colorscheme-gruvbox/gruvbox_256palette.sh
+# if [[ $TERM == xterm* ]]; then
+  # not for "linux"
+  # might use "tput colors"
+  # ~/.vim/bundle/colorscheme-gruvbox/gruvbox_256palette.sh
+  export BASE16_SHELL_DIR=~/.dotfiles/lib/base16/base16-shell
+  base16_scheme() {
+    if [[ -n $1 ]]; then
+      export BASE16_SCHEME=$1
+    else
+      echo "Reloading $BASE16_SCHEME..."
+    fi
+    local base16_scheme_file=$BASE16_SHELL_DIR/base16-$BASE16_SCHEME.sh
+    echo "Loading $BASE16_SCHEME..."
+    [[ -s $base16_scheme_file ]] && source $base16_scheme_file
+  }
+  # completion for base16_scheme function
+  compdef "compadd $BASE16_SHELL_DIR/*.sh(:t:r:s/base16-/)" base16_scheme
+
+  # init/load solarized theme
+  # XXX: do not do so, when using a non-base16 vim color theme (e.g. jellybeans)
+  # This changes color16, which is used as bg for SearchHl
+  # base16_scheme solarized.dark
+# fi
 
 # tmuxifier
 eval "$(tmuxifier init -)"
