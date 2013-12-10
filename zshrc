@@ -12,6 +12,8 @@
 # Path to your oh-my-zsh configuration.
 export ZSH=$HOME/.oh-my-zsh
 
+# set -x
+
 # Start profiling
 zsh_profile_start() {
   PS4='+$(date "+%s:%N") %N:%i> '
@@ -103,8 +105,8 @@ _zshrc_vcs_check_for_changes_hook() {
     local rv=$?
     if [[ $rv != 0 ]]; then
       if [[ $rv == 1 ]]; then
-	# was false (and not unset):
-	echo "on fast fs: check_for_changes => true"
+        # was false (and not unset):
+        echo "on fast fs: check_for_changes => true"
       fi
       zstyle ':vcs_info:*:prompt:*' check-for-changes true
     fi
@@ -121,9 +123,9 @@ bindkey -M vicmd "?" history-incremental-search-forward
 
 # Remap C-R/C-S to use patterns
 if (( ${+widgets[history-incremental-pattern-search-backward]} )); then
-	# since 4.3.7, not in Debian Lenny
-	bindkey "^R" history-incremental-pattern-search-backward
-	bindkey "^S" history-incremental-pattern-search-forward
+  # since 4.3.7, not in Debian Lenny
+  bindkey "^R" history-incremental-pattern-search-backward
+  bindkey "^S" history-incremental-pattern-search-forward
 fi
 
 # Search based on what you typed in already
@@ -143,8 +145,8 @@ bindkey -M vicmd "\eOF" end-of-line
 # Replace current buffer with executed result (vicmd mode)
 bindkey -M vicmd '!' edit-command-output
 edit-command-output() {
-	BUFFER=$(eval $BUFFER)
-	CURSOR=0
+  BUFFER=$(eval $BUFFER)
+  CURSOR=0
 }
 zle -N edit-command-output
 
@@ -220,15 +222,17 @@ if zmodload zsh/regex 2>/dev/null; then # might not be available (e.g. on DS212+
   bindkey -M isearch . self-insert 2>/dev/null
 fi
 
-if [[ "${COLORTERM}" == "gnome-terminal" && "$TERM" == "xterm" ]]; then
-    export TERM="xterm-256color"
+# generic, not bound to COLORTERM=gnome-terminal (for lilyterm)
+if [[ -n $DISPLAY ]] && [[ $TERM == "xterm" ]]; then
+  export TERM=xterm-256color
 fi
+
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
 if ! tput longname &> /dev/null; then
-	if [[ $TERM == screen*bce ]]; then TERM=screen-bce
-	elif [[ $TERM == screen* ]]; then TERM=screen
-	else TERM=xterm fi
-	export TERM
+  if [[ $TERM == screen*bce ]]; then TERM=screen-bce
+  elif [[ $TERM == screen* ]]; then TERM=screen
+  else TERM=xterm fi
+  export TERM
 fi
 
 setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
@@ -275,12 +279,12 @@ sudosession() {
       (-u) shift ; user=$1 ;;
       (--) shift ; break ;;
       (-h)
-	printf 'usage: sudosession [-h|-u USER] <cmd>\n'
-                printf '  -h      shows this help text.\n'
-                printf '  -u      set specific user (default: root).\n'
-                return 0
-                ;;
-            (*) printf "unkown option: '%s'\n" "$1" ; return 1 ;;
+        printf 'usage: sudosession [-h|-u USER] <cmd>\n'
+        printf '  -h      shows this help text.\n'
+        printf '  -u      set specific user (default: root).\n'
+        return 0
+        ;;
+      (*) printf "unkown option: '%s'\n" "$1" ; return 1 ;;
     esac
     shift
   done
@@ -367,7 +371,8 @@ fi
 # use the first entry of the globbing
 RR() {
   local a
-  a=( (../)#/.(git|hg|svn|bzr)(:h) )
+  # note: removed extraneous / ?!
+  a=( (../)#.(git|hg|svn|bzr)(:h) )
   if (( $#a )); then
     cd $a[1]
   fi
@@ -462,9 +467,9 @@ callwithsudoifnecessary_first() {
     # NOTE: `test -f` fails if the parent dir is not readable, e.g. /var/log/audit/audit.log
     # if [[ -f $file ]]; then
       if [[ -r $file ]]; then
-	${(Q)${(z)cmd}} $file
+        ${(Q)${(z)cmd}} $file
       else
-	sudo ${(Q)${(z)cmd}} $file
+        sudo ${(Q)${(z)cmd}} $file
       fi
       return
     # fi

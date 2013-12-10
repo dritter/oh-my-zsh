@@ -19,6 +19,7 @@ if [ "$DISABLE_LS_COLORS" != "true" ]; then
   done
   if [ -n "$dircolors" ]; then
     # : ${DIRCOLORS_FILE:=~/.dotfiles/lib/dircolors-solarized/dircolors.256dark}
+    # : ${DIRCOLORS_FILE:=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-dark}
     : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
     if [ -f $DIRCOLORS_FILE ] ; then
       # Redirect errors: e.g. 'unrecognized keyword RESET' on CentOS 5.4

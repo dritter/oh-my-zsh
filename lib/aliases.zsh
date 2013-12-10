@@ -116,9 +116,9 @@ xrgrep() {
       fi
     else
       if [[ $i == '--debug' ]]; then
-	debug=1
+        debug=1
       else
-	grepopts+=($i)
+        grepopts+=($i)
       fi
     fi
   done
@@ -184,24 +184,30 @@ alias ll3='tree --dirsfirst -ChFupDaL 3'
 
 # wget + dpatch
 wpatch() {
-	PATCH_URL="$1"; shift
-	echo "wget $PATCH_URL -O- | zless | cat | patch -p1 $@"
-	wget $PATCH_URL -O- | zless | patch -p1 "$@"
+  PATCH_URL="$1"; shift
+  echo "wget $PATCH_URL -O- | zless | cat | patch -p1 $@"
+  wget $PATCH_URL -O- | zless | patch -p1 "$@"
 }
 wless() {
   zless =(wget -q "$@" -O-)
 }
 # auto ssh-add key
-alias ssh='if ! ssh-add -l >/dev/null 2>&1; then ssh-add; fi; ssh'
+# (use a function to allow for setting temp. environment, e.g. `FOO=bar ssh`)
+ssh() {
+  if ! ssh-add -l >/dev/null 2>&1; then
+    ssh-add;
+  fi
+  command ssh "$@"
+}
 
 # make (overwriting) file operations interactive by default
 alias cp="cp -i"
 alias mv="mv -i"
 
 c() {
-	local prev=$PWD
-	[[ -d "$@" ]] && cd "$@" || j "$@"
-	[[ $PWD != $prev ]] && ls
+  local prev=$PWD
+  [[ -d "$@" ]] && cd "$@" || j "$@"
+  [[ $PWD != $prev ]] && ls
 }
 mdc() { mkdir "$@" && cd "$1" }
 
@@ -233,11 +239,11 @@ alias hgc="hg commit"
 # Quickly lookup entry in Wikipedia.
 # Source: https://github.com/msanders/dotfiles/blob/master/.aliases
 wiki() {
-	if [[ $1 == "" ]]; then
-		echo "usage: wiki [term]";
-	else
-		dig +short txt $1.wp.dg.cx;
-	fi
+  if [[ $1 == "" ]]; then
+    echo "usage: wiki [term]";
+  else
+    dig +short txt $1.wp.dg.cx;
+  fi
 }
 
 if [ $commands[screen] ]; then
