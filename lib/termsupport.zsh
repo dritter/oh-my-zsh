@@ -8,12 +8,14 @@ function title {
   [[ -z $2 ]] && 2=$1
   1=${(pj: :)${(f)1}}
   2=${(pj: :)${(f)2}}
-  # 1="1:$1"; 2="2:$2"
   # echo "title:1:$1" ; echo "title:2:$2"
+  # 1="1:$1"; 2="2:$2"
 
   # Append user@host if on ssh
   if [[ -n $SSH_CLIENT  ]]; then
-    2+=" (${(%):-%n@%m})"
+    # export it (useful in Vim's titlestring)
+    export TERM_USERATHOST_SUFFIX=" (${(%):-%n@%m})"
+    2+=$TERM_USERATHOST_SUFFIX
   fi
 
   if [[ $TERM == screen* ]]; then
@@ -40,7 +42,7 @@ function title {
       fi
       if [[ $rename_window == 1 ]]; then
         print -Pn $'\ek$1\e\\'
-        _tmux_title_auto_set=$1
+        export _tmux_title_auto_set=$1  # export for sub-shells
       fi
     fi
 
@@ -57,7 +59,7 @@ function title {
   fi
 }
 
-ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<..<%~%<<" #15 char left truncated PWD
+ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<" #15 char left truncated PWD
 ZSH_THEME_TERM_TITLE_IDLE="%~"
 
 #Appears when you have the prompt
@@ -94,7 +96,9 @@ function omz_termsupport_preexec {
 
   # Get the cmd out of what was typed:
   # local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
-  local cmd_index=${typed[(wi)^(*=*|sudo|ssh|-*)]} # cmd name only, or if this is sudo or ssh, the next cmd
+  # Get the index of the first item not matching the list
+  local cmd_index=${typed[(wi)^(*=*|sudo|ssh|-*|;|\[*)]} # cmd name only, or if this is sudo or ssh, the next cmd
+  # printf '%s\n' $typed; read
   local CMD="$typed[$cmd_index]"
 
   # For special cases like "make", append the arg
