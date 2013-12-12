@@ -1,3 +1,6 @@
 [submodule "plugins/grunt"]
 	path = plugins/grunt
 	url = git://github.com/yonchu/grunt-zsh-completion.git
+[submodule "custom/plugins/docker-zsh-completion"]
+	path = custom/plugins/docker
+	url = git://github.com/felixr/docker-zsh-completion.git
