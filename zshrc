@@ -94,7 +94,7 @@ _zshrc_vcs_check_for_changes_hook() {
   if [[ -n $ZSH_CHECK_FOR_CHANGES ]]; then
     # override per env:
     check_for_changes=$ZSH_CHECK_FOR_CHANGES
-  elif df -t sshfs -t nfs -t cifs . &>/dev/null; then
+  elif df -t sshfs -t nfs -t cifs -t fuse.bup-fuse . &>/dev/null; then
     zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'
     if [[ $? == 0 ]]; then
       echo "on slow fs: check_for_changes => false"
