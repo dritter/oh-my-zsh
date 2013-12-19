@@ -18,13 +18,32 @@ function title {
     2+=$TERM_USERATHOST_SUFFIX
   fi
 
+  # Container prefix/suffix: {{{
+  local PREFIX WINSUFFIX RELPWD
+  # Get OpenVZ container ID (/proc/bc is only on the host):
+  if [[ -r /proc/user_beancounters ]]; then
+    if [[ ! -d /proc/bc ]]; then
+      # container
+      PREFIX="[$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
+      WINSUFFIX=" (${(%):-%~})"
+    elif [[ $(pwd -P) == /var/lib/vz/private/[0-9]* ]]; then
+      # HN, in container dir
+      RELPWD=${$(pwd -P)#/var/lib/vz/private/}
+      WINSUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
+    fi
+  fi
+  WINSUFFIX=${WINSUFFIX:- [${(%):-%~}]}
+  1=$PREFIX$1
+  2=$PREFIX$2$WINSUFFIX
+  # }}}
+
   if [[ $TERM == screen* ]]; then
+    local rename_window=0
     if (($+TMUX)); then
       # tmux window name (escape sequence also for screen hardstatus, but irrelevant here)
       # Available as #W in tmux, defaults to current command
       # We use the window_name (CMD with CWD)
 
-      local rename_window=0
       # get option value (fallback for tmux 1.6)
       local tmux_auto_rename=$(tmux show-window-options -v automatic-rename 2>/dev/null) || $(tmux show-window-options | grep '^automatic-rename' | cut -f2 -d\ )
       if [[ $tmux_auto_rename != "off" ]]; then
@@ -40,10 +59,16 @@ function title {
         fi
         # fi
       fi
-      if [[ $rename_window == 1 ]]; then
-        print -Pn $'\ek$1\e\\'
-        export _tmux_title_auto_set=$1  # export for sub-shells
-      fi
+    else
+      # no tmux, or not exported ("vzctl enter")
+      # TODO: detect/handle manual rename here
+      #       might use set-environment, but would require $TMUX/tmux
+      #       could use a mark (invisible char, "﻿"), but needs tmux to read the current title
+      rename_window=1
+    fi
+    if [[ $rename_window == 1 ]]; then
+      print -Pn $'\ek$1\e\\'
+      export _tmux_title_auto_set=$1  # export for sub-shells
     fi
 
     # Term title (available as #T in tmux)
@@ -103,29 +128,15 @@ function omz_termsupport_preexec {
 
   # For special cases like "make", append the arg
   local -a cmds_with_arg
-  cmds_with_arg=(make man)
-  if (( ${cmds_with_arg[(i)$CMD]} <= ${#cmds_with_arg} )); then
+  cmds_with_arg=(make man ve)
+  if (( $#CMD <= 4 )); then
+    CMD+=" $typed[$cmd_index+1]"
+  elif (( ${cmds_with_arg[(i)$CMD]} <= ${#cmds_with_arg} )); then
     CMD+=" $typed[$cmd_index+1]"
   fi
   # local window_name="$CMD [${(%):-%~}]"
   local window_name="$CMD"
-
   local window_title="${typed:gs/%/%%/}"
-  local PREFIX SUFFIX RELPWD
-  # Get OpenVZ container ID (/proc/bc is only on the host):
-  if [[ -r /proc/user_beancounters ]]; then
-    if [[ ! -d /proc/bc ]]; then
-      # container
-      PREFIX="[$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
-      SUFFIX=" (${(%):-%~})"
-    elif [[ $(pwd -P) == /var/lib/vz/private/[0-9]* ]]; then
-      # HN, in container dir
-      RELPWD=${$(pwd -P)#/var/lib/vz/private/}
-      SUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
-    fi
-  fi
-  SUFFIX=${SUFFIX:- [${(%):-%~}]}
-  window_title+=$SUFFIX
 
   title $window_name $window_title # let the terminal app itself handle cropping
 }
