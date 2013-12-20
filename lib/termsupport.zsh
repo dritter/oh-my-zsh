@@ -45,19 +45,18 @@ function title {
       # We use the window_name (CMD with CWD)
 
       # get option value (fallback for tmux 1.6)
-      local tmux_auto_rename=$(tmux show-window-options -v automatic-rename 2>/dev/null) || $(tmux show-window-options | grep '^automatic-rename' | cut -f2 -d\ )
+      local tmux_auto_rename=$(tmux show-window-options -t $TMUX_PANE -v automatic-rename 2>/dev/null) || $(tmux show-window-options -t $TMUX_PANE | grep '^automatic-rename' | cut -f2 -d\ )
       if [[ $tmux_auto_rename != "off" ]]; then
         # auto-rename on (default)
         rename_window=1
       else
         # auto-rename off (is the case after first own rename)
-        local tmux_cur_title="$(tmux display-message -p '#W')"
-        # if ! (($+_tmux_title_auto_set)); then
-        if [[ $_tmux_title_auto_set == $tmux_cur_title ]]; then
-          # still our autoset value, change it:
+        local tmux_cur_title="$(tmux display-message -t $TMUX_PANE -p '#W')"
+        # Look for U+FEFF at the end
+        if [[ $tmux_cur_title[-1] == "﻿" ]]; then
+          # still our autoset value (marker or same value), change it:
           rename_window=1
         fi
-        # fi
       fi
     else
       # no tmux, or not exported ("vzctl enter")
@@ -67,8 +66,11 @@ function title {
       rename_window=1
     fi
     if [[ $rename_window == 1 ]]; then
-      print -Pn $'\ek$1\e\\'
-      export _tmux_title_auto_set=$1  # export for sub-shells
+      # Rename window and add mark (invisible space, U+FEFF)
+      print -Pn $'\ek$1﻿\e\\'
+      export _tmux_title_is_auto_set=1  # export for sub-shells / Vim
+    else
+      export _tmux_title_is_auto_set=0
     fi
 
     # Term title (available as #T in tmux)
@@ -84,15 +86,15 @@ function title {
   fi
 }
 
-ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<" #15 char left truncated PWD
-ZSH_THEME_TERM_TITLE_IDLE="%~"
+ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<_" #15 char left truncated PWD
+ZSH_THEME_TERM_TITLE_IDLE="%~_"
 
-#Appears when you have the prompt
+# Appears when you have the prompt
 function omz_termsupport_precmd {
   title ${(%)ZSH_THEME_TERM_TAB_TITLE_IDLE} ${(%)ZSH_THEME_TERM_TITLE_IDLE}
 }
 
-#Appears at the beginning of (and during) of command execution
+# Appears at the beginning (and during) of command execution
 function omz_termsupport_preexec {
   emulate -L zsh
   setopt extended_glob
