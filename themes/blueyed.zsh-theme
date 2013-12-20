@@ -35,9 +35,9 @@ prompt_blueyed_precmd () {
     # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
     # See `colors-table` for a list.
     local -h exitstatus=$? # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
-    local -h    normtext="%{$fg_no_bold[default]%}"
+    local -h    normtext="%{$fg_no_bold[white]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
-    local -h    histtext="%{$fg_no_bold[default]%}"
+    local -h    histtext="$normtext"
     local -h  distrotext="%{$fg_bold[green]%}"
     local -h  jobstext_s="%{$fg_bold[magenta]%}"
     local -h  jobstext_r="%{$fg_bold[magenta]%}"
@@ -51,7 +51,7 @@ prompt_blueyed_precmd () {
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_bold[white]%}"
-    local -h  prompttext="%{$fg_bold[magenta]%}"
+    local -h  prompttext="%{$fg_bold[green]%}"
     local -h   darkdelim="%{$fg_no_bold[black]%}"
     local -h bracket_open="${darkdelim}["
     local -h bracket_close="${darkdelim}]"
