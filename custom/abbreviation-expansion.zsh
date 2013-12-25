@@ -1,10 +1,9 @@
+# Source http://git.grml.org/?p=grml-etc-core.git;a=blob_plain;f=etc/zsh/zshrc;hb=HEAD
+
 # power completion / abbreviation expansion / buffer expansion
 # see http://zshwiki.org/home/examples/zleiab for details
 # less risky than the global aliases but powerful as well
-# just type the abbreviation key and afterwards ',.' to expand it
-
-# via http://git.grml.org/?p=grml-etc-core.git;a=blob_plain;f=etc/zsh/zshrc;hb=HEAD
-
+# just type the abbreviation key and afterwards 'ctrl-x .' to expand it
 declare -A abk
 setopt extendedglob
 setopt interactivecomments
@@ -31,7 +30,7 @@ abk=(
     'co'   './configure && make && sudo make install'
 )
 
-globalias() {
+zleiab() {
     emulate -L zsh
     setopt extendedglob
     local MATCH
@@ -41,11 +40,19 @@ globalias() {
         return 0
     fi
 
-    matched_chars='[.-|_a-zA-Z0-9]#'
-    LBUFFER=${LBUFFER%%(#m)[.-|_a-zA-Z0-9]#}
+    LBUFFER=${LBUFFER%%(#m)[.\-+:|_a-zA-Z0-9]#}
     LBUFFER+=${abk[$MATCH]:-$MATCH}
 }
+zle -N zleiab
 
-zle -N globalias
-bindkey ",." globalias
 
+help-show-abk()
+{
+  zle -M "$(print "Type 'C-x .' after these abbreviations to expand them:"; print -a -C 2 ${(kv)abk})"
+}
+zle -N help-show-abk
+
+
+# bindkey ",." globalias
+bindkey '^x.' zleiab
+bindkey '^xb' help-show-abk
