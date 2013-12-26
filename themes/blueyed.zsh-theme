@@ -112,9 +112,9 @@ prompt_blueyed_precmd () {
             fi
             # add slash, if not the first segment, or cwd starts with "/"
             if [[ -n $colored ]] || [[ $cwd[1] == '/' ]]; then
-                colored+=${color}/${i}
+                colored+=${color}/${i:gs/%/%%/}
             else
-                colored+=${color}${i}
+                colored+=${color}${i:gs/%/%%/}
             fi
             cur+='/'
         done

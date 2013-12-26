@@ -8,8 +8,10 @@ function title {
   [[ -z $2 ]] && 2=$1
   1=${(pj: :)${(f)1}}
   2=${(pj: :)${(f)2}}
-  # echo "title:1:$1" ; echo "title:2:$2"
   # 1="1:$1"; 2="2:$2"
+  1=${1:gs/%/%%/}
+  2=${2:gs/%/%%/}
+  # echo "title:1:$1" ; echo "title:2:$2"
 
   # Append user@host if on ssh
   if [[ -n $SSH_CLIENT  ]]; then
@@ -32,7 +34,7 @@ function title {
       WINSUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
     fi
   fi
-  WINSUFFIX=${WINSUFFIX:- [${(%):-%~}]}
+  WINSUFFIX=${WINSUFFIX:- [${${(%):-%~}:gs/%/%%/}]}
   1=$PREFIX$1
   2=$PREFIX$2$WINSUFFIX
   # }}}
@@ -138,7 +140,7 @@ function omz_termsupport_preexec {
   fi
   # local window_name="$CMD [${(%):-%~}]"
   local window_name="$CMD"
-  local window_title="${typed:gs/%/%%/}"
+  local window_title="${typed}"
 
   title $window_name $window_title # let the terminal app itself handle cropping
 }
