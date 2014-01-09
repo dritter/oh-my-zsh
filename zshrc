@@ -89,12 +89,20 @@ zstyle ':vcs_info:*:prompt:*' hgrevformat '%r'
 # Enable it depending on the current dir's filesystem type.
 autoload -U add-zsh-hook
 add-zsh-hook chpwd _zshrc_vcs_check_for_changes_hook
+_is_slow_file_system() {
+  fs_type=$(df -T .|tail -n1|tr -s ' '|cut -f2 -d\ )
+  case $fs_type in
+    (sshfs|nfs|cifs|fuse.bup-fuse) echo "1" ;;
+    (*) echo "0" ;;
+  esac
+  return
+}
 _zshrc_vcs_check_for_changes_hook() {
   local -h check_for_changes
   if [[ -n $ZSH_CHECK_FOR_CHANGES ]]; then
     # override per env:
     check_for_changes=$ZSH_CHECK_FOR_CHANGES
-  elif df -t sshfs -t nfs -t cifs -t fuse.bup-fuse . &>/dev/null; then
+  elif [[ "$(_is_slow_file_system)" == '1' ]]; then
     zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'
     if [[ $? == 0 ]]; then
       echo "on slow fs: check_for_changes => false"
