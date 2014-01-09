@@ -88,21 +88,32 @@ zstyle ':vcs_info:*:prompt:*' hgrevformat '%r'
 # check-for-changes can be really slow.
 # Enable it depending on the current dir's filesystem type.
 autoload -U add-zsh-hook
-add-zsh-hook chpwd _zshrc_vcs_check_for_changes_hook
+
+# Set ZSH_IS_SLOW_DIR
+add-zsh-hook chpwd _zshrc_handle_slow_dir
 _is_slow_file_system() {
   fs_type=$(df -T .|tail -n1|tr -s ' '|cut -f2 -d\ )
   case $fs_type in
     (sshfs|nfs|cifs|fuse.bup-fuse) echo "1" ;;
     (*) echo "0" ;;
   esac
-  return
 }
+_zshrc_handle_slow_dir() {
+  export ZSH_IS_SLOW_DIR=0
+  if [[ $PWD == /run/user/*/gvfs/* ]] || [[ $PWD == ~/.gvfs/mtp/* ]] \
+    || [[ $(_is_slow_file_system) == 1 ]]; then
+    ZSH_IS_SLOW_DIR=1
+    echo "on slow fs"
+  fi
+}
+
+add-zsh-hook chpwd _zshrc_vcs_check_for_changes_hook
 _zshrc_vcs_check_for_changes_hook() {
   local -h check_for_changes
   if [[ -n $ZSH_CHECK_FOR_CHANGES ]]; then
     # override per env:
     check_for_changes=$ZSH_CHECK_FOR_CHANGES
-  elif [[ "$(_is_slow_file_system)" == '1' ]]; then
+  elif (( $ZSH_IS_SLOW_DIR )); then
     zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'
     if [[ $? == 0 ]]; then
       echo "on slow fs: check_for_changes => false"
@@ -562,8 +573,10 @@ fi
 
 # Add hook to adjust settings for slow dirs (e.g. ~/.gvfs/mtp/…)
 autoload -U add-zsh-hook
+# TODO: merge with _zshrc_vcs_check_for_changes_hook
 _zsh_chpwd_handle_slow_dirs() {
-  if [[ $PWD == ~/.gvfs/mtp/* ]]; then
+  # if [[ $PWD == /run/user/*/gvfs/* ]] || [[ $PWD == ~/.gvfs/mtp/* ]]; then
+  if (( $ZSH_IS_SLOW_DIR )); then
     ZSH_DISABLE_VCS_INFO=1
     (( $ZSH_DISABLE_HIGHLIGHT )) || ZSH_HIGHLIGHT_MAXLENGTH=0
   else
