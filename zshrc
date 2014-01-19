@@ -229,6 +229,7 @@ export LESS="-j5 -R -i -S"
 # local ones in ~/.zshrc.local
 hash -d l=/var/log
 hash -d d=~/Downloads
+hash -d df=~/.dotfiles
 
 # just type '...' to get '../..'
 # Originally by grml, improved by Mikachu
@@ -532,7 +533,9 @@ dusch() {
   du -sch -- ${~^@:-"*"}(D) | sort -rh
 }
 alias dusch='noglob dusch'
-alias phwd='print -rP %m:%/'
+alias pip='noglob pip'
+alias spip='noglob sudo pip'
+alias phwd='print -rP %M:%/'
 
 alias dL='dpkg -L'
 alias dS='dpkg -S'
@@ -541,7 +544,10 @@ alias dS='dpkg -S'
 alias sudo='sudo '
 
 viack() {
-  vi -c "Ack '$*'"
+  vi -c "Ack $*"
+}
+viag() {
+  vi -c "Ag $*"
 }
 
 
