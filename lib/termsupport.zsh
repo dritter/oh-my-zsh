@@ -34,7 +34,7 @@ function title {
       WINSUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
     fi
   fi
-  WINSUFFIX=${WINSUFFIX:- [${${(%):-%~}:gs/%/%%/}]}
+  # WINSUFFIX=${WINSUFFIX:- [${${(%):-%~}:gs/%/%%/}]}
   1=$PREFIX$1
   2=$PREFIX$2$WINSUFFIX
   # }}}
@@ -141,6 +141,8 @@ function omz_termsupport_preexec {
   # local window_name="$CMD [${(%):-%~}]"
   local window_name="$CMD"
   local window_title="${typed}"
+  # append cwd to window title
+  window_title+=" [${(%):-%~}]"
 
   title $window_name $window_title # let the terminal app itself handle cropping
 }
