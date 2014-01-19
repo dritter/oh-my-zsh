@@ -126,7 +126,7 @@ function omz_termsupport_preexec {
   # Get the cmd out of what was typed:
   # local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
   # Get the index of the first item not matching the list
-  local cmd_index=${typed[(wi)^(*=*|sudo|ssh|-*|;|\[*)]} # cmd name only, or if this is sudo or ssh, the next cmd
+  local cmd_index=${typed[(wi)^(export|*=*|sudo|ssh|-*|;|\[*)]} # cmd name only, or if this is sudo or ssh, the next cmd
   # printf '%s\n' $typed; read
   local CMD="$typed[$cmd_index]"
 
