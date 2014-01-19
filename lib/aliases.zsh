@@ -27,7 +27,7 @@ ffind() {
     debug=1
     shift
   fi
-  # if the first argument is a dir, use it for `find`
+  # if the first argument is a dir, use it for `find` (only if there are more arguments)
   if [[ $# -gt 1 ]] && [[ -d $1 ]] ; then
     dir=$1; shift
     (( $debug )) && echo "DEBUG: finding in $dir" >&2
@@ -63,6 +63,7 @@ ffind() {
     args+=(-print)
   fi
   (( $debug )) && echo "DEBUG: args: $args ($#args)" >&2
+  # TODO: do not ignore/prune .*, if we are looking for e.g. 'ffind .ropeproject'
   cmd=(find $dir -mindepth 1 \( \
       \( -type d -name ".*" \) \
       -o \( -type d -name _build \) \
@@ -90,7 +91,7 @@ lsh() { l  --color -t "$@" | head -n $((LINES > 23 ? 20 : LINES-3)) }
 # commands starting with % for pasting from web
 alias %=' '
 
-alias g='gvim --remote-silent'
+alias gv='gvim --remote-silent'
 
 # Custom aliases (from ~/.bash_aliases)
 # Get previous ubuntu version from changelog (the one to use with -v for e.g. debuild)
