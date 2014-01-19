@@ -171,7 +171,6 @@ xrgrep() {
   fi
   $=_findcmd | $_xargscmd
 }
-alias connect-to-moby='ssh -t hahler.de "while true ; do su -c \"BYOBU_PREFIX=/root/.dotfiles/lib/byobu/usr ; PATH=\\\$BYOBU_PREFIX/bin:\\\$PATH ; b=\\\$BYOBU_PREFIX/bin/byobu-screen ; \\\$b -x byobu || { sleep 2 && \\\$b -S byobu }\" && break; done"'
 function o() {
   if [ $commands[xdg-open] ]; then
     xdg-open "$@"
