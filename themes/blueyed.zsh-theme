@@ -59,7 +59,7 @@ prompt_blueyed_precmd () {
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
-    if (( $ZSH_DISABLE_VCS_INFO )) || ! vcs_info 'prompt' &> /dev/null; then
+    if (( $ZSH_IS_SLOW_DIR )) || ! vcs_info 'prompt' &> /dev/null; then
         # No vcs_info available, only set cwd
         prompt_vcs=""
     else
