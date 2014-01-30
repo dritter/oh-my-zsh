@@ -55,6 +55,9 @@ typeset -U path
 [ -x /usr/local/bin/vim ] && export EDITOR=/usr/local/bin/vim || export EDITOR=vim
 export GPGKEY='3FE63E00'
 
+# Disable XON/XOFF flow control; this is required to make C-s work in Vim.
+stty -ixon
+
 # Source local env file if any
 [ -f ~/.zshenv.local ] && source ~/.zshenv.local
 

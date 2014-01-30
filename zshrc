@@ -600,9 +600,6 @@ zsh_disable_highlighting() {
 }
 
 
-# disable XON/XOFF flow control; this is required to make C-s work in Vim
-stty -ixon
-
 # if [[ $TERM == xterm* ]]; then
   # not for "linux"
   # might use "tput colors"
