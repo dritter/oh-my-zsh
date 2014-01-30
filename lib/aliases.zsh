@@ -91,7 +91,8 @@ lsh() { l  --color -t "$@" | head -n $((LINES > 23 ? 20 : LINES-3)) }
 # commands starting with % for pasting from web
 alias %=' '
 
-alias gv='gvim --remote-silent'
+# Using a script instead.
+# alias gv='gvim --remote-silent'
 
 # Custom aliases (from ~/.bash_aliases)
 # Get previous ubuntu version from changelog (the one to use with -v for e.g. debuild)
