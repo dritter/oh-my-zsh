@@ -540,6 +540,15 @@ alias phwd='print -rP %M:%/'
 alias dL='dpkg -L'
 alias dS='dpkg -S'
 
+# Custom command modifier, like `noglob`.
+_nomatch () {
+  setopt localoptions nonomatch
+  cmd=$1; shift
+  command $cmd ${~@}
+}
+alias ag='noglob _nomatch ag'
+
+
 # Make aliases work with sudo; source: http://serverfault.com/a/178956/14449
 alias sudo='sudo '
 
