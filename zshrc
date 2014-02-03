@@ -543,9 +543,10 @@ alias dS='dpkg -S'
 # Custom command modifier, like `noglob`.
 _nomatch () {
   setopt localoptions nonomatch
-  cmd=$1; shift
+  local cmd=$1; shift
   command $cmd ${~@}
 }
+compdef _precommand _nomatch
 alias ag='noglob _nomatch ag'
 
 
