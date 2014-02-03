@@ -56,7 +56,9 @@ typeset -U path
 export GPGKEY='3FE63E00'
 
 # Disable XON/XOFF flow control; this is required to make C-s work in Vim.
-stty -ixon
+# NOTE: silence possible error when using mosh:
+#       "stty: standard input: Inappropriate ioctl for device"
+stty -ixon 2>/dev/null
 
 # Source local env file if any
 [ -f ~/.zshenv.local ] && source ~/.zshenv.local
