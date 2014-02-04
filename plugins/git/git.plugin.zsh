@@ -156,7 +156,7 @@ ggpush() {
   # get args (skipping options)
   for i; do
     [[ $i == -* ]] && git_opts+=($i) || args+=($i)
-    [[ $i == -h ]] && { echo "Usage: ggpush [--options...] [remote (Default: origin)] [branch (Default: current)]"; return; }
+    [[ $i == -h ]] && { echo "Usage: ggpush [--options...] [remote (Default: tracking branch / github.user)] [branch (Default: current)]"; return; }
   done
 
   branch=${args[2]-$(current_branch)}
@@ -166,13 +166,38 @@ ggpush() {
     remote=${$(command git rev-parse --verify $branch@{upstream} \
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
     remote=${remote%/$branch}
+
+    if [[ -z $remote ]]; then
+      remote=$(command git config github.user)
+      if ! [[ -z $remote ]]; then
+        # Verify remote from github.user:
+        if ! command git ls-remote --exit-code $remote &> /dev/null; then
+          echo "NOTE: remote for github.user does not exist ($remote)."
+          remote=
+        fi
+      fi
+      if [[ -z $remote ]]; then
+        echo "ERR: cannot determine remote."
+        return 1
+      fi
+      echo "WARN: using remote from github.user: $remote"
+      if (( ${git_opts[(i)-u]} > ${#git_opts} )); then
+        if read -q "yn?Push with -u to set upstream? (y/[n]) "; then
+          git_opts+=(-u)
+        fi
+        echo
+      fi
+    fi
   fi
 
-  echo "$remote:$branch"
+  echo "Pushing to $remote:$branch.."
   [[ -z $branch ]] && { echo "No current branch (given or according to 'current_branch').\nAre you maybe in a rebase, or not in a Git repo?"; return 1; }
 
   # TODO: git push ${1-@{u}} $branch
-  git push $=git_opts $remote $branch
+  local -a cmd
+  cmd=(git push $git_opts $remote $branch)
+  echo $cmd
+  $=cmd
 }
 compdef _git ggpush=git-push
 
