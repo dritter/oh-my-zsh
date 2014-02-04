@@ -7,6 +7,8 @@ alias gb='git branch'
 alias gba='git branch -a'
 alias gbl='git blame'
 alias gc='git commit -v'
+gcm() { git commit -m "$*" }
+alias gcm='noglob gcm'
 alias gca='git commit -v -a'
 alias gcl='git clone --recursive'
 alias gco='git checkout'
