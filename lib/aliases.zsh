@@ -27,11 +27,14 @@ ffind() {
     debug=1
     shift
   fi
-  # if the first argument is a dir, use it for `find` (only if there are more arguments)
-  if [[ $# -gt 1 ]] && [[ -d $1 ]] ; then
+  # If the first argument is a dir, use it as base, but only
+  # if there are more arguments or it starts with slash or dot.
+  if [[ -d $1 ]] && ( [[ $# -gt 1 ]] || [[ $1[1] == [./]* ]] ) ; then
     dir=$1; shift
     (( $debug )) && echo "DEBUG: finding in $dir" >&2
-  else; dir=. ; fi
+  else
+    dir=.
+  fi
 
   args=()
   _has_cmd=0
