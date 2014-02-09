@@ -63,8 +63,9 @@ ffind() {
     args+=(-print)
   fi
   (( $debug )) && echo "DEBUG: args: $args ($#args)" >&2
-  # TODO: do not ignore/prune .*, if we are looking for e.g. 'ffind .ropeproject'
-  cmd=(find $dir -mindepth 1 \( \
+  # -H: resolve symlinks from arguments.
+  # -mindepth 1: do not prune arguments, so that `ffind ~/.vim` works.
+  cmd=(find -H $dir -mindepth 1 \( \
       \( -type d -name ".*" \) \
       -o \( -type d -name _build \) \
       -o \( -type d -name node_modules \) \
