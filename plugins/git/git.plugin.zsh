@@ -97,11 +97,12 @@ gsma() {
   git commit -m "Add submodule $2 @${${${(ps: :)summary[1]}[3]}/*.../}"$'\n\n'"${(F)summary}" "$2" .gitmodules && \
   git submodule update --init --recursive "$2"
 }
-# `gsma` for ~df/vim/bundles
+# `gsma` for ~df/vim/bundles:
+# Use basename from $1 without typical prefix (vim-) and suffix (.git) for bundle name.
 gsmav() {
   [ x$1 = x ] && { echo "Add which submodule?"; return 1;}
   ~df
-  gsma $1 vim/bundle/${${1%.git}#vim-}
+  gsma $1 vim/bundle/${${${1%.git}#vim-}##*/}
 }
 gsmrm() {
   # Remove a git submodule
