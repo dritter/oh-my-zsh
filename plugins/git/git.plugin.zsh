@@ -102,7 +102,7 @@ gsma() {
 gsmav() {
   [ x$1 = x ] && { echo "Add which submodule?"; return 1;}
   ~df
-  gsma $1 vim/bundle/${${${1%.git}#vim-}##*/}
+  gsma $1 vim/bundle/${${${1##*/}%.git}#vim-}
 }
 gsmrm() {
   # Remove a git submodule
