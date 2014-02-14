@@ -188,11 +188,9 @@ ggpush() {
         return 1
       fi
       echo "WARN: using remote from github.user: $remote"
+      echo "      Using '-u' to set upstream."
       if (( ${git_opts[(i)-u]} > ${#git_opts} )); then
-        if read -q "yn?Push with -u to set upstream? (y/[n]) "; then
-          git_opts+=(-u)
-        fi
-        echo
+        git_opts+=(-u)
       fi
     fi
   fi
