@@ -127,16 +127,19 @@ function omz_termsupport_preexec {
   # local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
   # Get the index of the first item not matching the list
   local cmd_index=${typed[(wi)^(export|*=*|sudo|ssh|-*|;|\[*)]} # cmd name only, or if this is sudo or ssh, the next cmd
-  # printf '%s\n' $typed; read
+  # printf '"%s"\n' $typed; read
   local CMD="$typed[$cmd_index]"
 
-  # For special cases like "make", append the arg
+  # For special cases like "make", append the arg.
   local -a cmds_with_arg
   cmds_with_arg=(make man ve)
-  if (( $#CMD <= 4 )); then
-    CMD+=" $typed[$cmd_index+1]"
-  elif (( ${cmds_with_arg[(i)$CMD]} <= ${#cmds_with_arg} )); then
-    CMD+=" $typed[$cmd_index+1]"
+  if (( $#typed > $cmd_index )) && [[ $typed[$cmd_index+1] != ';' ]]; then
+    if (( $#CMD <= 4 )) || (( ${cmds_with_arg[(i)$CMD]} <= ${#cmds_with_arg} )); then
+      CMD+=" $typed[$((++cmd_index))]"
+    fi
+  fi
+  if (( $#typed > $cmd_index )); then
+    CMD+=" …"
   fi
   # local window_name="$CMD [${(%):-%~}]"
   local window_name="$CMD"
