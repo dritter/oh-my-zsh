@@ -230,6 +230,7 @@ export LESS="-j5 -R -i -S"
 hash -d l=/var/log
 hash -d d=~/Downloads
 hash -d df=~/.dotfiles
+hash -d omz=~/.dotfiles/oh-my-zsh
 
 # just type '...' to get '../..'
 # Originally by grml, improved by Mikachu
