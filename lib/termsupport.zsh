@@ -41,7 +41,8 @@ function title {
 
   if [[ $TERM == screen* ]]; then
     local rename_window=0
-    if (($+TMUX)); then
+    # Disabled: use term/pane title, which is more dynamic.
+    if false && (($+TMUX)); then
       # tmux window name (escape sequence also for screen hardstatus, but irrelevant here)
       # Available as #W in tmux, defaults to current command
       # We use the window_name (CMD with CWD)
