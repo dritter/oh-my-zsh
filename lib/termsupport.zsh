@@ -21,22 +21,22 @@ function title {
   fi
 
   # Container prefix/suffix: {{{
-  local PREFIX WINSUFFIX RELPWD
+  local PREFIX SUFFIX RELPWD
   # Get OpenVZ container ID (/proc/bc is only on the host):
   if [[ -r /proc/user_beancounters ]]; then
     if [[ ! -d /proc/bc ]]; then
       # container
       PREFIX="[$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
-      WINSUFFIX=" (${(%):-%~})"
+      # SUFFIX=" (${(%):-%~})"
     elif [[ $(pwd -P) == /var/lib/vz/private/[0-9]* ]]; then
       # HN, in container dir
       RELPWD=${$(pwd -P)#/var/lib/vz/private/}
-      WINSUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
+      # SUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
     fi
   fi
-  # WINSUFFIX=${WINSUFFIX:- [${${(%):-%~}:gs/%/%%/}]}
+  # SUFFIX=${SUFFIX:- [${${(%):-%~}:gs/%/%%/}]}
   1=$PREFIX$1
-  2=$PREFIX$2$WINSUFFIX
+  2=$PREFIX$2$SUFFIX
   # }}}
 
   if [[ $TERM == screen* ]]; then
