@@ -14,10 +14,10 @@ function title {
   # echo "title:1:$1" ; echo "title:2:$2"
 
   # Append user@host if on ssh
-  if [[ -n $SSH_CLIENT  ]]; then
+  if [[ -n $SSH_CLIENT ]] && ! (($+TMUX)); then
     # export it (useful in Vim's titlestring)
-    export TERM_USERATHOST_SUFFIX=" (${(%):-%n@%m})"
-    2+=$TERM_USERATHOST_SUFFIX
+    export _TERM_TITLE_SUFFIX=" (${(%):-%n@%m})"
+    2+=$_TERM_TITLE_SUFFIX
   fi
 
   # Container prefix/suffix: {{{
