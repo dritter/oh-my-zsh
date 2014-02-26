@@ -48,6 +48,16 @@ for i in /opt/eclipse ; do
   append_path_if_not_in_already $i
 done
 
+# Add specific paths for root; used on diskstation
+if [[ $USER == root ]]; then
+  for i in /opt/sbin /usr/syno/bin ; do
+    test -d $i || continue
+    path+=($i)
+  done
+fi
+
+unset i
+
 # make path/PATH entries unique
 typeset -U path
 
@@ -62,4 +72,3 @@ stty -ixon 2>/dev/null
 
 # Source local env file if any
 [ -f ~/.zshenv.local ] && source ~/.zshenv.local
-
