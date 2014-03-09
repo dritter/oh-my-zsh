@@ -541,11 +541,14 @@ alias phwd='print -rP %M:%/'
 alias dL='dpkg -L'
 alias dS='dpkg -S'
 
-# Custom command modifier, like `noglob`.
+# Custom command modifier to not error on non-matches, like `noglob`.
 _nomatch () {
   setopt localoptions nonomatch
   local cmd=$1; shift
-  command $cmd ${~@}
+  # NOTE: not using 'command' to make it work with functions.
+  # NOTE: quotes required with 'cmd foo: (bar)'
+  # command $cmd ${~@}
+  $cmd "${~@}"
 }
 compdef _precommand _nomatch
 alias ag='noglob _nomatch ag'
