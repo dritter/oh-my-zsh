@@ -645,6 +645,12 @@ alias tt=tmuxifier
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
+# dquilt: quilt for Debian/Ubuntu packages.
+dquilt() {
+  quilt --quiltrc=${HOME}/.quiltrc-dpkg "$@"
+}
+compdef _quilt dquilt=quilt
+
 
 # zsh_profile_stop
 
