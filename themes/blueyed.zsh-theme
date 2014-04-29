@@ -91,16 +91,12 @@ prompt_blueyed_precmd () {
         fi
         for i in $cwd_split; do
             # expand "~" to make the "-h" test work
-            # cur+=${~i}  # might fail after user has been deleted.
-            if [[ $cwd = ~* ]]; then
-              # manually expand ~foo => /home/foo
-              cwd=/home/"${cwd[2,-1]}"
-            fi
+            cur+=${~i}  # NOTE: might fail after user has been deleted.
             # color repository root
             if [[ "$cur" = $vcs_info_msg_2_ ]]; then
                 color=${repotext}
             # color Git repo (not root according to vcs_info then)
-            elif [[ -d $cur/.git ]]; then
+            elif [[ -e $cur/.git ]]; then
                 color=${repotext}
             # color symlink segment
             elif [[ -h $cur ]]; then
