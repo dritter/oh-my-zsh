@@ -129,8 +129,10 @@ prompt_blueyed_precmd () {
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
     prompt_cwd="$cwdtext${cwd}"
 
+    # user@host for SSH connections or when inside an OpenVZ container.
     local userathost
-    if [[ -n $SSH_CLIENT ]]; then
+    if [[ -n $SSH_CLIENT ]] \
+        || [[ -e /proc/user_beancounters && ! -d /proc/bc ]]; then
         local -h     user="%(#.$roottext.$normtext)%n"
 
         # http_proxy defines color of "@" between user and host
