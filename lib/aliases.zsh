@@ -25,6 +25,7 @@ ffind() {
   local debug=0
   if [[ $1 == '-d' ]]; then
     debug=1
+    set -x
     shift
   fi
   # If the first argument is a dir, use it as base, but only
@@ -178,10 +179,18 @@ xrgrep() {
   $=_findcmd | $_xargscmd
 }
 function o() {
+  if (( $# )); then
+    echo -n "Open multiple files? [yn] "
+    read -q || return
+  fi
   if [ $commands[xdg-open] ]; then
-    xdg-open "$@"
+    for f; do
+      xdg-open "$f"
+    done
   else
-    open "$@" # MacOS
+    for f; do
+      open "$f" # MacOS
+    done
   fi
 }
 alias 7zpwd="7z a -mx0 -mhe=on -p"
