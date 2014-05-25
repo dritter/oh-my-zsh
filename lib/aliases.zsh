@@ -180,7 +180,7 @@ xrgrep() {
   $=_findcmd | $_xargscmd
 }
 function o() {
-  if (( $# )); then
+  if (( $# > 1 )); then
     echo -n "Open multiple files? [yn] "
     read -q || return
   fi
