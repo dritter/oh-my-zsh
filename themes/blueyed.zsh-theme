@@ -168,6 +168,10 @@ prompt_blueyed_precmd () {
             rprompt_extra+=("%fdj:${DJANGO_SETTINGS_MODULE##*.}")
         fi
     fi
+    # Shell level: display it if >= 1 (or 2 if $TMUX is set).
+    if [[ $SHLVL -gt ((1+$+TMUX)) ]]; then
+        rprompt_extra+=("%fSHLVL:${SHLVL}")
+    fi
 
     # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
     # Do not do this when in a midnight commander subshell.
