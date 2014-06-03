@@ -26,6 +26,7 @@ _strip_escape_codes() {
 }
 
 # Switch between light and dark variants (solarized).
+ZSH_THEME_VARIANT_CONFIG_FILE=~/.config/zsh-theme-variant
 theme-variant() {
     [[ $1 == light ]] && variant=light || variant=dark
 
@@ -34,11 +35,16 @@ theme-variant() {
     else
         DIRCOLORS_FILE=~/.dotfiles/lib/LS_COLORS/LS_COLORS
     fi
-    echo "Enabling $variant variant.."
+    echo "Enabling $variant theme variant."
     ZSH_THEME_VARIANT=$variant
     zsh-set-dircolors
+    echo $variant > $ZSH_THEME_VARIANT_CONFIG_FILE
 }
-export ZSH_THEME_VARIANT=light
+[[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
+    && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
+    || ZSH_THEME_VARIANT=light
+export ZSH_THEME_VARIANT
+theme-variant $ZSH_THEME_VARIANT
 
 add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {

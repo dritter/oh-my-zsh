@@ -4,7 +4,7 @@ export LSCOLORS="Gxfxcxdxbxegedabagacad"
 export LS_COLORS
 
 # Enable ls colors
-# NOTE: gets also used by theme-variant() in themes/blueyed.zsh-theme.
+# NOTE: called from themes/blueyed.zsh-theme.
 zsh-set-dircolors() {
 if [ "$DISABLE_LS_COLORS" != "true" ]; then
   : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
@@ -36,7 +36,6 @@ if [ "$DISABLE_LS_COLORS" != "true" ]; then
   fi
 fi
 }
-zsh-set-dircolors
 
 #setopt no_beep
 setopt auto_cd
