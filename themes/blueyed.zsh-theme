@@ -307,7 +307,8 @@ function +vi-git-stash() {
     # Resolve git dir (necessary for submodules)
     gitdir=${hook_com[base]}/.git
     if [[ -f $gitdir ]]; then
-        gitdir=$(command git rev-parse --resolve-git-dir $gitdir)
+        # XXX: the output might be across two lines (fixed in the meantime); handled/fixed that somewhere else already, but could not find it.
+        gitdir=$(command git rev-parse --resolve-git-dir $gitdir | head -n1)
     fi
 
     if [[ -s $gitdir/refs/stash ]] ; then
