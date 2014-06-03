@@ -4,7 +4,10 @@ export LSCOLORS="Gxfxcxdxbxegedabagacad"
 export LS_COLORS
 
 # Enable ls colors
+# NOTE: gets also used by theme-variant() in themes/blueyed.zsh-theme.
+zsh-set-dircolors() {
 if [ "$DISABLE_LS_COLORS" != "true" ]; then
+  : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
   # Find the option for using colors in ls, depending on the version: Linux or BSD
 
   # NOTE: Do not overwrite own aliases
@@ -20,7 +23,6 @@ if [ "$DISABLE_LS_COLORS" != "true" ]; then
   if [ -n "$dircolors" ]; then
     # : ${DIRCOLORS_FILE:=~/.dotfiles/lib/dircolors-solarized/dircolors.256dark}
     # : ${DIRCOLORS_FILE:=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-dark}
-    : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
     if [ -f $DIRCOLORS_FILE ] ; then
       # Redirect errors: e.g. 'unrecognized keyword RESET' on CentOS 5.4
       eval $($dircolors -b $DIRCOLORS_FILE 2>/dev/null)
@@ -33,6 +35,8 @@ if [ "$DISABLE_LS_COLORS" != "true" ]; then
     zstyle -e ':completion:*:default' list-colors 'reply=("${PREFIX:+=(#bi)($PREFIX:t)(?)*==02=01}:${(s.:.)LS_COLORS}")'
   fi
 fi
+}
+zsh-set-dircolors
 
 #setopt no_beep
 setopt auto_cd

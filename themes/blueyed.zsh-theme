@@ -25,6 +25,21 @@ _strip_escape_codes() {
     echo $1 | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
 }
 
+# Switch between light and dark variants (solarized).
+theme-variant() {
+    [[ $1 == light ]] && variant=light || variant=dark
+
+    if [[ "$variant" == "light" ]]; then
+        DIRCOLORS_FILE=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-light
+    else
+        DIRCOLORS_FILE=~/.dotfiles/lib/LS_COLORS/LS_COLORS
+    fi
+    echo "Enabling $variant variant.."
+    ZSH_THEME_VARIANT=$variant
+    zsh-set-dircolors
+}
+export ZSH_THEME_VARIANT=light
+
 add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
     # Start profiling, via http://stackoverflow.com/questions/4351244/can-i-profile-my-zshrc-zshenv
@@ -35,7 +50,7 @@ prompt_blueyed_precmd () {
     # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
     # See `colors-table` for a list.
     local -h exitstatus=$? # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
-    local -h    normtext="%{$fg_no_bold[white]%}"
+    local -h    normtext="%{$fg_no_bold[default]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
     local -h    histtext="$normtext"
     local -h  distrotext="%{$fg_bold[green]%}"
@@ -43,16 +58,21 @@ prompt_blueyed_precmd () {
     local -h  jobstext_r="%{$fg_bold[magenta]%}"
     local -h exiterrtext="%{$fg_no_bold[red]%}"
     local -h        blue="%{$fg_no_bold[blue]%}"
-    local -h     cwdtext="%{$fg_no_bold[white]%}"
+    local -h     cwdtext="%{$fg_no_bold[default]%}"
     local -h   nonrwtext="%{$fg_no_bold[red]%}"
     local -h    warntext="%{$fg_bold[red]%}"
     local -h    roottext="%{$fg_bold[red]%}"
     local -h    repotext="%{$fg_no_bold[green]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
-    local -h   lighttext="%{$fg_bold[white]%}"
+    local -h   lighttext="%{$fg_bold[default]%}"
     local -h  prompttext="%{$fg_bold[green]%}"
-    local -h   darkdelim="%{$fg_no_bold[black]%}"
+    if [[ $ZSH_THEME_VARIANT == "dark" ]]; then
+        local -h   dimmedtext="%{$fg_no_bold[black]%}"
+    else
+        local -h   dimmedtext="%{$fg_no_bold[white]%}"
+    fi
+    local -h   darkdelim="$dimmedtext"
     local -h bracket_open="${darkdelim}["
     local -h bracket_close="${darkdelim}]"
 
