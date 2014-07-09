@@ -7,6 +7,8 @@
 #  - Based on http://kriener.org/articles/2009/06/04/zsh-prompt-magic
 #  - Some Git ideas from http://eseth.org/2010/git-in-zsh.html (+vi-git-stash, +vi-git-st, ..)
 #
+# Some signs: ✚ ⬆ ⬇ ✖ ✱ ➜ ✭ ═ ◼ ♺ ❮ ❯
+#
 # TODO: setup $prompt_cwd in chpwd hook only (currently adding the hook causes infinite recursion via vcs_info)
 
 autoload -U add-zsh-hook
@@ -25,7 +27,7 @@ _strip_escape_codes() {
     echo $1 | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
 }
 
-# Switch between light and dark variants (solarized).
+# Switch between light and dark variants (solarized). {{{
 ZSH_THEME_VARIANT_CONFIG_FILE=~/.config/zsh-theme-variant
 theme-variant() {
     [[ $1 == light ]] && variant=light || variant=dark
@@ -35,16 +37,32 @@ theme-variant() {
     else
         DIRCOLORS_FILE=~/.dotfiles/lib/LS_COLORS/LS_COLORS
     fi
-    echo "Enabling $variant theme variant."
-    ZSH_THEME_VARIANT=$variant
     zsh-set-dircolors
-    echo $variant > $ZSH_THEME_VARIANT_CONFIG_FILE
+    # echo $variant > $ZSH_THEME_VARIANT_CONFIG_FILE
+
+    if [[ -z "$ZSH_THEME_VARIANT" ]]; then
+        local -h gnome_terminal_profile="solarized-$variant"
+        if [[ "$COLORTERM" == "gnome-terminal" ]]; then
+            local -h cur_profile=$(gconftool-2 --get /apps/gnome-terminal/global/default_profile)
+            if [[ $cur_profile != $gnome_terminal_profile ]]; then
+                echo "Changing gnome-terminal default profile to: $gnome_terminal_profile."
+                gconftool-2 --set --type string /apps/gnome-terminal/global/default_profile $gnome_terminal_profile
+            fi
+        fi
+    fi
+    ZSH_THEME_VARIANT=$variant
 }
-[[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
-    && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
-    || ZSH_THEME_VARIANT=light
-export ZSH_THEME_VARIANT
-theme-variant $ZSH_THEME_VARIANT
+# [[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
+#     && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
+#     || ZSH_THEME_VARIANT=light
+# export ZSH_THEME_VARIANT
+# echo "redshift-period: $(redshift-period)"
+if [[ "$(redshift-period)" == 'Daytime' ]]; then
+    theme-variant light
+else
+    theme-variant dark
+fi
+# }}}
 
 add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
@@ -72,7 +90,9 @@ prompt_blueyed_precmd () {
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
     local -h   lighttext="%{$fg_bold[default]%}"
-    local -h  prompttext="%{$fg_bold[green]%}"
+    local -h     rprompt="$normtext"
+    local -h   rprompthl="$lighttext"
+    local -h  prompttext="%{$fg_no_bold[green]%}"
     if [[ $ZSH_THEME_VARIANT == "dark" ]]; then
         local -h   dimmedtext="%{$fg_no_bold[black]%}"
     else
@@ -147,8 +167,10 @@ prompt_blueyed_precmd () {
         cwd=${colored}
     fi
 
-    if [[ $~cur == $vcs_info_msg_2_*  ]]; then
-        rprompt_extra+=(${repotext}${vcs_info_msg_2_:t})
+    # Display current repo name (and short revision as of vcs_info).
+    if [[ -n $vcs_info_msg_2_ && $~cur == $vcs_info_msg_2_*  ]]; then
+        # rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${rprompt_extra_rev})
+        rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${vcs_info_msg_3_})
     fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
@@ -186,18 +208,31 @@ prompt_blueyed_precmd () {
     fi
     # virtualenv
     if [[ -n $VIRTUAL_ENV ]]; then
-        rprompt_extra+=("%fⓔ ${VIRTUAL_ENV##*/}")
+        rprompt_extra+=("${rprompthl}ⓔ ${VIRTUAL_ENV##*/}")
     fi
-    # django settings module
+    if [[ -n $ENVSHELL ]]; then
+        prompt_extra+=("${normtext}ENV:${ENVSHELL##*/}")
+    fi
+
+    # ENVDIR (used for tmm, ':A:t' means tail of absolute path).
+    # Only display it when not in an envshell already.
+    if [[ -z $ENVSHELL ]] && [[ -n $ENVDIR ]]; then
+        rprompt_extra+=("${rprompt}envdir:${ENVDIR:A:t}")
+    fi
+    if [[ -n $DJANGO_CONFIGURATION ]]; then
+        rprompt_extra+=("${rprompt}djc:$DJANGO_CONFIGURATION")
+    fi
+    # Obsolete
     if [[ -n $DJANGO_SETTINGS_MODULE ]]; then
-        if [[ $DJANGO_SETTINGS_MODULE != 'project.settings.local' ]]; then
-            rprompt_extra+=("%fdj:${DJANGO_SETTINGS_MODULE##*.}")
+        if [[ $DJANGO_SETTINGS_MODULE != 'config.settings' ]] && \
+            [[ $DJANGO_SETTINGS_MODULE != 'project.settings.local' ]]; then
+            rprompt_extra+=("${rprompt}djs:${DJANGO_SETTINGS_MODULE##*.}")
         fi
     fi
     # Shell level: display it if >= 1 (or 2 if $TMUX is set).
-    if [[ $SHLVL -gt ((1+$+TMUX)) ]]; then
-        rprompt_extra+=("%fSHLVL:${SHLVL}")
-    fi
+    # if [[ $SHLVL -gt ((1+$+TMUX)) ]]; then
+    #     rprompt_extra+=("%fSHLVL:${SHLVL}")
+    # fi
 
     # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
     # Do not do this when in a midnight commander subshell.
@@ -267,8 +302,8 @@ prompt_blueyed_precmd () {
     [[ -n $rprompt_extra ]] && rprompt_extra="${(j: :)rprompt_extra}$PR_RESET"
 
     # Assemble prompt:
+    local -h prompt="${userathost}${prompt_cwd}${prompt_extra}"
     local -h rprompt="$rprompt_extra${PR_RESET}"
-    local -h prompt="${userathost}${prompt_cwd}$prompt_extra"
     # right trim:
     prompt="${prompt%% #} "
 
@@ -278,11 +313,14 @@ prompt_blueyed_precmd () {
     local -h prompt_len=${#${"$(_strip_escape_codes ${(%)prompt})"}}
     PR_FILLBAR="%f${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
 
+    # local -h prompt_sign='%b%(#.%F{green}.%F{red})❯%F{yellow}❯%(#.%F{red}.%F{green})❯%f%b'
+    local -h prompt_sign="%b%(?.%F{blue}.%F{red})❯%(#.${roottext}.${prompttext})❯%f"
+
 # NOTE: Konsole has problems with rendering the special sign if it's colored!
 #     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
 # $prompt_vcs%f❯ "
     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
-$prompt_vcs%(#.$roottext.$prompttext)❯${PR_RESET} "
+${prompt_vcs}${prompt_sign}${PR_RESET} "
 
     # When invoked from gvim ('zsh -i') make it less hurting
     if [[ -n $MYGVIMRC ]]; then
@@ -290,24 +328,25 @@ $prompt_vcs%(#.$roottext.$prompttext)❯${PR_RESET} "
     fi
 
     # End profiling
-        # unsetopt xtrace
-        # exec 2>&3 3>&-
+    # unsetopt xtrace
+    # exec 2>&3 3>&-
 }
 
 
 # register vcs_info hooks
-zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st
+zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st git-untracked
 
 # Show count of stashed changes
 function +vi-git-stash() {
+    [[ $1 == 0 ]] || return 0 # do this only once for vcs_info_msg_0_.
+
     local -a stashes
     local gitdir
 
-    [[ $1 == 0 ]] || return # do this only once for vcs_info_msg_0_.
-    # return if check-for-changes is false:
+    # Return if check-for-changes is false:
     if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
         hook_com[misc]+="$bracket_open$hitext? stashed$bracket_close"
-        return
+        return 0
     fi
 
     # Resolve git dir (necessary for submodules)
@@ -321,17 +360,38 @@ function +vi-git-stash() {
         stashes=$(command git --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
         hook_com[misc]+="$bracket_open$hitext${stashes} stashed$bracket_close"
     fi
+    return 0
 }
 
-# Show remote ref name and number of commits ahead-of or behind
+# vcs_info: git: Show marker (+) if there are untracked files in repository.
+# (via %c).
+function +vi-git-untracked() {
+    [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
+
+    if [[ $(command git rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
+        # command git status --porcelain | grep '??' &> /dev/null ; then
+        # This will show the marker if there are any untracked files in repo.
+        # If instead you want to show the marker only if there are untracked
+        # files in $PWD, use:
+        [[ -n $(git ls-files --others --exclude-standard) ]] ; then
+        hook_com[staged]+='✗ '
+    fi
+}
+
+# Show remote ref name and number of commits ahead-of or behind.
+# This also colors and adjusts ${hook_com[branch]}.
 function +vi-git-st() {
+    [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
+
     local ahead behind remote
     local -a gitstatus
 
-    [[ $1 == 0 ]] || return # do this only once vcs_info_msg_0_.
+    # Determine short revision for rprompt.
+    # rprompt_extra_rev=$(command git describe --always --abbrev=1 ${hook_com[revision]})
+
     # return if check-for-changes is false:
     if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
-        return
+        return 0
     fi
 
     # Are we on a remote-tracking branch?
@@ -346,7 +406,7 @@ function +vi-git-st() {
 
     if [[ -z ${remote} ]] ; then
         hook_com[branch]="${branch_color}${local_branch}"
-        return
+        return 0
     else
         # for git prior to 1.7
         # ahead=$(command git rev-list origin/${hook_com[branch]}..HEAD | wc -l)
@@ -371,6 +431,7 @@ function +vi-git-st() {
         hook_com[branch]="${branch_color}${local_branch}$remote_color@${remote}"
         [[ -n $gitstatus ]] && hook_com[branch]+="$bracket_open$normtext${(j:/:)gitstatus}$bracket_close"
     fi
+    return 0
 }
 
 # Vim mode indicator {{{1
@@ -410,16 +471,17 @@ hash_value_from_list() {
 
 # vcs_info styling formats {{{1
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
-FMT_BRANCH=" %{$fg_no_bold[blue]%}↳ %{$fg_no_bold[blue]%}%s:%b%{$fg_bold[blue]%}%u%{$fg_bold[magenta]%}%c" # e.g. master¹²
+# NOTE: %b gets colored via hook_com.
+FMT_BRANCH="%{$fg_no_bold[blue]%}↳ %s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
+# FMT_BRANCH=" %{$fg_no_bold[blue]%}%s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
 FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
 
-# zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
+zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
-zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" "%R"
-zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" "%R"
-zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   ""
-zstyle ':vcs_info:*:prompt:*' max-exports 3
-
+zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" "%R" "%8.8i"
+zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" "%R" "%8.8i"
+zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   ""   ""
+zstyle ':vcs_info:*:prompt:*' max-exports 4
 
 #  vim: set ft=zsh ts=4 sw=4 et:

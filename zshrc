@@ -78,9 +78,7 @@ export RI="--format ansi"
 
 # directory based VCS before repo based ones (e.g. CVS in $HOME, the latter using Git)
 # zstyle ':vcs_info:*' enable cvs svn bzr hg git
-# zstyle ':vcs_info:*' enable hg bzr git
-zstyle ':vcs_info:*' enable git
-zstyle ':vcs_info:*' get-revision true
+zstyle ':vcs_info:*' enable hg bzr git
 # zstyle ':vcs_info:bzr:*' use-simple true
 zstyle ':vcs_info:(bzr|hg|svn):*' use-simple false
 zstyle ':vcs_info:*:prompt:*' hgrevformat '%r'
@@ -133,7 +131,6 @@ _zshrc_vcs_check_for_changes_hook() {
 }
 # init
 _zshrc_vcs_check_for_changes_hook
-
 
 
 # Incremental search
