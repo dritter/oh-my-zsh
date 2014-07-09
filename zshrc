@@ -45,12 +45,14 @@ export DISABLE_AUTO_UPDATE="true"
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Example format: plugins=(rails git textmate ruby ighthouse)
+# NOTE: pip used from zsh-completions, but has no support for packages (https://github.com/zsh-users/zsh-completions/issues/194)
 plugins=(git github dirstack svn apt grunt)
 
 # grunt-zsh-completion
 zstyle ':completion::complete:grunt::options:' show_grunt_path yes
 
 fpath=(~/.dotfiles/lib/zsh-completions/src $fpath)
+fpath=(~/.dotfiles/lib/docker-zsh-completion $fpath)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -88,7 +90,9 @@ zstyle ':vcs_info:*:prompt:*' hgrevformat '%r'
 autoload -U add-zsh-hook
 
 # Set ZSH_IS_SLOW_DIR
-add-zsh-hook chpwd _zshrc_handle_slow_dir
+add-zsh-hook chpwd _zshrc_chpwd_detect_slow_dir 2>/dev/null || {
+  echo 'zsh-syntax-highlighting: failed loading add-zsh-hook.' >&2
+}
 _is_slow_file_system() {
   fs_type=$(df -T .|tail -n1|tr -s ' '|cut -f2 -d\ )
   case $fs_type in
@@ -96,13 +100,17 @@ _is_slow_file_system() {
     (*) echo "0" ;;
   esac
 }
-_zshrc_handle_slow_dir() {
-  export ZSH_IS_SLOW_DIR=0
+_zshrc_chpwd_detect_slow_dir() {
   if [[ $PWD == /run/user/*/gvfs/* ]] || [[ $PWD == ~/.gvfs/mtp/* ]] \
     || [[ $(_is_slow_file_system) == 1 ]]; then
+    if [[ $ZSH_IS_SLOW_DIR != 1 ]]; then
+      echo "NOTE: on slow fs" >&2
+    fi
     ZSH_IS_SLOW_DIR=1
-    echo "on slow fs"
+  else
+    ZSH_IS_SLOW_DIR=0
   fi
+  export ZSH_IS_SLOW_DIR
 }
 
 add-zsh-hook chpwd _zshrc_vcs_check_for_changes_hook
@@ -168,8 +176,9 @@ zle -N edit-command-output
 
 # Make files executable via associated apps
 # XXX: slow?!
-autoload -U zsh-mime-setup
-zsh-mime-setup
+# NOTE: opens .py files in less, although they are executable!
+# autoload -U zsh-mime-setup
+# zsh-mime-setup
 # Do not break invoke-rc.d completion
 unalias -s d 2>/dev/null
 
@@ -178,7 +187,8 @@ watch=(notme)
 # autojump
 source ~/.dotfiles/autojump/bin/autojump.zsh
 # XXX: _j() has been removed in autojump!?! commit 49a0d70
-# fpath=(~/.dotfiles/oh-my-zsh/functions $fpath)
+# fpath=(~/.dotfiles/autojump/bin $fpath)
+# Obsolete with master.
 export AUTOJUMP_KEEP_SYMLINKS=1
 
 # Load bash completion system
@@ -240,6 +250,9 @@ if zmodload zsh/regex 2>/dev/null; then # might not be available (e.g. on DS212+
   bindkey -M isearch . self-insert 2>/dev/null
 fi
 
+# Completion for custom docker scripts.
+compdef _docker docker-shell=_docker_containers
+
 # generic, not bound to COLORTERM=gnome-terminal (for lilyterm)
 if [[ -n $DISPLAY ]] && [[ $TERM == "xterm" ]]; then
   export TERM=xterm-256color
@@ -256,6 +269,7 @@ fi
 setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
 
 # Setup vimpager as pager:
+# NOTE: quite a few drawbacks: load time, usability (not less, not Vim, …)
 # export PAGER=~/.dotfiles/lib/vimpager/vimpager
 # alias less=$PAGER
 # alias zless=$PAGER
@@ -377,6 +391,8 @@ alias ZZ=exit
 
 alias map='xargs -n1 -r'
 
+alias vimrc='vim ~df/vimrc'
+
 # autoload run-help helpers, e.g. run-help-git
 local run_helpers
 run_helpers=/usr/share/zsh/functions/Misc/run-help-*(N:t)
@@ -394,6 +410,20 @@ RR() {
   if (( $#a )); then
     cd $a[1]
   fi
+}
+
+# Call Makefile from parent directories.
+make () {
+  if ! [ -f Makefile ]; then
+    local m
+    m=((../)#Makefile(N))
+    if (( $#m )); then
+      echo -n "No Makefile in current dir. Use $m[1]? (y to continue) " >&2
+      read -q && command make -C $m[1]:h "$@"
+      return
+    fi
+  fi
+  command make "$@"
 }
 
 
@@ -419,6 +449,7 @@ _tmux_pane_words() {
   for i in $(tmux list-panes -F '#P'); do
     # skip current pane (handled above)
     [[ "$TMUX_PANE" = "$i" ]] && continue
+    # TODO: split words: e.g. "foo(bar" should be "foo" and "bar".
     w+=( ${(u)=$(tmux capture-pane -J -p -t $i)} )
   done
   _wanted values expl 'words from current tmux pane' compadd -a w
@@ -537,6 +568,8 @@ alias phwd='print -rP %M:%/'
 
 alias dL='dpkg -L'
 alias dS='dpkg -S'
+# grep in the files of a package, e.g. `dG acpid screen`.
+dG() { p=$1; shift; for i in $(dpkg -L $p); test -f $i && grep -H $@ -- $i }
 
 # Custom command modifier to not error on non-matches, like `noglob`.
 _nomatch () {
@@ -548,7 +581,7 @@ _nomatch () {
   $cmd "${~@}"
 }
 compdef _precommand _nomatch
-alias ag='noglob _nomatch ag'
+alias ag='noglob _nomatch ag --smart-case'
 
 
 # Make aliases work with sudo; source: http://serverfault.com/a/178956/14449
