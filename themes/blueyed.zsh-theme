@@ -57,7 +57,7 @@ theme-variant() {
 #     || ZSH_THEME_VARIANT=light
 # export ZSH_THEME_VARIANT
 # echo "redshift-period: $(redshift-period)"
-if [[ "$(redshift-period)" == 'Daytime' ]]; then
+if [[ -n $commands[redshift-period] ]] && [[ "$(redshift-period)" == 'Daytime' ]]; then
     theme-variant light
 else
     theme-variant dark
