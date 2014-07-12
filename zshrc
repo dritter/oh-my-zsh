@@ -668,19 +668,15 @@ zsh_disable_highlighting() {
   # base16_scheme solarized.dark
 # fi
 
-# tmuxifier
-eval "$(tmuxifier init -)"
-alias tt=tmuxifier
-
-# Source local rc file if any {{{1
-[ -f ~/.zshrc.local ] && source ~/.zshrc.local
-
 # dquilt: quilt for Debian/Ubuntu packages.
 dquilt() {
   quilt --quiltrc=${HOME}/.quiltrc-dpkg "$@"
 }
 compdef _quilt dquilt=quilt
 
+
+# Source local rc file if any {{{1
+[ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
 # zsh_profile_stop
 
