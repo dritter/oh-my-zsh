@@ -517,8 +517,10 @@ callwithsudoifnecessary_first() {
     # if [[ -f $file ]]; then
       if [[ -r $file ]]; then
         ${(Q)${(z)cmd}} $file
-      else
+      elif [ "$UID" != 0 ] && [ -n "$commands[sudo]" ] ; then
         sudo ${(Q)${(z)cmd}} $file
+      else
+        continue
       fi
       return
     # fi
@@ -528,13 +530,16 @@ callwithsudoifnecessary_first() {
 # This is useful for: `tf ~l/squid3/*.log`
 callwithsudoifnecessary_all() {
   cmd=$1; shift
-  for file do
-    # NOTE: `test -f` fails if the parent dir is not readable, e.g. /var/log/audit/audit.log
-    if ! [[ -r $file ]]; then
-      sudo ${(Q)${(z)cmd}} "$@"
-      return $?
-    fi
-  done
+
+  if [ "$UID" != 0 ] && [ -n "$commands[sudo]" ] ; then
+    for file do
+      # NOTE: `test -f` fails if the parent dir is not readable, e.g. /var/log/audit/audit.log
+      if ! [[ -r $file ]]; then
+        sudo ${(Q)${(z)cmd}} "$@"
+        return $?
+      fi
+    done
+  fi
   # all readable:
   ${(Q)${(z)cmd}} "$@"
 }
