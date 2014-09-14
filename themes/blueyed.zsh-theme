@@ -7,7 +7,7 @@
 #  - Based on http://kriener.org/articles/2009/06/04/zsh-prompt-magic
 #  - Some Git ideas from http://eseth.org/2010/git-in-zsh.html (+vi-git-stash, +vi-git-st, ..)
 #
-# Some signs: ✚ ⬆ ⬇ ✖ ✱ ➜ ✭ ═ ◼ ♺ ❮ ❯
+# Some signs: ✚ ⬆ ⬇ ✖ ✱ ➜ ✭ ═ ◼ ♺ ❮ ❯ λ
 #
 # TODO: setup $prompt_cwd in chpwd hook only (currently adding the hook causes infinite recursion via vcs_info)
 
@@ -15,6 +15,10 @@ autoload -U add-zsh-hook
 autoload -Uz vcs_info
 
 setopt prompt_subst
+
+# Skip prompt setup in virtualenv/bin/activate.
+# This causes a glitch with `pyenv shell venv_name` when it gets activated.
+VIRTUAL_ENV_DISABLE_PROMPT=1
 
 PR_RESET="%{${reset_color}%}";
 
@@ -38,9 +42,8 @@ theme-variant() {
         DIRCOLORS_FILE=~/.dotfiles/lib/LS_COLORS/LS_COLORS
     fi
     zsh-set-dircolors
-    # echo $variant > $ZSH_THEME_VARIANT_CONFIG_FILE
 
-    if [[ -z "$ZSH_THEME_VARIANT" ]]; then
+    if [[ "$ZSH_THEME_VARIANT" != "$variant" ]]; then
         local -h gnome_terminal_profile="solarized-$variant"
         if [[ "$COLORTERM" == "gnome-terminal" ]]; then
             local -h cur_profile=$(gconftool-2 --get /apps/gnome-terminal/global/default_profile)
@@ -52,14 +55,12 @@ theme-variant() {
     fi
     export ZSH_THEME_VARIANT=$variant
 }
-# [[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
-#     && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
-#     || ZSH_THEME_VARIANT=light
-# export ZSH_THEME_VARIANT
-if [[ -n $commands[get-daytime-period] ]] && [[ "$(get-daytime-period)" == 'Daytime' ]]; then
-    theme-variant light
-else
-    theme-variant dark
+# Init once and export the value.
+if [[ -z "$ZSH_THEME_VARIANT" ]]; then
+    [[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
+        && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
+        || ZSH_THEME_VARIANT=auto
+    theme-variant $ZSH_THEME_VARIANT
 fi
 # }}}
 
@@ -169,7 +170,8 @@ prompt_blueyed_precmd () {
     # Display current repo name (and short revision as of vcs_info).
     if [[ -n $vcs_info_msg_2_ && $~cur == $vcs_info_msg_2_*  ]]; then
         # rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${rprompt_extra_rev})
-        rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${vcs_info_msg_3_})
+        # rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${vcs_info_msg_3_})
+        rprompt_extra+=(${repotext}@${vcs_info_msg_3_})
     fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
@@ -205,12 +207,16 @@ prompt_blueyed_precmd () {
     if [[ -r /proc/user_beancounters && ! -d /proc/bc ]]; then
         prompt_extra+=("${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')]")
     fi
+    # pyenv
+    if [[ -n $PYENV_VERSION ]]; then
+        rprompt_extra+=("${rprompthl}🐍 ${normtext}${PYENV_VERSION}")
+    fi
     # virtualenv
     if [[ -n $VIRTUAL_ENV ]]; then
-        rprompt_extra+=("${rprompthl}ⓔ ${VIRTUAL_ENV##*/}")
+        rprompt_extra+=("${rprompthl}ⓔ ${normtext}${VIRTUAL_ENV##*/}")
     fi
     if [[ -n $ENVSHELL ]]; then
-        prompt_extra+=("${normtext}ENV:${ENVSHELL##*/}")
+        prompt_extra+=("${rprompthl}ENV:${normtext}${ENVSHELL##*/}")
     fi
 
     # ENVDIR (used for tmm, ':A:t' means tail of absolute path).
@@ -383,6 +389,7 @@ function +vi-git-st() {
     [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
 
     local ahead behind remote
+    local branch_color remote_color local_branch local_branch_disp
     local -a gitstatus
 
     # Determine short revision for rprompt.
@@ -398,13 +405,19 @@ function +vi-git-st() {
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
 
     local_branch=${hook_com[branch]}
-    # make branch name bold if not "master"
+
+    # Init local_branch_disp: shorten branch to 6 chars + tail.
+    (( $#local_branch > 7 )) \
+        && local_branch_disp="${local_branch:0:7}…" \
+        || local_branch_disp=$local_branch
+
+    # Make branch name bold if not "master".
     [[ $local_branch == "master" ]] \
         && branch_color="%{$fg_no_bold[blue]%}" \
         || branch_color="%{$fg_bold[blue]%}"
 
     if [[ -z ${remote} ]] ; then
-        hook_com[branch]="${branch_color}${local_branch}"
+        hook_com[branch]="${branch_color}${local_branch_disp}"
         return 0
     else
         # for git prior to 1.7
@@ -419,15 +432,15 @@ function +vi-git-st() {
 
         remote=${remote%/$local_branch}
 
-        # abbreviate "master@origin" (common/normal)
+        # Abbreviate "master@origin" to "m@o" (common/normal).
         if [[ $remote == "origin" ]] ; then
           remote=o
-          [[ $local_branch == "master" ]] && local_branch="m"
+          [[ $local_branch == "master" ]] && local_branch_disp="m"
         else
           remote_color="%{$fg_bold[blue]%}"
         fi
 
-        hook_com[branch]="${branch_color}${local_branch}$remote_color@${remote}"
+        hook_com[branch]="${branch_color}${local_branch_disp}$remote_color@${remote}"
         [[ -n $gitstatus ]] && hook_com[branch]+="$bracket_open$normtext${(j:/:)gitstatus}$bracket_close"
     fi
     return 0
