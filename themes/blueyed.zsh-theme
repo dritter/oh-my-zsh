@@ -116,12 +116,8 @@ prompt_blueyed_precmd () {
         rprompt_extra+=("${vcs_info_msg_1_}")
     fi
 
+    # Shorten named/hashed dirs.
     cwd=${(%):-%~} # 'print -P "%~"'
-    # NOTE: does not work good for root with HOME=/root and expansion below.
-    # if [[ $cwd = /home/* ]]; then
-    #     # manually shorten /home/foo => ~/foo
-    #     cwd=\~"${cwd[6,-1]}"
-    # fi
 
     # Highlight different types in segments of $cwd
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
@@ -136,10 +132,24 @@ prompt_blueyed_precmd () {
             # starting at root
             cur='/'
         fi
-        # setopt localoptions no_nomatch
+
+        setopt localoptions no_nomatch
+        local n=0
         for i in $cwd_split; do
-            # expand "~" to make the "-h" test work
-            cur+=${~i}  # NOTE: might fail after user has been deleted.
+            n=$(($n+1))
+
+            # Expand "~" to make the "-h" test work.
+            cur+=${~i}
+
+            # Use a special symbol for "/home".
+            if [[ $n == 1 ]]; then
+                if [[ $i == 'home' ]]; then
+                    i='⌂'
+                elif [[ $i != '~' ]]; then
+                    i="/$i"
+                fi
+            fi
+
             # color repository root
             if [[ "$cur" = $vcs_info_msg_2_ ]]; then
                 color=${repotext}
@@ -158,8 +168,8 @@ prompt_blueyed_precmd () {
             else
                 color=${cwdtext}
             fi
-            # add slash, if not the first segment, or cwd starts with "/"
-            if [[ -n $colored ]] || [[ $cwd[1] == '/' ]]; then
+            # Add slash, if not the first segment.
+            if [[ -n $colored ]] ; then
                 colored+=${color}/${i:gs/%/%%/}
             else
                 colored+=${color}${i:gs/%/%%/}
