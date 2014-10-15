@@ -117,10 +117,11 @@ prompt_blueyed_precmd () {
     fi
 
     cwd=${(%):-%~} # 'print -P "%~"'
-    if [[ $cwd = /home/* ]]; then
-        # manually shorten /home/foo => ~foo
-        cwd=\~"${cwd[7,-1]}"
-    fi
+    # NOTE: does not work good for root with HOME=/root and expansion below.
+    # if [[ $cwd = /home/* ]]; then
+    #     # manually shorten /home/foo => ~/foo
+    #     cwd=\~"${cwd[6,-1]}"
+    # fi
 
     # Highlight different types in segments of $cwd
     local ln_color=${${(ps/:/)LS_COLORS}[(r)ln=*]#ln=}
@@ -135,6 +136,7 @@ prompt_blueyed_precmd () {
             # starting at root
             cur='/'
         fi
+        # setopt localoptions no_nomatch
         for i in $cwd_split; do
             # expand "~" to make the "-h" test work
             cur+=${~i}  # NOTE: might fail after user has been deleted.
