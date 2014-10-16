@@ -145,7 +145,7 @@ prompt_blueyed_precmd () {
             if [[ $n == 1 ]]; then
                 if [[ $i == 'home' ]]; then
                     i='⌂'
-                elif [[ $i != '~' ]]; then
+                elif [[ $i[1] != '~' ]]; then
                     i="/$i"
                 fi
             fi
@@ -419,7 +419,7 @@ function +vi-git-st() {
     local_branch=${hook_com[branch]}
 
     # Init local_branch_disp: shorten branch to 6 chars + tail.
-    (( $#local_branch > 7 )) \
+    (( $#local_branch > 7 )) && ! [[ $local_branch == */* ]] \
         && local_branch_disp="${local_branch:0:7}…" \
         || local_branch_disp=$local_branch
 
