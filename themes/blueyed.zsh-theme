@@ -179,11 +179,11 @@ prompt_blueyed_precmd () {
         cwd=${colored}
     fi
 
-    # Display current repo name (and short revision as of vcs_info).
-    if [[ -n $vcs_info_msg_2_ && $~cur == $vcs_info_msg_2_*  ]]; then
+    # Display repo and shortened revision as of vcs_info, if available.
+    if [[ -n $vcs_info_msg_2_ ]]; then
         # rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${rprompt_extra_rev})
-        # rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${vcs_info_msg_3_})
-        rprompt_extra+=(${repotext}@${vcs_info_msg_3_})
+        rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${vcs_info_msg_3_})
+        # rprompt_extra+=(${repotext}@${vcs_info_msg_3_})
     fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
