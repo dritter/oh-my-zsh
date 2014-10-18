@@ -28,6 +28,15 @@ ffind() {
     set -x
     shift
   fi
+  # Get options for `find`.
+  opts=(-H)
+  while true; do
+    case $1 in
+      -H|-L|-P|-O*) opts+=($1); shift ;;
+      -D)  opts+=($1 $2); shift 2 ;;
+      *) break ;;
+    esac
+  done
   # If the first argument is a dir, use it as base, but only
   # if there are more arguments or it starts with slash or dot.
   if [[ -d $1 ]] && ( [[ $# -gt 1 ]] || [[ $1[1] == [./]* ]] ) ; then
@@ -70,7 +79,7 @@ ffind() {
   # -H: resolve symlinks from arguments.
   # -mindepth 1: do not prune arguments, so that `ffind ~/.vim` works.
   # NOTE: action before pruning, so that you can search for e.g. "bower_components".
-  cmd=(find -H $dir -mindepth 1  \( $args \) -o \( \
+  cmd=(find $opts $dir -mindepth 1  \( $args \) -o \( \
       \( -type d -name ".*" \) \
       -o \( -type d -name _build \) \
       -o \( -type d -name node_modules \) \
