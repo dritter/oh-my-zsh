@@ -1,6 +1,6 @@
 # TODO: Explain what some of this does..
 
-bindkey -e
+bindkey -v
 bindkey '\ew' kill-region
 bindkey -s '\el' "ls\n"
 # bindkey -s '\e.' "..\n"
@@ -117,3 +117,11 @@ bindkey '^[[5C' end-of-line
 bindkey '^[[3~' delete-char
 bindkey '^[^N' newtab
 bindkey '^?' backward-delete-char
+
+autoload -U smart-insert-last-word
+zle -N insert-last-assignment smart-insert-last-word
+zstyle :insert-last-assignment match '[[:alpha:]][][[:alnum:]]#=*'
+bindkey '\e=' insert-last-assignment
+
+zle -N insert-last-word smart-insert-last-word
+bindkey -M viins "^[." insert-last-word
