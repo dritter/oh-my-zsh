@@ -70,5 +70,25 @@ export GPGKEY='3FE63E00'
 #       "stty: standard input: Inappropriate ioctl for device"
 stty -ixon 2>/dev/null
 
+# Setup pyenv (with completion for zsh).
+# It gets done also in ~/.profile, but that does not cover completion and
+# ~/.profile is not sourced for real virtual consoles (VTs).
+if [ -d ~/.pyenv ]; then
+  export PYENV_ROOT="$HOME/.pyenv"
+  # prepend_path_if_not_in_already $PYENV_ROOT/bin
+  PATH="$PYENV_ROOT/bin:$PATH"
+  # prepend_path_if_not_in_already $PYENV_ROOT/shims
+
+  # Setup pyenv function and completion.
+  # NOTE: moved from ~/.zshrc to fix YouCompleteMe/Python in gvim started from Firefox.
+  # XXX: probably not that lazy with this forking..
+  if ! type pyenv | grep -q function; then # only once!
+    # if [ -n "$commands[pyenv]" ] ; then
+      eval "$($PYENV_ROOT/bin/pyenv init -)"
+    # fi
+  fi
+fi
+
+
 # Source local env file if any
 [ -f ~/.zshenv.local ] && source ~/.zshenv.local
