@@ -30,7 +30,10 @@ if [[ -n $commands[brew] ]]; then
   prepend_path_if_not_in_already $(brew --prefix coreutils)/libexec/gnubin
 fi
 
-prepend_path_if_not_in_already ~/.dotfiles/usr/bin ~/bin /usr/local/bin /usr/local/sbin
+prepend_path_if_not_in_already /usr/local/bin /usr/local/sbin
+prepend_path_if_not_in_already ~/.dotfiles/usr/bin ~/bin
+# For pipsi:
+prepend_path_if_not_in_already ~/.local/bin
 
 # Add various "bin" directories to $path
 # (e.g. /usr/local/apache2/bin is used @bp)
