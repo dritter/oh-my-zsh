@@ -14,8 +14,6 @@
 autoload -U add-zsh-hook
 autoload -Uz vcs_info
 
-setopt prompt_subst
-
 # Skip prompt setup in virtualenv/bin/activate.
 # This causes a glitch with `pyenv shell venv_name` when it gets activated.
 VIRTUAL_ENV_DISABLE_PROMPT=1
@@ -63,6 +61,19 @@ if [[ -z "$ZSH_THEME_VARIANT" ]]; then
     theme-variant $ZSH_THEME_VARIANT
 fi
 # }}}
+
+
+# Override builtin reset-prompt widget to call the precmd hook manually
+# (for fzf's fzf-cd-widget). This is needed in case the pwd changed.
+# TODO: move cwd related things from prompt_blueyed_precmd into a chpwd hook?!
+zle -N reset-prompt my-reset-prompt
+function my-reset-prompt() {
+    if (( ${+precmd_functions[(r)prompt_blueyed_precmd]} )); then
+        prompt_blueyed_precmd
+    fi
+    zle .reset-prompt
+}
+
 
 add-zsh-hook precmd prompt_blueyed_precmd
 prompt_blueyed_precmd () {
@@ -271,6 +282,11 @@ prompt_blueyed_precmd () {
             RPS1_list+=("$distrotext$(get_distro)")
         fi
 
+        # Keymap indicator for dumb terminals.
+        if [ -n ${_ZSH_KEYMAP_INDICATOR} ]; then
+            RPS1_list+=("${_ZSH_KEYMAP_INDICATOR}")
+        fi
+
         RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
         # NOTE: PR_RESET without space might cause off-by-one error with urxvt after `ls <tab>` etc.
         if (( $#RPS1_list )); then
@@ -463,22 +479,74 @@ function +vi-git-st() {
     return 0
 }
 
+my-send-term-escape() {
+    # Wrap escape code for tmux.
+    [[ -n $TMUX ]] && printf '\ePtmux;\e'
+
+    echo -ne $1
+
+    # End escape code wrapping for tmux.
+    [[ -n $TMUX ]] && printf '\e\\'
+}
+
+my-set-cursor-shape() {
+    # Not supported with gnome-terminal and "linux".
+    if ! [[ $COLORTERM == rxvt* ]]; then
+        return
+    fi
+    local code
+    case "$1" in
+        block_blink)     code='\e[1 q' ;;
+        block)           code='\e[2 q' ;;
+        underline_blink) code='\e[3 q' ;;
+        underline)       code='\e[4 q' ;;
+        # NOTE: bar/ibeam not supported by urxvt.
+        *) echo "my-set-cursor-shape: unknown arg: $1"; return 1 ;;
+    esac
+    my-send-term-escape $code
+    return 0
+}
+
 # Vim mode indicator {{{1
-# Taken from the vi-mode plugin, but without `bindkey -v`.
-function zle-line-init zle-keymap-select {
-  zle reset-prompt
+zle-keymap-select zle-line-init () {
+    if [[ $COLORTERM == rxvt* ]]; then
+        if [ $KEYMAP = vicmd ]; then
+            my-set-cursor-shape block_blink
+        else
+            my-set-cursor-shape underline_blink
+        fi
+    elif [[ $TERM == xterm* ]]; then
+        if [ $KEYMAP = vicmd ]; then
+            # First set a color name (recognized by gnome-terminal), then the number from the palette (recognized by urxvt).
+            # NOTE: not for "linux" or tmux on linux.
+            my-send-term-escape "\033]12;#0087ff\007"
+            my-send-term-escape "\033]12;4\007"
+        else
+            my-send-term-escape "\033]12;#5f8700\007"
+            my-send-term-escape "\033]12;2\007"
+        fi
+    else
+        # Dumb terminal, e.g. linux or screen/tmux in linux console.
+        # If mode indicator wasn't setup by theme, define default.
+        if [[ "$MODE_INDICATOR" == "" ]]; then
+            MODE_INDICATOR="%{$fg_bold[red]%}<%{$fg_no_bold[red]%}<<%{$reset_color%}"
+        fi
+
+        export _ZSH_KEYMAP_INDICATOR="${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
+        my-reset-prompt
+    fi
 }
-zle -N zle-line-init
 zle -N zle-keymap-select
+zle -N zle-line-init
+# Init.
+my-set-cursor-shape underline_blink
 
-# if mode indicator wasn't setup by theme, define default
-if [[ "$MODE_INDICATOR" == "" ]]; then
-  MODE_INDICATOR="%{$fg_bold[red]%}<%{$fg_no_bold[red]%}<<%{$reset_color%}"
-fi
-
-function vi_mode_prompt_info() {
-  echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
+# Set block cursor before executing a program.
+add-zsh-hook preexec _set_cursor_style
+function _set_cursor_style() {
+    my-set-cursor-shape block_blink
 }
+# }}}
 
 color_for_host() {
     # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
