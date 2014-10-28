@@ -264,7 +264,7 @@ prompt_blueyed_precmd () {
     #   fi
     # fi
     if [[ "$is_mc_shell" == "0" ]]; then
-        RPS1_list=('$(vi_mode_prompt_info)')
+        RPS1_list=()
 
         # Distribution (if on a remote system)
         if [ -n "$SSH_CLIENT" ] ; then
@@ -272,7 +272,12 @@ prompt_blueyed_precmd () {
         fi
 
         RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
-        RPS1="${(j: :)RPS1_list}$PR_RESET"
+        # NOTE: PR_RESET without space might cause off-by-one error with urxvt after `ls <tab>` etc.
+        if (( $#RPS1_list )); then
+            RPS1="${(j: :)RPS1_list}$PR_RESET "
+        else
+            RPS1=
+        fi
     else
         prompt_extra+=("$normtext(mc)")
     fi
