@@ -46,7 +46,15 @@ function title {
 
   if [[ $TERM == screen* ]]; then
     if (($+TMUX)) && [[ $_tmux_name_reset != ${TMUX}_${TMUX_PANE} ]]; then
-      local tmux_auto_rename=$(tmux show-window-options -t $TMUX_PANE -v automatic-rename 2>/dev/null) || $(tmux show-window-options -t $TMUX_PANE | grep '^automatic-rename' | cut -f2 -d\ )
+      # Migrate from previous title handling for running tmux sessions. (2014-10-30)
+      if (($+_tmux_title_is_auto_set)); then
+        if [[ $_tmux_title_is_auto_set == 1 ]]; then
+          local tmux_auto_rename=on
+        fi
+        unset _tmux_title_is_auto_set
+      else
+        local tmux_auto_rename=$(tmux show-window-options -t $TMUX_PANE -v automatic-rename 2>/dev/null) || $(tmux show-window-options -t $TMUX_PANE | grep '^automatic-rename' | cut -f2 -d\ )
+      fi
       if [[ $tmux_auto_rename != "off" ]]; then
         # echo "Resetting tmux name to 0."
         tmux set-window-option -t $TMUX_PANE -q automatic-rename off
