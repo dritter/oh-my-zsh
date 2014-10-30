@@ -3,19 +3,20 @@
 #Fully support screen, iterm, and probably most modern xterm and rxvt
 #Limited support for Apple Terminal (Terminal can't set window or tab separately)
 # NOTE: '${(%):-%~}' => short PWD, with named dirs
+# NOTE: tab title is used by awesomeWM when minimized.
 function title {
-  [ "$DISABLE_AUTO_TITLE" != "true" ] || return
   [[ -z $2 ]] && 2=$1
   1=${(V)${(pj: :)${(f)1}}}
   2=${(V)${(pj: :)${(f)2}}}
   # 1="1:$1"; 2="2:$2"
+  # Escape.
   1=${1:gs/%/%%/}
   2=${2:gs/%/%%/}
   # echo "title:1:$1" ; echo "title:2:$2"
 
-  # Append user@host if on ssh
+  # Append user@host if on ssh.
   if [[ -n $SSH_CLIENT ]] && ! (($+TMUX)); then
-    # export it (useful in Vim's titlestring)
+    # Export it (useful in Vim's titlestring).
     export _TERM_TITLE_SUFFIX=" (${(%):-%n@%m})"
     2+=$_TERM_TITLE_SUFFIX
   fi
@@ -39,41 +40,19 @@ function title {
   2=$PREFIX$2$SUFFIX
   # }}}
 
-  if [[ $TERM == screen* ]]; then
-    local rename_window=0
-    # Disabled: use term/pane title, which is more dynamic.
-    if false && (($+TMUX)); then
-      # tmux window name (escape sequence also for screen hardstatus, but irrelevant here)
-      # Available as #W in tmux, defaults to current command
-      # We use the window_name (CMD with CWD)
+  # prompt_subst is required for print with $''.
+  # NOTE: $'' is required for no extra output with: printf "\e[3mCheck for\e[m"
+  setopt local_options prompt_subst
 
-      # get option value (fallback for tmux 1.6)
+  if [[ $TERM == screen* ]]; then
+    if (($+TMUX)) && [[ $_tmux_name_reset != ${TMUX}_${TMUX_PANE} ]]; then
       local tmux_auto_rename=$(tmux show-window-options -t $TMUX_PANE -v automatic-rename 2>/dev/null) || $(tmux show-window-options -t $TMUX_PANE | grep '^automatic-rename' | cut -f2 -d\ )
       if [[ $tmux_auto_rename != "off" ]]; then
-        # auto-rename on (default)
-        rename_window=1
-      else
-        # auto-rename off (is the case after first own rename)
-        local tmux_cur_title="$(tmux display-message -t $TMUX_PANE -p '#W')"
-        # Look for U+FEFF at the end
-        if [[ $tmux_cur_title[-1] == "﻿" ]]; then
-          # still our autoset value (marker or same value), change it:
-          rename_window=1
-        fi
+        # echo "Resetting tmux name to 0."
+        tmux set-window-option -t $TMUX_PANE -q automatic-rename off
+        tmux rename-window -t $TMUX_PANE 0
       fi
-    else
-      # no tmux, or not exported ("vzctl enter")
-      # TODO: detect/handle manual rename here
-      #       might use set-environment, but would require $TMUX/tmux
-      #       could use a mark (invisible char, "﻿"), but needs tmux to read the current title
-      rename_window=1
-    fi
-    if [[ $rename_window == 1 ]]; then
-      # Rename window and add mark (invisible space, U+FEFF)
-      print -Pn $'\ek$1﻿\e\\'
-      export _tmux_title_is_auto_set=1  # export for sub-shells / Vim
-    else
-      export _tmux_title_is_auto_set=0
+      _tmux_name_reset=${TMUX}_${TMUX_PANE}
     fi
 
     # Term title (available as #T in tmux)
@@ -88,17 +67,33 @@ function title {
     print -Pn $'\e]1;$1\a' # set icon (=tab) name (will override window name on broken terminal)
   fi
 }
+# Manually set the title and disable autosetting it.
+set_title() {
+  title $1 $2
+  export DISABLE_AUTO_TITLE=true
+}
 
-ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<_" #15 char left truncated PWD
+ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<_" # 15 char left truncated PWD.
 ZSH_THEME_TERM_TITLE_IDLE="%~_"
 
 # Appears when you have the prompt
 function omz_termsupport_precmd {
-  title ${(%)ZSH_THEME_TERM_TAB_TITLE_IDLE} ${(%)ZSH_THEME_TERM_TITLE_IDLE}
+  [ "$DISABLE_AUTO_TITLE" != "true" ] || return
+
+  if (( $+_ZSH_LAST_CMD_TITLE )); then
+    local suffix=" ($_ZSH_LAST_CMD_TITLE)"
+  else
+    local suffix=""
+  fi
+
+  title ${(%)ZSH_THEME_TERM_TAB_TITLE_IDLE}${suffix} \
+        ${(%)ZSH_THEME_TERM_TITLE_IDLE}${suffix}
 }
 
 # Appears at the beginning (and during) of command execution
 function omz_termsupport_preexec {
+  [ "$DISABLE_AUTO_TITLE" != "true" ] || return
+
   emulate -L zsh
   setopt extended_glob
   local -a typed; typed=(${(z)1}) # split what the user has typed into words using shell parsing
@@ -143,12 +138,17 @@ function omz_termsupport_preexec {
     CMD+=" …"
   fi
   # local window_name="$CMD [${(%):-%~}]"
-  local window_name="$CMD"
+  # local window_name="$CMD"
   local window_title="${typed}"
   # append cwd to window title
   window_title+=" [${(%):-%~}]"
 
-  title $window_name $window_title # let the terminal app itself handle cropping
+  export _ZSH_LAST_CMD_TITLE=$CMD
+
+  # title $window_name $window_title # let the terminal app itself handle cropping
+
+  # NOTE: tab/icon name is used by awesomeWM when minimized.
+  title $window_title $window_title # let the terminal app itself handle cropping
 }
 
 autoload -U add-zsh-hook
