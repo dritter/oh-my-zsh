@@ -253,9 +253,14 @@ fi
 # Completion for custom docker scripts.
 compdef _docker docker-shell=_docker_containers
 
-# generic, not bound to COLORTERM=gnome-terminal (for lilyterm)
-if [[ -n $DISPLAY ]] && [[ $TERM == "xterm" ]]; then
-  export TERM=xterm-256color
+# Assume 256 colors with xterm/screen when $DISPLAY is set.
+# Generic, not bound to COLORTERM=gnome-terminal (for lilyterm)
+if [[ -n $DISPLAY ]]; then
+  if [[ $TERM == "xterm" ]]; then
+    export TERM=xterm-256color
+  elif [[ $TERM == "screen" ]]; then
+    export TERM=screen-256color
+  fi
 fi
 
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
