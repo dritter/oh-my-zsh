@@ -263,6 +263,16 @@ if [[ -n $DISPLAY ]]; then
   fi
 fi
 
+# Export COLORTERM as LC_MY_SSH_COLORTERM, to be passed on through ssh, via
+# SendEnv in ~/.ssh/config and LC_* whitelist on the server.
+if (( $+COLORTERM )) && ! (( $+LC_MY_SSH_COLORTERM )); then
+  export LC_MY_SSH_COLORTERM=$COLORTERM
+elif [[ -n $SSH_CLIENT ]]; then
+  if ! (( $+COLORTERM )) && [[ -n $LC_MY_SSH_COLORTERM ]]; then
+    export COLORTERM=$LC_MY_SSH_COLORTERM
+  fi
+fi
+
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
 if ! tput longname &> /dev/null; then
   if [[ $TERM == screen*bce ]]; then TERM=screen-bce
