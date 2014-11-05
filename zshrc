@@ -591,7 +591,7 @@ alias dS='dpkg -S'
 # grep in the files of a package, e.g. `dG acpid screen`.
 dG() { p=$1; shift; for i in $(dpkg -L $p); test -f $i && grep -H $@ -- $i }
 
-# Custom command modifier to not error on non-matches, like `noglob`.
+# Custom command modifier to not error on non-matches; similar to `noglob`.
 _nomatch () {
   setopt localoptions nonomatch
   local cmd=$1; shift
@@ -601,7 +601,7 @@ _nomatch () {
   $cmd "${~@}"
 }
 compdef _precommand _nomatch
-alias ag='noglob _nomatch ag --smart-case'
+alias ag='_nomatch ag --smart-case'
 
 
 # Make aliases work with sudo; source: http://serverfault.com/a/178956/14449
