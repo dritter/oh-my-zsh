@@ -253,16 +253,6 @@ fi
 # Completion for custom docker scripts.
 compdef _docker docker-shell=_docker_containers
 
-# Assume 256 colors with xterm/screen when $DISPLAY is set.
-# Generic, not bound to COLORTERM=gnome-terminal (for lilyterm)
-if [[ -n $DISPLAY ]]; then
-  if [[ $TERM == "xterm" ]]; then
-    export TERM=xterm-256color
-  elif [[ $TERM == "screen" ]]; then
-    export TERM=screen-256color
-  fi
-fi
-
 # Export COLORTERM as LC_MY_SSH_COLORTERM, to be passed on through ssh, via
 # SendEnv in ~/.ssh/config and LC_* whitelist on the server.
 if (( $+COLORTERM )) && ! (( $+LC_MY_SSH_COLORTERM )); then
@@ -270,6 +260,16 @@ if (( $+COLORTERM )) && ! (( $+LC_MY_SSH_COLORTERM )); then
 elif [[ -n $SSH_CLIENT ]]; then
   if ! (( $+COLORTERM )) && [[ -n $LC_MY_SSH_COLORTERM ]]; then
     export COLORTERM=$LC_MY_SSH_COLORTERM
+  fi
+fi
+
+# Assume 256 colors with xterm/screen when $DISPLAY or $COLORTERM is given.
+# Generic, not bound to COLORTERM=gnome-terminal (for lilyterm)
+if [[ -n $DISPLAY ]] || [[ -n $COLORTERM ]]; then
+  if [[ $TERM == "xterm" ]]; then
+    export TERM=xterm-256color
+  elif [[ $TERM == "screen" ]]; then
+    export TERM=screen-256color
   fi
 fi
 
