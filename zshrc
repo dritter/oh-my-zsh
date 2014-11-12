@@ -695,6 +695,14 @@ dquilt() {
 compdef _quilt dquilt=quilt
 
 
+# Disable XON/XOFF flow control; this is required to make C-s work in Vim.
+# NOTE: silence possible error when using mosh:
+#       "stty: standard input: Inappropriate ioctl for device"
+# NOTE: moved to ~/.zshrc (from ~/.zshenv), to fix display issues during Vim
+# startup (with subshell/system call).
+stty -ixon 2>/dev/null
+
+
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 

@@ -68,11 +68,6 @@ typeset -U path
 [ -x /usr/local/bin/vim ] && export EDITOR=/usr/local/bin/vim || export EDITOR=vim
 export GPGKEY='3FE63E00'
 
-# Disable XON/XOFF flow control; this is required to make C-s work in Vim.
-# NOTE: silence possible error when using mosh:
-#       "stty: standard input: Inappropriate ioctl for device"
-stty -ixon 2>/dev/null
-
 # Setup pyenv (with completion for zsh).
 # It gets done also in ~/.profile, but that does not cover completion and
 # ~/.profile is not sourced for real virtual consoles (VTs).
