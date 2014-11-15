@@ -5,8 +5,6 @@ bindkey '\ew' kill-region
 bindkey -s '\el' "ls\n"
 # bindkey -s '\e.' "..\n"
 bindkey '^r' history-incremental-search-backward
-bindkey "^[[5~" up-line-or-history
-bindkey "^[[6~" down-line-or-history
 
 # up / down search in history for the current line's prefix
 autoload -U up-line-or-beginning-search
@@ -15,9 +13,13 @@ zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 bindkey '^[[A' up-line-or-beginning-search
 bindkey '^[[B' down-line-or-beginning-search
-# C-up / C-down: consider first word only
-bindkey '^[[1;5A' up-line-or-search
-bindkey '^[[1;5B' down-line-or-search
+# Shift-up / Shift-down: consider first word only
+bindkey '^[[1;2A' up-line-or-search
+bindkey '^[[1;2B' down-line-or-search
+
+# Remap default C-p / C-p from up-line-or-history.
+bindkey '^P' up-line-or-beginning-search
+bindkey '^N' down-line-or-beginning-search
 
 bindkey "^[[H" beginning-of-line
 bindkey "^[[1~" beginning-of-line
@@ -75,7 +77,10 @@ zle -N edit-command-line
 bindkey -M vicmd 'v' edit-command-line
 bindkey -M vicmd 'u' undo # stacked undo!
 bindkey -M vicmd 'q' push-line
-bindkey -M viins 'jj' vi-cmd-mode
+# Map run-help also in vicmd mode.
+bindkey -M vicmd "\eh" run-help
+bindkey -M viins 'jk' vi-cmd-mode
+# bindkey -M viins 'kj' vi-cmd-mode
 bindkey -M viins ' ' magic-space
 bindkey -M viins '\C-i' complete-word
 
@@ -117,6 +122,14 @@ bindkey '^[[5C' end-of-line
 bindkey '^[[3~' delete-char
 bindkey '^[^N' newtab
 bindkey '^?' backward-delete-char
+
+# Overwrite vi-backward-kill-word, which stops at where insert mode was last entered.
+bindkey '^w' backward-kill-word
+
+# Useful bindings from emacs set.
+bindkey "^X*"  expand-word
+bindkey "^X^U" undo
+bindkey "^Xu"  undo
 
 autoload -U smart-insert-last-word
 zle -N insert-last-assignment smart-insert-last-word
