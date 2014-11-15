@@ -44,8 +44,8 @@ function title {
   # NOTE: $'' is required for no extra output with: printf "\e[3mCheck for\e[m"
   setopt local_options prompt_subst
 
-  if [[ $TERM == screen* ]]; then
-    if (($+TMUX)) && [[ $_tmux_name_reset != ${TMUX}_${TMUX_PANE} ]]; then
+  if (($+TMUX)); then
+    if [[ $_tmux_name_reset != ${TMUX}_${TMUX_PANE} ]]; then
       # Migrate from previous title handling for running tmux sessions. (2014-10-30)
       if (($+_tmux_title_is_auto_set)); then
         if [[ $_tmux_title_is_auto_set == 1 ]]; then
@@ -60,12 +60,16 @@ function title {
         tmux set-window-option -t $TMUX_PANE -q automatic-rename off
         tmux rename-window -t $TMUX_PANE 0
       fi
-      _tmux_name_reset=${TMUX}_${TMUX_PANE}
+      export _tmux_name_reset=${TMUX}_${TMUX_PANE}
     fi
 
-    # Term title (available as #T in tmux)
+    # Term title (available as #T in tmux).
     print -Pn $'\e]2;$2\a'
     print -Pn $'\e]1;$1\a'
+
+  elif [[ $TERM == screen* ]]; then
+    # GNU screen: set %t portion of "hardstatus".
+    print -Pn $'\ek$2\e\\'
 
   elif [[ $TERM == xterm* ]] || [[ $TERM == rxvt* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     # ESC]0;stringBEL -- Set icon name and window title to string
