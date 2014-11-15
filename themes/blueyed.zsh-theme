@@ -18,7 +18,7 @@ autoload -Uz vcs_info
 # This causes a glitch with `pyenv shell venv_name` when it gets activated.
 VIRTUAL_ENV_DISABLE_PROMPT=1
 
-PR_RESET="%{${reset_color}%}";
+PR_RESET="%{${reset_color}%}"
 
 # Remove any ANSI color codes (via www.commandlinefu.com/commands/view/3584/)
 _strip_escape_codes() {
@@ -74,9 +74,17 @@ function my-reset-prompt() {
     zle .reset-prompt
 }
 
+# NOTE: using only prompt_blueyed_precmd as the 2nd function fails to add it, when added as 2nd one!
+add-zsh-hook precmd prompt_blueyed_precmd_exitstatus
+add-zsh-hook precmd prompt_blueyed_precmd_main
 
-add-zsh-hook precmd prompt_blueyed_precmd
-prompt_blueyed_precmd () {
+
+# Explicit hook, which should not be called via my-reset-prompt.
+prompt_blueyed_precmd_exitstatus () {
+    _ZSH_LAST_EXIT_STATUS=$?
+}
+
+prompt_blueyed_precmd_main () {
     # Start profiling, via http://stackoverflow.com/questions/4351244/can-i-profile-my-zshrc-zshenv
       # PS4='+$(date "+%s:%N") %N:%i> '
       # exec 3>&2 2>/tmp/startlog.$$
@@ -84,7 +92,7 @@ prompt_blueyed_precmd () {
 
     # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
     # See `colors-table` for a list.
-    local -h exitstatus=$? # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
+    local -h exitstatus=$_ZSH_LAST_EXIT_STATUS # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
     local -h    normtext="%{$fg_no_bold[default]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
     local -h    histtext="$normtext"
@@ -191,7 +199,7 @@ prompt_blueyed_precmd () {
     fi
 
     # Display repo and shortened revision as of vcs_info, if available.
-    if [[ -n $vcs_info_msg_2_ ]]; then
+    if [[ -n $vcs_info_msg_3_ ]]; then
         # rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${rprompt_extra_rev})
         rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${vcs_info_msg_3_})
         # rprompt_extra+=(${repotext}@${vcs_info_msg_3_})
@@ -300,7 +308,7 @@ prompt_blueyed_precmd () {
 
     # exit status
     local -h disp
-    if [ $exitstatus -ne 0 ] ; then
+    if [[ $exitstatus -ne 0 ]] ; then
         disp="es:$exitstatus"
         if [ $exitstatus -gt 128 -a $exitstatus -lt 163 ] ; then
             disp+=" (SIG$signals[$exitstatus-128])"
@@ -437,12 +445,18 @@ function +vi-git-st() {
     remote=${$(command git rev-parse --verify ${hook_com[branch]}@{upstream} \
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
 
+    # NOTE: "branch" might come shortened as "$COMMIT[0,7]..." from Zsh.
+    #       (gitbranch="${${"$(< $gitdir/HEAD)"}[1,7]}…").
     local_branch=${hook_com[branch]}
 
-    # Init local_branch_disp: shorten branch to 6 chars + tail.
-    (( $#local_branch > 7 )) && ! [[ $local_branch == */* ]] \
-        && local_branch_disp="${local_branch:0:7}…" \
-        || local_branch_disp=$local_branch
+    # Init local_branch_disp: shorten branch.
+    if [[ $local_branch == bisect/* ]]; then
+        local_branch_disp="-"
+    elif (( $#local_branch > 13 )) && ! [[ $local_branch == */* ]]; then
+        local_branch_disp="${local_branch:0:12}…"
+    else
+        local_branch_disp=$local_branch
+    fi
 
     # Make branch name bold if not "master".
     [[ $local_branch == "master" ]] \
@@ -479,16 +493,6 @@ function +vi-git-st() {
     return 0
 }
 
-my-send-term-escape() {
-    # Wrap escape code for tmux.
-    [[ -n $TMUX ]] && printf '\ePtmux;\e'
-
-    echo -ne $1
-
-    # End escape code wrapping for tmux.
-    [[ -n $TMUX ]] && printf '\e\\'
-}
-
 my-set-cursor-shape() {
     # Not supported with gnome-terminal and "linux".
     if ! [[ $COLORTERM == rxvt* ]]; then
@@ -503,7 +507,7 @@ my-set-cursor-shape() {
         # NOTE: bar/ibeam not supported by urxvt.
         *) echo "my-set-cursor-shape: unknown arg: $1"; return 1 ;;
     esac
-    my-send-term-escape $code
+    printf $code
     return 0
 }
 
@@ -519,11 +523,11 @@ zle-keymap-select zle-line-init () {
         if [ $KEYMAP = vicmd ]; then
             # First set a color name (recognized by gnome-terminal), then the number from the palette (recognized by urxvt).
             # NOTE: not for "linux" or tmux on linux.
-            my-send-term-escape "\033]12;#0087ff\007"
-            my-send-term-escape "\033]12;4\007"
+            printf "\033]12;#0087ff\007"
+            printf "\033]12;4\007"
         else
-            my-send-term-escape "\033]12;#5f8700\007"
-            my-send-term-escape "\033]12;2\007"
+            printf "\033]12;#5f8700\007"
+            printf "\033]12;2\007"
         fi
     else
         # Dumb terminal, e.g. linux or screen/tmux in linux console.
@@ -571,7 +575,7 @@ hash_value_from_list() {
 # NOTE: %b gets colored via hook_com.
 FMT_BRANCH="%{$fg_no_bold[blue]%}↳ %s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
 # FMT_BRANCH=" %{$fg_no_bold[blue]%}%s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
-FMT_ACTION="%{$fg[cyan]%}(%a%)"   # e.g. (rebase-i)
+FMT_ACTION="%{$fg_no_bold[cyan]%}(%a%)"   # e.g. (rebase-i)
 
 zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
@@ -580,5 +584,7 @@ zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" "
 zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" "%R" "%8.8i"
 zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   ""   ""
 zstyle ':vcs_info:*:prompt:*' max-exports 4
+# patch-format for Git, used during rebase.
+zstyle ':vcs_info:git*:prompt:*' patch-format "%{$fg_no_bold[cyan]%}Applied: %p [%n/%a]"
 
 #  vim: set ft=zsh ts=4 sw=4 et:

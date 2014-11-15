@@ -228,9 +228,11 @@ bindkey '\ee' edit-command-line
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval $(lesspipe)
 
-# options for less: move jump target to line 5 and handle ANSI color sequences (default, but required with $LESS set?!), for "git diff"
+# Options for less: move jump target to line 5 and handle ANSI color
+# sequences (default, but required with $LESS set?!), for "git diff".
 # Also: (smart-)ignore case and do not fold long lines.
-export LESS="-j5 -R -i -S"
+# -X: do not use alternate screen (smcup/rmcup).
+export LESS="-j5 -R -i -S -X"
 
 # named directories/shortcuts (~l => /var/log)
 # local ones in ~/.zshrc.local
@@ -605,6 +607,7 @@ alias ag='_nomatch ag --smart-case'
 
 
 # Make aliases work with sudo; source: http://serverfault.com/a/178956/14449
+# For handling functions (e.g. _nomatch) see http://www.zsh.org/mla/users/1999/msg00155.html.
 alias sudo='sudo '
 
 viack() {
@@ -620,12 +623,42 @@ if [[ -r /proc/user_beancounters ]] && [[ ! -d /proc/bc ]] && (( $plugins[(I)dir
   popd
 fi
 
+
+# Incognito mode: do not store history and dirstack.
 incognito() {
-  unset HISTFILE
-  DIRSTACKFILE=/dev/null
-  autoload -U add-zsh-hook
-  add-zsh-hook -d preexec autojump_preexec
-  add-zsh-hook -d precmd  _zsh_persistent_history_precmd_hook
+  if [[ $1 == -u ]]; then
+    # Undo.
+    [[ -z $_incognito_save_HISTFILE ]] && {
+      echo "Nothing to undo."
+      return 1
+    }
+    HISTFILE=$_incognito_save_HISTFILE
+    DIRSTACKFILE=$_incognito_save_DIRSTACKFILE
+    add-zsh-hook -d preexec autojump_preexec
+    add-zsh-hook -d precmd  _zsh_persistent_history_precmd_hook
+    unset _incognito_save_HISTFILE _incognito_save_DIRSTACKFILE
+  elif [[ -n $_incognito_save_HISTFILE ]]; then
+      echo "In incognito mode already!"
+      return 1
+  else
+    _incognito_save_HISTFILE=$HISTFILE
+    _incognito_save_DIRSTACKFILE=$DIRSTACKFILE
+    unset HISTFILE
+    DIRSTACKFILE=/dev/null
+    add-zsh-hook -d preexec autojump_preexec
+    add-zsh-hook -d precmd  _zsh_persistent_history_precmd_hook
+  fi
+}
+
+# Minimal prompt: useful when creating a test case for copy'n'paste.
+minimalprompt() {
+  if [[ $1 == -u ]]; then
+    # Undo.
+    add-zsh-hook precmd prompt_blueyed_precmd
+  else
+    add-zsh-hook -d precmd prompt_blueyed_precmd
+    PS1="%~ %# "
+  fi
 }
 
 export GPG_TTY=$(tty)
@@ -634,7 +667,8 @@ export GPG_TTY=$(tty)
 # Source zsh-syntax-highlighting when not in Vim's shell
 if [[ -z $VIM ]]; then
   # https://github.com/zsh-users/zsh-syntax-highlighting#readme
-  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
+  # NOTE: not 'cursor', which defaults to 'standout' and messes with vicmd mode.
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
   #ZSH_HIGHLIGHT_HIGHLIGHTERS+=(root)
   # XXX: slow?!
   source ~/.dotfiles/lib/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
