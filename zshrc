@@ -722,6 +722,25 @@ zsh_disable_highlighting() {
   # base16_scheme solarized.dark
 # fi
 
+
+# Zsh/Vim fg back-and-forth (I am using C-y in Vim, instead of C-z). {{{
+# Ctrl-Z does fg<enter>
+# via http://git.grml.org/?p=grml-etc-core.git;a=blob_plain;f=etc/zsh/zshrc;hb=HEAD
+function grml-zsh-fg() {
+  if (( ${#jobstates} )); then
+    zle .push-input
+    [[ -o hist_ignore_space ]] && BUFFER=' ' || BUFFER=''
+    BUFFER="${BUFFER}fg %vi || fg"
+    zle .accept-line
+  else
+    zle -M 'No background jobs. Doing nothing.'
+  fi
+}
+zle -N grml-zsh-fg
+bindkey '^z' grml-zsh-fg
+bindkey '^y' grml-zsh-fg
+# }}}
+
 # dquilt: quilt for Debian/Ubuntu packages.
 dquilt() {
   quilt --quiltrc=${HOME}/.quiltrc-dpkg "$@"
