@@ -20,6 +20,8 @@ VIRTUAL_ENV_DISABLE_PROMPT=1
 
 PR_RESET="%{${reset_color}%}"
 
+# Detect Midnight Commander, which needs special handling regarding its prompt.
+[ -z "${MC_SID+x}" ]; is_mc_shell=$?
 # Remove any ANSI color codes (via www.commandlinefu.com/commands/view/3584/)
 _strip_escape_codes() {
     [[ -n $commands[gsed] ]] && sed=gsed || sed=sed # gsed with coreutils on MacOS
@@ -29,31 +31,81 @@ _strip_escape_codes() {
     echo $1 | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
 }
 
+# Check if we're running in gnome-terminal.
+# This gets used to e.g. auto-switch the profile.
+is_gnome_terminal() {
+    # Common case, since I am using URxvt now.
+    [[ $COLORTERM == rxvt* ]] && return 1
+    # Old-style, got dropped.. :/
+    [[ $COLORTERM == "gnome-terminal" ]] && return 0
+    # Check /proc, but only on the local system.
+    if [[ -z $SSH_CLIENT ]] && [[ ${$(</proc/$PPID/cmdline):t} == gnome-terminal* ]]; then
+        return 0
+    fi
+    return 1
+}
+
 # Switch between light and dark variants (solarized). {{{
 ZSH_THEME_VARIANT_CONFIG_FILE=~/.config/zsh-theme-variant
 theme-variant() {
-    [[ $1 == light ]] && variant=light || variant=dark
+    # XXX: Might be slow!
+    # from zprof:
+    #  1)    1       25361,75 25361,75   97,68%  25354,73 25354,73   97,66%  theme-variant
+    #        1/1         7,01     7,01    0,03%      7,01     7,01             zsh-set-dircolors [17]
+    if [[ "$1" == "auto" ]]; then
+        if [[ -n $commands[get-daytime-period] ]] \
+            && [[ "$(get-daytime-period)" == 'Daytime' ]]; then
+            variant=light
+        else
+            variant=dark
+        fi
+    else
+        case "$1" in
+            light|dark) variant=$1 ;;
+            *) echo "theme-variant: unknown arg: $1"; return 1 ;;
+        esac
+    fi
+    echo $1 > $ZSH_THEME_VARIANT_CONFIG_FILE
 
-    if [[ "$variant" == "light" ]]; then
+    if [[ "$variant" == "light" ]] && is_gnome_terminal; then
         DIRCOLORS_FILE=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-light
     else
+        # DIRCOLORS_FILE=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-dark
+        # Prefer LS_COLORS repo, which is more fine-grained, but does not look good on light bg.
         DIRCOLORS_FILE=~/.dotfiles/lib/LS_COLORS/LS_COLORS
     fi
     zsh-set-dircolors
 
-    if [[ "$ZSH_THEME_VARIANT" != "$variant" ]]; then
-        local -h gnome_terminal_profile="solarized-$variant"
-        if [[ "$COLORTERM" == "gnome-terminal" ]]; then
-            local -h cur_profile=$(gconftool-2 --get /apps/gnome-terminal/global/default_profile)
-            if [[ $cur_profile != $gnome_terminal_profile ]]; then
-                echo "Changing gnome-terminal default profile to: $gnome_terminal_profile."
-                gconftool-2 --set --type string /apps/gnome-terminal/global/default_profile $gnome_terminal_profile
-            fi
+    # Setup/change gnome-terminal profile.
+    if [[ "$ZSH_THEME_VARIANT" != "$variant" ]] && is_gnome_terminal; then
+        local wanted_gnome_terminal_profile="Solarized-$variant"
+        # local id_light=e6e34acf-124a-43bd-ad32-46fb0765ad76
+        # local id_dark=b1dcc9dd-5262-4d8d-a863-c897e6d979b9
+
+        local default_profile_id=${$(dconf read /org/gnome/terminal/legacy/profiles:/default)//\'/}
+        # echo "default_profile_id:$default_profile_id"
+        local default_profile_name=${$(dconf read /org/gnome/terminal/legacy/profiles:/":"$default_profile_id/visible-name)//\'/}
+        # echo "default_profile_name:$default_profile_name"
+
+        # local -h cur_profile=$(gconftool-2 --get /apps/gnome-terminal/global/default_profile)
+        if [[ $default_profile_name != $wanted_gnome_terminal_profile ]]; then
+            # Get ID of wanted profile.
+
+            wanted_gnome_terminal_profile_id=$(
+                dconf dump "/org/gnome/terminal/legacy/profiles:/" \
+                | grep -P "^(visible-name='$wanted_gnome_terminal_profile'|\[:)" \
+                | grep '^visible-name' -B1 | head -n1 \
+                | sed -e 's/^\[://' -e 's/]$//')
+
+            echo "Changing gnome-terminal default profile to: $wanted_gnome_terminal_profile ($wanted_gnome_terminal_profile_id)."
+            # gconftool-2 --set --type string /apps/gnome-terminal/global/default_profile $gnome_terminal_profile
+            dconf write /org/gnome/terminal/legacy/profiles:/default "'$wanted_gnome_terminal_profile_id'"
         fi
     fi
     export ZSH_THEME_VARIANT=$variant
 }
 # Init once and export the value.
+# This gets used in Vim to auto-set the background, too.
 if [[ -z "$ZSH_THEME_VARIANT" ]]; then
     [[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
         && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
@@ -112,10 +164,10 @@ prompt_blueyed_precmd_main () {
     local -h     rprompt="$normtext"
     local -h   rprompthl="$lighttext"
     local -h  prompttext="%{$fg_no_bold[green]%}"
-    if [[ $ZSH_THEME_VARIANT == "dark" ]]; then
-        local -h   dimmedtext="%{$fg_no_bold[black]%}"
-    else
+    if [[ $ZSH_THEME_VARIANT == "light" ]] && is_gnome_terminal; then
         local -h   dimmedtext="%{$fg_no_bold[white]%}"
+    else
+        local -h   dimmedtext="%{$fg_no_bold[black]%}"
     fi
     local -h   darkdelim="$dimmedtext"
     local -h bracket_open="${darkdelim}["
@@ -270,18 +322,7 @@ prompt_blueyed_precmd_main () {
     #     rprompt_extra+=("%fSHLVL:${SHLVL}")
     # fi
 
-    # Assemble RPS1 (different from rprompt, which is right-aligned in PS1)
-    # Do not do this when in a midnight commander subshell.
-    [ -z "${MC_SID+x}" ]; is_mc_shell=$?
-    # if [ -f /proc/$PPID/cmdline ]; then
-    #   if grep -q '^mc\b' /proc/$PPID/cmdline; then
-    #     is_mc_shell=1
-    #   fi
-    # else
-    #   if [[ $(ps -o comm= $PPID) == "mc" ]]; then
-    #     is_mc_shell=1
-    #   fi
-    # fi
+    # Assemble RPS1 (different from rprompt, which is right-aligned in PS1).
     if [[ "$is_mc_shell" == "0" ]]; then
         RPS1_list=()
 
@@ -494,10 +535,10 @@ function +vi-git-st() {
 }
 
 my-set-cursor-shape() {
+    [[ $is_mc_shell == 1 ]] && return
     # Not supported with gnome-terminal and "linux".
-    if ! [[ $COLORTERM == rxvt* ]]; then
-        return
-    fi
+    [[ $COLORTERM == rxvt* ]] || return
+
     local code
     case "$1" in
         block_blink)     code='\e[1 q' ;;
@@ -548,7 +589,7 @@ my-set-cursor-shape underline_blink
 # Set block cursor before executing a program.
 add-zsh-hook preexec _set_cursor_style
 function _set_cursor_style() {
-    my-set-cursor-shape block_blink
+  my-set-cursor-shape block_blink
 }
 # }}}
 
