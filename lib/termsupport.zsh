@@ -132,10 +132,9 @@ function omz_termsupport_preexec {
   (( $#newtyped )) && typed=($newtyped)
 
   # Get the cmd out of what was typed:
-  # local CMD=${typed[(wr)^(*=*|sudo|ssh|-*)]} #cmd name only, or if this is sudo or ssh, the next cmd
-  # Get the index of the first item not matching the list
-  local cmd_index=${typed[(wi)^(export|*=*|sudo|ssh|-*|;|\[*)]} # cmd name only, or if this is sudo or ssh, the next cmd
-  # printf '"%s"\n' $typed; read
+  # Get the index of the first item not matching the list.
+  local cmd_index=${typed[(wi)^(export|*?=*|sudo|ssh|-*|;|\[*)]} # cmd name only, or if this is sudo or ssh, the next cmd
+  # printf 'typed: "%s"\n' $typed; echo $cmd_index; read
   local CMD="$typed[$cmd_index]"
 
   # For special cases like "make", append the arg.
