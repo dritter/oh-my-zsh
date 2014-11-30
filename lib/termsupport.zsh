@@ -88,7 +88,7 @@ set_title() {
 ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<_" # 15 char left truncated PWD.
 ZSH_THEME_TERM_TITLE_IDLE="%~_"
 
-# Appears when you have the prompt
+#Appears when you have the prompt
 function omz_termsupport_precmd {
   [ "$DISABLE_AUTO_TITLE" != "true" ] || return
 
@@ -102,9 +102,11 @@ function omz_termsupport_precmd {
         ${(%)ZSH_THEME_TERM_TITLE_IDLE}${suffix}
 }
 
-# Appears at the beginning (and during) of command execution
+#Appears at the beginning of (and during) of command execution
 function omz_termsupport_preexec {
-  [ "$DISABLE_AUTO_TITLE" != "true" ] || return
+  if [[ "$DISABLE_AUTO_TITLE" == "true" ]] || [[ "$EMACS" == *term* ]]; then
+    return
+  fi
 
   emulate -L zsh
   setopt extended_glob

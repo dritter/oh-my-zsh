@@ -1,5 +1,5 @@
 # Aliases
-#alias g='git' # used for 'gvim --remote'
+alias g='git'
 alias ga='git add'
 alias gap='git add --patch'
 alias gae='git add --edit'
@@ -9,6 +9,8 @@ alias gbnm='git branch --no-merged'
 alias gbm='git branch --merged'
 alias gbl='git blame'
 alias gc='git commit -v'
+alias gca='git commit -v -a'
+alias gcl='git clone --recursive'
 # Commit with message: no glob expansion and error on non-match.
 # gcm() { git commit -m "${(V)*}" }
 gcm() { git commit -m "$*" }
@@ -17,11 +19,11 @@ alias gcm='noglob _nomatch gcm'
 # gcma() { git commit --amend -m "${(V)*}" }
 gcma() { git commit --amend -m "$*" }
 alias gcma='noglob _nomatch gcma'
-alias gca='git commit -v -a'
-alias gcl='git clone --recursive'
 alias gco='git checkout'
+alias gcom='git checkout master'
 alias gcount='git shortlog -sn'
 alias gcp='git cherry-pick'
+
 alias gd='git diff --submodule'
 alias gdc='git diff --cached'
 # `git diff` against upstream (usually origin/master)
@@ -56,12 +58,24 @@ alias glg='git log --stat --max-count=5'
 alias glgg='git log --graph --max-count=5'
 alias gls='git ls-files'
 alias glsu='git ls-files -o --exclude-standard'
+alias gm='git merge'
 alias gp='git push'
 alias gpl='git pull --ff-only'
 alias gpll='git pull'
 alias gr='git remote'
+
+# Rebase
+alias grbi='git rebase -i'
+alias grbc='git rebase --continue'
+alias grba='git rebase --abort'
+
 alias grh='git reset HEAD'
 alias grv='git remote -v'
+
+# Will cd into the top of the current repository
+# or submodule. NOTE: see also `RR`.
+alias grt='cd $(git rev-parse --show-toplevel || echo ".")'
+
 alias gsh='git show'
 alias gsm='git submodule'
 alias gsms='git submodule summary'
@@ -69,6 +83,13 @@ alias gsmst='git submodule status'
 alias gss='git status -s'
 alias gst='git status'
 alias gssp='git stash show -p'
+
+# NEW
+alias gsts='git stash show --text'
+alias gsta='git stash'
+alias gstp='git stash pop'
+alias gstd='git stash drop'
+
 # git-up and git-reup from ~/.dotfiles/usr/bin
 compdef _git git-up=git-fetch
 compdef _git git-reup=git-fetch
@@ -181,6 +202,10 @@ gswitch() {
 # compdef _git gswitch=_git_commits  # calls __git_commits
 compdef _git gswitch=git-checkout
 
+alias gg='git gui citool'
+alias gga='git gui citool --amend'
+alias gk='gitk --all --branches'
+
 # Git and svn mix
 alias git-svn-dcommit-push='git svn dcommit && git push github master:svntrunk'
 compdef git-svn-dcommit-push=git
@@ -193,8 +218,15 @@ alias gsd='git svn dcommit'
 # Usage example: git pull origin $(current_branch)
 #
 function current_branch() {
-  ref=$(git symbolic-ref HEAD 2> /dev/null) || return
+  ref=$(git symbolic-ref HEAD 2> /dev/null) || \
+  ref=$(git rev-parse --short HEAD 2> /dev/null) || return
   echo ${ref#refs/heads/}
+}
+
+function current_repository() {
+  ref=$(git symbolic-ref HEAD 2> /dev/null) || \
+  ref=$(git rev-parse --short HEAD 2> /dev/null) || return
+  echo $(git remote -v | cut -d':' -f 2)
 }
 
 # these aliases take advantage of the previous function
@@ -257,9 +289,15 @@ ggpushb() {
 }
 compdef _git ggpushb=git-push
 
-alias ggpnp='git pull origin $(current_branch) && git push origin $(current_branch)'
-compdef ggpnp=git
-#
 # Setup wrapper for git's editor. It will use just core.editor for other
 # files (e.g. patch editing in `git add -p`).
 export GIT_EDITOR=vim-for-git
+
+# these alias ignore changes to file
+alias gignore='git update-index --assume-unchanged'
+alias gunignore='git update-index --no-assume-unchanged'
+# list temporarily ignored files
+alias gignored='git ls-files -v | grep "^[[:lower:]]"'
+
+
+

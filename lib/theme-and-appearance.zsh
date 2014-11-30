@@ -8,12 +8,7 @@ export LS_COLORS
 zsh-set-dircolors() {
 if [ "$DISABLE_LS_COLORS" != "true" ]; then
   : ${DIRCOLORS_FILE:=~/.dotfiles/lib/LS_COLORS/LS_COLORS}
-  # Find the option for using colors in ls, depending on the version: Linux or BSD
-
-  # NOTE: Do not overwrite own aliases
-  # ls --color -d . &>/dev/null 2>&1 && alias ls='ls --color=tty' || alias ls='ls -G'
-
-  # setup LS_COLORS
+  # Setup LS_COLORS
   # (dircolors on GNU/Linux, gdircolors with coreutils on MacOS)
   for i in dircolors gdircolors; do
     if [ $commands[$i] ]; then
