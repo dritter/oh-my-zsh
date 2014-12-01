@@ -243,8 +243,8 @@ ggpush() {
     [[ $i == -h ]] && { echo "Usage: ggpush [--options...] [remote (Default: tracking branch / github.user)] [branch (Default: current)]"; return; }
   done
 
-  branch=${args[2]-$(current_branch)}
   remote=${args[1]}
+  branch=${args[2]-$(current_branch)}
   if [[ -z $remote ]]; then
     # XXX: may resolve to "origin/develop" for new local branches..
     remote=${$(command git rev-parse --verify $branch@{upstream} \
