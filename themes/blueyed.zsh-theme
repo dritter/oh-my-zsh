@@ -120,28 +120,36 @@ fi
 # TODO: move cwd related things from prompt_blueyed_precmd into a chpwd hook?!
 zle -N reset-prompt my-reset-prompt
 function my-reset-prompt() {
-    if (( ${+precmd_functions[(r)prompt_blueyed_precmd]} )); then
-        prompt_blueyed_precmd
+    if (( ${+precmd_functions[(r)prompt_blueyed_precmd_main]} )); then
+        prompt_blueyed_precmd_main reset-prompt
     fi
     zle .reset-prompt
 }
 
 # NOTE: using only prompt_blueyed_precmd as the 2nd function fails to add it, when added as 2nd one!
-add-zsh-hook precmd prompt_blueyed_precmd_get_data
-add-zsh-hook precmd prompt_blueyed_precmd_main
-
-
-# Explicit hook, which should not be called via my-reset-prompt.
-prompt_blueyed_precmd_get_data () {
-    _ZSH_LAST_EXIT_STATUS=$?
-
-    if (( $ZSH_IS_SLOW_DIR )); then
-        return
-    fi
-    vcs_info 'prompt'
+setup_prompt_blueyed() {
+    add-zsh-hook precmd prompt_blueyed_precmd_main
 }
+unsetup_prompt_blueyed() {
+    add-zsh-hook -d precmd prompt_blueyed_precmd_main
+}
+setup_prompt_blueyed
 
+# Optional arg 1: "reset-prompt" if called via reset-prompt zle widget.
 prompt_blueyed_precmd_main () {
+    # Get exit status of command first.
+    local -h save_exitstatus=$?
+
+    if [[ $1 == "reset-prompt" ]]; then
+        if [[ $PWD == $_ZSH_LAST_PWD ]]; then
+            # cwd did not change, nothing to do.
+            return
+        fi
+    else
+        _ZSH_LAST_EXIT_STATUS=$save_exitstatus
+    fi
+    _ZSH_LAST_PWD=$PWD
+
     # Start profiling, via http://stackoverflow.com/questions/4351244/can-i-profile-my-zshrc-zshenv
       # PS4='+$(date "+%s:%N") %N:%i> '
       # exec 3>&2 2>/tmp/startlog.$$
@@ -149,7 +157,7 @@ prompt_blueyed_precmd_main () {
 
     # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
     # See `colors-table` for a list.
-    local -h exitstatus=$_ZSH_LAST_EXIT_STATUS # we need this, because %? gets not expanded in here yet. e.g. via ${(%)%?}.
+    local -h exitstatus=$_ZSH_LAST_EXIT_STATUS
     local -h    normtext="%{$fg_no_bold[default]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
     local -h    histtext="$normtext"
@@ -181,15 +189,15 @@ prompt_blueyed_precmd_main () {
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
-    if [[ -n $vcs_info_msg_0_ ]]; then
+    if (( $ZSH_IS_SLOW_DIR )) || ! vcs_info 'prompt' &>/dev/null; then
+        # No vcs_info available, only set cwd
+        prompt_vcs=""
+    else
         prompt_vcs="${PR_RESET}$vcs_info_msg_0_"
         if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
             prompt_vcs+=' ?'
         fi
         rprompt_extra+=("${vcs_info_msg_1_}")
-    else
-        # No vcs_info available, only set cwd
-        prompt_vcs=""
     fi
 
     # Shorten named/hashed dirs.
