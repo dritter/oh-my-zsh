@@ -127,13 +127,18 @@ function my-reset-prompt() {
 }
 
 # NOTE: using only prompt_blueyed_precmd as the 2nd function fails to add it, when added as 2nd one!
-add-zsh-hook precmd prompt_blueyed_precmd_exitstatus
+add-zsh-hook precmd prompt_blueyed_precmd_get_data
 add-zsh-hook precmd prompt_blueyed_precmd_main
 
 
 # Explicit hook, which should not be called via my-reset-prompt.
-prompt_blueyed_precmd_exitstatus () {
+prompt_blueyed_precmd_get_data () {
     _ZSH_LAST_EXIT_STATUS=$?
+
+    if (( $ZSH_IS_SLOW_DIR )); then
+        return
+    fi
+    vcs_info 'prompt'
 }
 
 prompt_blueyed_precmd_main () {
@@ -176,15 +181,15 @@ prompt_blueyed_precmd_main () {
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
-    if (( $ZSH_IS_SLOW_DIR )) || ! vcs_info 'prompt' &> /dev/null; then
-        # No vcs_info available, only set cwd
-        prompt_vcs=""
-    else
+    if [[ -n $vcs_info_msg_0_ ]]; then
         prompt_vcs="${PR_RESET}$vcs_info_msg_0_"
         if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
             prompt_vcs+=' ?'
         fi
         rprompt_extra+=("${vcs_info_msg_1_}")
+    else
+        # No vcs_info available, only set cwd
+        prompt_vcs=""
     fi
 
     # Shorten named/hashed dirs.
