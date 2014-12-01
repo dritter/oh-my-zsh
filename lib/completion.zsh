@@ -35,7 +35,6 @@ else
   zstyle ':completion:*:*:*:*:processes' command "ps -u $USER -o pid,user,comm -w -w"
 fi
 
-
 # disable named-directories autocompletion
 # NOTE: should have been this probably
 # zstyle ':completion:*:cd:*' tag-order !named-directories
@@ -74,7 +73,6 @@ if [ "x$COMPLETION_WAITING_DOTS" = "xtrue" ]; then
 fi
 
 
-zstyle ':completion:*' use-cache on
 zstyle ':completion:*' verbose yes
 zstyle ':completion:*:descriptions' format "%{$fg_no_bold[green]%}%U%B%d:%b%u%{$reset_color%}"
 zstyle ':completion:*:warnings' format '%BNo matches for: %d%b'

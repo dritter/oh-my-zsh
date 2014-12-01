@@ -95,6 +95,7 @@ bindkey '\e[3~' delete-char    # delete key
 #
 #bindkey -s '^X^Z' '%-^M'
 #bindkey '^[e' expand-cmd-path
+#bindkey '^[^I' reverse-menu-complete]
 #bindkey '^X^N' accept-and-infer-next-history
 #bindkey '^W' kill-region
 #bindkey '^I' complete-word
