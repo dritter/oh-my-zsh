@@ -231,7 +231,7 @@ function current_repository() {
 
 # these aliases take advantage of the previous function
 alias ggpull='git pull origin $(current_branch)'
-compdef _git ggpull=git-pull
+compdef -e 'words[1]=(git pull origin); service=git; (( CURRENT+=2 )); _git' ggpull
 
 ggpush() {
   local -h remote branch
