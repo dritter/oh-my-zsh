@@ -11,14 +11,28 @@ alias gbl='git blame'
 alias gc='git commit -v'
 alias gca='git commit -v -a'
 alias gcl='git clone --recursive'
+
+# Helper: call a given command with (optional) files as first args at the end.
+command_with_files() {
+  local cmd=$1; shift
+  # Shift existing files/dirs from the beginning of args.
+  files=()
+  while (( $# > 0 )) && [[ -e $1 ]]; do
+    files+=($1)
+    shift
+  done
+  $=cmd "$*" $files
+}
+
 # Commit with message: no glob expansion and error on non-match.
 # gcm() { git commit -m "${(V)*}" }
-gcm() { git commit -m "$*" }
-alias gcm='noglob _nomatch gcm'
+alias gcm='noglob _nomatch command_with_files "git commit -m"'
 # Amend directly (with message): no glob expansion and error on non-match.
 # gcma() { git commit --amend -m "${(V)*}" }
-gcma() { git commit --amend -m "$*" }
-alias gcma='noglob _nomatch gcma'
+# gcma() { git commit --amend -m "$*" }
+alias gcma='noglob _nomatch command_with_files "git commit --amend -m"'
+alias gca='git commit -v -a'
+alias gcl='git clone --recursive'
 alias gco='git checkout'
 alias gcom='git checkout master'
 alias gcount='git shortlog -sn'
@@ -39,11 +53,13 @@ glo() {
 compdef _git glo=git-log
 _git_against_upstream() {
   [ x$1 = x ] && { echo "Missing command."; return 1; }
-  u=$(git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD))
-  [ x$u = x ] && { echo "No upstream setup for tracking."; return 2; }
-  cmd=(git $@ $u..HEAD)
+  cmd=(git $@ '@{upstream}..HEAD')
   echo $cmd
   $cmd
+  if [[ $? == 128 ]]; then
+    echo "Branch list:"
+    git show-branch --list
+  fi
 }
 gdv() { git diff -w "$@" | view - }
 compdef _git gdv=git-diff
@@ -53,14 +69,15 @@ alias gf='git fetch'
 alias gfa='git fetch --all --prune'
 alias gl='git l'
 # git log with patches. '-m --first-parent' shows diff for first parent.
-alias glp='gl -p -m --first-parent'
+alias glp='gl -p -m'
+alias glpf='gl -p -m --first-parent'
 alias glg='git log --stat --max-count=5'
 alias glgg='git log --graph --max-count=5'
 alias gls='git ls-files'
 alias glsu='git ls-files -o --exclude-standard'
 alias gm='git merge'
 alias gp='git push'
-alias gpl='git pull --ff-only'
+alias gpl='git pull --ff-only --verbose'
 alias gpll='git pull'
 alias gr='git remote'
 
@@ -237,8 +254,10 @@ ggpush() {
   local -h remote branch
   local -ha args git_opts
 
-  # get args (skipping options)
+  # Get args (skipping options).
+  local using_force=0
   for i; do
+    [[ $i == -f || $i == --force ]] && using_force=1
     [[ $i == -* ]] && git_opts+=($i) || args+=($i)
     [[ $i == -h ]] && { echo "Usage: ggpush [--options...] [remote (Default: tracking branch / github.user)] [branch (Default: current)]"; return; }
   done
@@ -270,6 +289,14 @@ ggpush() {
       if (( ${git_opts[(i)-u]} > ${#git_opts} )); then
         git_opts+=(-u)
       fi
+    fi
+
+    # Ask for confirmation with '-f' and autodetected remote.
+    if [[ $using_force == 1 ]]; then
+      echo "WARN: using '-f' without explicit remote."
+      echo -n "Do you want to continue with detected $remote:$branch? [y/N] "
+      read -q || return 1
+      echo
     fi
   fi
 
