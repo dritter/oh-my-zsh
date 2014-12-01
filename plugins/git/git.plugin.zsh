@@ -1,3 +1,8 @@
+# Query/use custom command for `git`.
+local git_cmd
+zstyle -s ":vcs_info:git:*:-all-" "command" git_cmd
+: ${git_cmd:=git}
+
 # Aliases
 alias g='git'
 alias ga='git add'
@@ -230,20 +235,27 @@ alias gsvnup='git svn fetch && git stash && git svn rebase && git stash pop'
 
 alias gsr='git svn rebase'
 alias gsd='git svn dcommit'
-#
+
 # Will return the current branch name
 # Usage example: git pull origin $(current_branch)
-#
+# Using '--quiet' with 'symbolic-ref' will not cause a fatal error (128) if
+# it's not a symbolic ref, but in a Git repo.
 function current_branch() {
-  ref=$(git symbolic-ref HEAD 2> /dev/null) || \
-  ref=$(git rev-parse --short HEAD 2> /dev/null) || return
+  local ref
+  ref=$($git_cmd symbolic-ref --quiet HEAD 2> /dev/null)
+  local ret=$?
+  if [[ $ret != 0 ]]; then
+    [[ $ret == 128 ]] && return  # no git repo.
+    ref=$($git_cmd rev-parse --short HEAD 2> /dev/null) || return
+  fi
   echo ${ref#refs/heads/}
 }
 
 function current_repository() {
-  ref=$(git symbolic-ref HEAD 2> /dev/null) || \
-  ref=$(git rev-parse --short HEAD 2> /dev/null) || return
-  echo $(git remote -v | cut -d':' -f 2)
+  if ! $git_cmd rev-parse --is-inside-work-tree &> /dev/null; then
+    return
+  fi
+  echo $($git_cmd remote -v | cut -d':' -f 2)
 }
 
 # these aliases take advantage of the previous function
