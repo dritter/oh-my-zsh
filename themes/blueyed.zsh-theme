@@ -45,9 +45,20 @@ is_gnome_terminal() {
     return 1
 }
 
+my_get_gitdir() {
+    local base=$1
+    [[ -z $base ]] && base=$(command git rev-parse --show-toplevel)
+    local gitdir=$base/.git
+    if [[ -f $gitdir ]]; then
+        # XXX: the output might be across two lines (fixed in the meantime); handled/fixed that somewhere else already, but could not find it.
+        gitdir=$(command git rev-parse --resolve-git-dir $gitdir | head -n1)
+    fi
+    echo $gitdir
+}
+
 # Switch between light and dark variants (solarized). {{{
 ZSH_THEME_VARIANT_CONFIG_FILE=~/.config/zsh-theme-variant
-theme-variant() {
+theme_variant() {
     # XXX: Might be slow!
     # from zprof:
     #  1)    1       25361,75 25361,75   97,68%  25354,73 25354,73   97,66%  theme-variant
@@ -62,7 +73,7 @@ theme-variant() {
     else
         case "$1" in
             light|dark) variant=$1 ;;
-            *) echo "theme-variant: unknown arg: $1"; return 1 ;;
+            *) echo "theme_variant: unknown arg: $1"; return 1 ;;
         esac
     fi
     echo $1 > $ZSH_THEME_VARIANT_CONFIG_FILE
@@ -110,7 +121,7 @@ if [[ -z "$ZSH_THEME_VARIANT" ]]; then
     [[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
         && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
         || ZSH_THEME_VARIANT=auto
-    theme-variant $ZSH_THEME_VARIANT
+    theme_variant $ZSH_THEME_VARIANT
 fi
 # }}}
 
@@ -434,11 +445,11 @@ ${prompt_vcs}${prompt_sign}${PR_RESET} "
 
 
 # register vcs_info hooks
-zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st git-untracked
+zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st git-untracked git-shallow
 
 # Show count of stashed changes
 function +vi-git-stash() {
-    [[ $1 == 0 ]] || return 0 # do this only once for vcs_info_msg_0_.
+    [[ $1 == 0 ]] || return  # do this only once for vcs_info_msg_0_.
 
     local -a stashes
     local gitdir
@@ -446,35 +457,42 @@ function +vi-git-stash() {
     # Return if check-for-changes is false:
     if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
         hook_com[misc]+="$bracket_open$hitext? stashed$bracket_close"
-        return 0
+        return
     fi
 
     # Resolve git dir (necessary for submodules)
-    gitdir=${hook_com[base]}/.git
-    if [[ -f $gitdir ]]; then
-        # XXX: the output might be across two lines (fixed in the meantime); handled/fixed that somewhere else already, but could not find it.
-        gitdir=$(command git rev-parse --resolve-git-dir $gitdir | head -n1)
-    fi
+    gitdir=$(my_get_gitdir ${hook_com[base]})
 
     if [[ -s $gitdir/refs/stash ]] ; then
         stashes=$(command git --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
         hook_com[misc]+="$bracket_open$hitext${stashes} stashed$bracket_close"
     fi
-    return 0
+    return
 }
 
-# vcs_info: git: Show marker (+) if there are untracked files in repository.
+# vcs_info: git: Show marker (✗) if there are untracked files in repository.
 # (via %c).
 function +vi-git-untracked() {
-    [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
+    [[ $1 == 0 ]] || return  # do this only once vcs_info_msg_0_.
 
     if [[ $(command git rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
         # command git status --porcelain | grep '??' &> /dev/null ; then
         # This will show the marker if there are any untracked files in repo.
         # If instead you want to show the marker only if there are untracked
         # files in $PWD, use:
-        [[ -n $(git ls-files --others --exclude-standard) ]] ; then
+        [[ -n $(command git ls-files --others --exclude-standard) ]] ; then
         hook_com[staged]+='✗ '
+    fi
+}
+
+# vcs_info: git: Show marker if the repo is a shallow clone.
+# (via %c).
+function +vi-git-shallow() {
+    [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
+
+    echo $(my_get_gitdir ${hook_com[base]})/shallow >> /tmp/1
+    if [[ -f $(my_get_gitdir)/shallow ]]; then
+        hook_com[misc]+="${bracket_open}${hitext}shallow${bracket_close}"
     fi
 }
 
@@ -547,6 +565,15 @@ function +vi-git-st() {
     return 0
 }
 
+_my_cursor_shape=auto
+_auto-my-set-cursor-shape() {
+    if [[ $_my_cursor_shape != "auto" ]]; then
+        return
+    fi
+    my-set-cursor-shape "$@"
+    _my_cursor_shape=auto
+}
+# Can be called manually, and will not be autoset then anymore.
 my-set-cursor-shape() {
     [[ $is_mc_shell == 1 ]] && return
     # Not supported with gnome-terminal and "linux".
@@ -558,10 +585,16 @@ my-set-cursor-shape() {
         block)           code='\e[2 q' ;;
         underline_blink) code='\e[3 q' ;;
         underline)       code='\e[4 q' ;;
+        bar_blink)       code='\e[5 q' ;;
+        bar)             code='\e[6 q' ;;
+        auto) echo "Using 'auto' again." ;;
         # NOTE: bar/ibeam not supported by urxvt.
         *) echo "my-set-cursor-shape: unknown arg: $1"; return 1 ;;
     esac
-    printf $code
+    if [[ -n $code ]]; then
+        printf $code
+    fi
+    _my_cursor_shape=$1
     return 0
 }
 
@@ -569,9 +602,9 @@ my-set-cursor-shape() {
 zle-keymap-select zle-line-init () {
     if [[ $COLORTERM == rxvt* ]]; then
         if [ $KEYMAP = vicmd ]; then
-            my-set-cursor-shape block_blink
+            _auto-my-set-cursor-shape block_blink
         else
-            my-set-cursor-shape underline_blink
+            _auto-my-set-cursor-shape bar_blink
         fi
     elif [[ $TERM == xterm* ]]; then
         if [ $KEYMAP = vicmd ]; then
@@ -597,12 +630,35 @@ zle-keymap-select zle-line-init () {
 zle -N zle-keymap-select
 zle -N zle-line-init
 # Init.
-my-set-cursor-shape underline_blink
+_auto-my-set-cursor-shape underline_blink
+
+# Manage my_confirm_client_kill X client property (used by awesome). {{{
+function get_x_focused_win_id() {
+    set localoptions pipefail
+    xprop -root 2>/dev/null | sed -n '/^_NET_ACTIVE_WINDOW/ s/.* // p'
+}
+
+if [[ $COLORTERM == rxvt-xpm ]] && [[ -n $DISPLAY ]]; then
+    function set_my_confirm_client_kill() {
+      # xprop -id $(get_x_focused_win_id) -f my_confirm_client_kill 8c
+      xprop -id $WINDOWID -f my_confirm_client_kill 8c \
+          -set my_confirm_client_kill $1
+    }
+    function _preexec_my_confirm_client_kill() {
+      set_my_confirm_client_kill 1
+    }
+    function _precmd_my_confirm_client_kill() {
+      set_my_confirm_client_kill 0
+    }
+    add-zsh-hook preexec _preexec_my_confirm_client_kill
+    add-zsh-hook precmd  _precmd_my_confirm_client_kill
+fi
+# }}}
 
 # Set block cursor before executing a program.
 add-zsh-hook preexec _set_cursor_style
 function _set_cursor_style() {
-  my-set-cursor-shape block_blink
+  _auto-my-set-cursor-shape block_blink
 }
 # }}}
 
