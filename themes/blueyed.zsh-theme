@@ -131,23 +131,23 @@ fi
 # TODO: move cwd related things from prompt_blueyed_precmd into a chpwd hook?!
 zle -N reset-prompt my-reset-prompt
 function my-reset-prompt() {
-    if (( ${+precmd_functions[(r)prompt_blueyed_precmd_main]} )); then
-        prompt_blueyed_precmd_main reset-prompt
+    if (( ${+precmd_functions[(r)prompt_blueyed_precmd]} )); then
+        prompt_blueyed_precmd reset-prompt
     fi
     zle .reset-prompt
 }
 
 # NOTE: using only prompt_blueyed_precmd as the 2nd function fails to add it, when added as 2nd one!
 setup_prompt_blueyed() {
-    add-zsh-hook precmd prompt_blueyed_precmd_main
+    add-zsh-hook precmd prompt_blueyed_precmd
 }
 unsetup_prompt_blueyed() {
-    add-zsh-hook -d precmd prompt_blueyed_precmd_main
+    add-zsh-hook -d precmd prompt_blueyed_precmd
 }
 setup_prompt_blueyed
 
 # Optional arg 1: "reset-prompt" if called via reset-prompt zle widget.
-prompt_blueyed_precmd_main () {
+prompt_blueyed_precmd () {
     # Get exit status of command first.
     local -h save_exitstatus=$?
 
@@ -644,20 +644,20 @@ if [[ $COLORTERM == rxvt-xpm ]] && [[ -n $DISPLAY ]]; then
       xprop -id $WINDOWID -f my_confirm_client_kill 8c \
           -set my_confirm_client_kill $1
     }
-    function _preexec_my_confirm_client_kill() {
+    function prompt_blueyed_confirmkill_preexec() {
       set_my_confirm_client_kill 1
     }
-    function _precmd_my_confirm_client_kill() {
+    function prompt_blueyed_confirmkill_precmd() {
       set_my_confirm_client_kill 0
     }
-    add-zsh-hook preexec _preexec_my_confirm_client_kill
-    add-zsh-hook precmd  _precmd_my_confirm_client_kill
+    add-zsh-hook preexec prompt_blueyed_confirmkill_preexec
+    add-zsh-hook precmd  prompt_blueyed_confirmkill_precmd
 fi
 # }}}
 
 # Set block cursor before executing a program.
-add-zsh-hook preexec _set_cursor_style
-function _set_cursor_style() {
+add-zsh-hook preexec prompt_blueyed_cursorstyle_preexec
+function prompt_blueyed_cursorstyle_preexec() {
   _auto-my-set-cursor-shape block_blink
 }
 # }}}
@@ -696,5 +696,11 @@ zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   "
 zstyle ':vcs_info:*:prompt:*' max-exports 4
 # patch-format for Git, used during rebase.
 zstyle ':vcs_info:git*:prompt:*' patch-format "%{$fg_no_bold[cyan]%}Applied: %p [%n/%a]"
+
+
+# Interface to zsh's promptinit.
+prompt_blueyed_setup() {
+    prompt_blueyed_precmd
+}
 
 #  vim: set ft=zsh ts=4 sw=4 et:
