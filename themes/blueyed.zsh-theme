@@ -674,6 +674,10 @@ color_for_host() {
 # Hash the given value to an item from the given list.
 # Note: if strange errors happen here, it is because of some DEBUG echo in ~/.zshenv/zshrc probably.
 hash_value_from_list() {
+    if ! (( ${+functions[(r)sumcharvals]} )); then
+      source =sumcharvals
+    fi
+
     value=$1
     list=(${(s: :)2})
     index=$(( $(sumcharvals $value) % $#list + 1 ))
