@@ -18,7 +18,7 @@ if [[ -f ${DIRSTACKFILE} ]] && [[ ${#dirstack[*]} -eq 0 ]] ; then
         if [[ -d $dirstack[1] ]]; then
             # if $PWD is the most recent dirstack entry, but resolved, change back and forth
             # This happens when opening a new tab in gnome-terminal, which appears to resolve the symlink.
-            if [[ $PWD != $dirstack[1] ]] && [[ $(readlink -f $PWD) == $(readlink -f $dirstack[1]) ]]; then
+            if [[ $PWD != $dirstack[1] ]] && [[ ${PWD:A} == ${dirstack[1]:A} ]]; then
                 # save dirstack[1], which changes after the first cd!
                 local -h d1=$dirstack[1]
                 cd -qL $dirstack[2] && cd -qL $d1
