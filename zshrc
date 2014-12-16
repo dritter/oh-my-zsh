@@ -267,8 +267,7 @@ elif [[ -n $SSH_CLIENT ]]; then
 fi
 
 # Assume 256 colors with xterm/screen when $DISPLAY or $COLORTERM is given.
-# Generic, not bound to COLORTERM=gnome-terminal (for lilyterm)
-if [[ -n $DISPLAY ]] || [[ -n $COLORTERM ]]; then
+if [[ -n $DISPLAY ]] || [[ -n $COLORTERM ]] || [[ -n $SSH_CLIENT ]]; then
   if [[ $TERM == "xterm" ]]; then
     export TERM=xterm-256color
   elif [[ $TERM == "screen" ]]; then
