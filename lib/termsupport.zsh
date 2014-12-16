@@ -57,7 +57,24 @@ function title {
       fi
       if [[ $tmux_auto_rename != "off" ]]; then
         # echo "Resetting tmux name to 0."
-        tmux set-window-option -t $TMUX_PANE -q automatic-rename off
+        # Handle old tmux (1.6, diskstation).
+        if [ "$(tmux -V)" = 'tmux 1.6' ]; then
+          for i in window-status-format window-status-current-format; do
+            local cur="$(tmux show-window-options -g | grep "^$i" | cut -d\  -f2-)"
+            local new="${cur/0T\} /0T [#W]}"
+            if [[ $new == $cur ]]; then
+              # Only once
+              break
+            fi
+            new="${new/\#{?window_name,\[\#W\],/}"
+            # Remove quotes
+            new=${${new#\"}%\"}
+            tmux set -wg $i "$new"
+          done
+          tmux set-window-option -t $TMUX_PANE automatic-rename off
+        else
+          tmux set-window-option -t $TMUX_PANE -q automatic-rename off
+        fi
         tmux rename-window -t $TMUX_PANE 0
       fi
       export _tmux_name_reset=${TMUX}_${TMUX_PANE}

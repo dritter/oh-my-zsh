@@ -94,7 +94,8 @@ add-zsh-hook chpwd _zshrc_chpwd_detect_slow_dir 2>/dev/null || {
   echo 'zsh-syntax-highlighting: failed loading add-zsh-hook.' >&2
 }
 _is_slow_file_system() {
-  fs_type=$(df -T .|tail -n1|tr -s ' '|cut -f2 -d\ )
+  # fs_type=$(df -T .|tail -n1|tr -s ' '|cut -f2 -d\ )
+  fs_type=$(stat -f . | grep -o 'Type:.*' | cut -f2 -d\ )
   case $fs_type in
     (sshfs|nfs|cifs|fuse.bup-fuse) echo "1" ;;
     (*) echo "0" ;;
