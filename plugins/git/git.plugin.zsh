@@ -144,7 +144,7 @@ gsma() {
   local smpath=$1; shift
   git diff --cached --exit-code > /dev/null || { echo "Index is not clean."; return 1 ; }
   # test for clean .gitmodules
-  local -h gitroot=$(readlink -f ./$(git rev-parse --show-cdup))
+  local -h gitroot=./$(git rev-parse --show-cdup)
   if [[ -f $gitroot/.gitmodules ]]; then
     git diff --exit-code $gitroot/.gitmodules > /dev/null || { echo ".gitmodules is not clean."; return 2 ; }
   fi
