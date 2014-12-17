@@ -12,23 +12,24 @@
 # Path to your oh-my-zsh configuration.
 export ZSH=$HOME/.oh-my-zsh
 
-# set -x
+# Profiling / Tracing. {{{
+# Start debug tracing (NOTE: does not work from a function).
+# if true; then
+#   PS4='+$(date "+%s:%N") %N:%i> '
+#   zsh_xtrace_file=/tmp/zsh-xtrace.$$.log
+#   echo "Tracing into $zsh_xtrace_file"
+#   exec 3>&2 2>$zsh_xtrace_file
+#   setopt xtrace prompt_subst
+# fi
+# # Stop debug tracing.
+# zsh_stop_debug_xtrace() {
+#   unsetopt xtrace
+#   exec 2>&3 3>&-
+# }
 
-# Start profiling
-zsh_profile_start() {
-  PS4='+$(date "+%s:%N") %N:%i> '
-  exec 3>&2 2>/tmp/zsh-profile.log.$$
-  setopt xtrace prompt_subst
-  zmodload zsh/zprof
-}
-# Stop profiling
-zsh_profile_stop() {
-  unsetopt xtrace
-  exec 2>&3 3>&-
-  zprof
-}
-
-# zsh_profile_start
+# Start profiling; call zprof to output results.
+# zmodload zsh/zprof
+# }}}
 
 # Set to the name theme to load.
 # Look in ~/.oh-my-zsh/themes/
@@ -82,7 +83,8 @@ export RI="--format ansi"
 # zstyle ':vcs_info:*' enable cvs svn bzr hg git
 zstyle ':vcs_info:*' enable hg bzr git
 # zstyle ':vcs_info:bzr:*' use-simple true
-zstyle ':vcs_info:(bzr|hg|svn):*' use-simple false
+zstyle ':vcs_info:(hg|svn):*' use-simple false
+zstyle ':vcs_info:(bzr|hg|svn):*' use-simple true
 zstyle ':vcs_info:*:prompt:*' hgrevformat '%r'
 
 # check-for-changes can be really slow.
@@ -114,7 +116,8 @@ _zshrc_chpwd_detect_slow_dir() {
   export ZSH_IS_SLOW_DIR
 }
 
-add-zsh-hook chpwd _zshrc_vcs_check_for_changes_hook
+
+add-zsh-hook chpwd _zshrc_vcs_check_for_changes_hook # {{{
 _zshrc_vcs_check_for_changes_hook() {
   local -h check_for_changes
   if [[ -n $ZSH_CHECK_FOR_CHANGES ]]; then
@@ -139,8 +142,7 @@ _zshrc_vcs_check_for_changes_hook() {
   fi
 }
 # init
-_zshrc_vcs_check_for_changes_hook
-
+_zshrc_vcs_check_for_changes_hook  # }}}
 
 # Incremental search
 bindkey -M vicmd "/" history-incremental-search-backward
@@ -217,8 +219,6 @@ fi
 
 
 # run-help for builtins
-# Explicitly set HELPDIR, see http://bugs.debian.org/530366
-HELPDIR=/usr/share/zsh/help
 unalias run-help &>/dev/null
 autoload run-help
 
@@ -234,6 +234,9 @@ bindkey '\ee' edit-command-line
 # Also: (smart-)ignore case and do not fold long lines.
 # -X: do not use alternate screen (smcup/rmcup).
 export LESS="-j5 -R -i -S -X"
+# Alias for `less`, without `-X`.
+alias lessx='LESS="-j5 -R -i -S" less'
+compdef lessx=less
 
 # named directories/shortcuts (~l => /var/log)
 # local ones in ~/.zshrc.local
@@ -315,8 +318,7 @@ multicat() {
   done
 }
 
-
-# Start a session as another user (via sudo, default is root),
+# sudosession: start a session as another user (via sudo, default is root), {{{
 # using a separate environment based on ~/.dotfiles (in ~/.sudosession).
 # NOTE: while "sudo -s HOME=.. …" appears to work best, it failed
 #       on a SUSE 10.4 system with "$SHELL: can't open input file: command".
@@ -373,6 +375,7 @@ sudosession() {
 }
 alias rs=sudosession  # mnemonic: "root session"
 compdef "_arguments '-u[user name]:user name:_users' '*::arguments: _normal'" sudosession
+# }}}
 
 # connect to qemu system by default
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
@@ -409,6 +412,7 @@ alias ZZ=exit
 alias map='xargs -n1 -r'
 
 alias vimrc='vim ~df/vimrc'
+alias zshrc='vim ~df/zshrc'
 
 # autoload run-help helpers, e.g. run-help-git
 local run_helpers
@@ -418,9 +422,10 @@ if [[ -n $run_helpers ]]; then
 fi
 
 
-# change to repository root (starting in parent directory)
-# use the first entry of the globbing
+# Change to repository root (starting in parent directory), using the first
+# entry of a recursive globbing.
 RR() {
+  setopt localoptions extendedglob
   local a
   # note: removed extraneous / ?!
   a=( (../)#.(git|hg|svn|bzr)(:h) )
@@ -432,11 +437,16 @@ RR() {
 # Call Makefile from parent directories.
 make () {
   if ! [ -f Makefile ]; then
+    setopt localoptions extendedglob
     local m
     m=((../)#Makefile(N))
     if (( $#m )); then
       echo -n "No Makefile in current dir. Use $m[1]? (y to continue) " >&2
-      read -q && command make -C $m[1]:h "$@"
+      read -q && {
+        echo
+        command make -C $m[1]:h "$@"
+        return
+      }
       return
     fi
   fi
@@ -651,12 +661,21 @@ incognito() {
 }
 
 # Minimal prompt: useful when creating a test case for copy'n'paste.
+_zsh_minimalprompt_preexec() {
+  # XXX: workaround $2 having a trailing space with assignments.
+  if [[ "$1" != "$2" ]] && [[ "$1 " != "$2" ]]; then
+    echo " >> $3"
+  fi
+  # _zsh_minimalprompt_preexec_cmd=$2
+}
 minimalprompt() {
   if [[ $1 == -u ]]; then
     # Undo.
-    add-zsh-hook precmd prompt_blueyed_precmd
+    add-zsh-hook -d preexec _zsh_minimalprompt_preexec
+    setup_prompt_blueyed
   else
-    add-zsh-hook -d precmd prompt_blueyed_precmd
+    unsetup_prompt_blueyed
+    add-zsh-hook preexec _zsh_minimalprompt_preexec
     PS1="%~ %# "
   fi
 }
@@ -741,6 +760,11 @@ bindkey '^z' grml-zsh-fg
 bindkey '^y' grml-zsh-fg
 # }}}
 
+# Lookup in `man zshall`
+zman() {
+  PAGER="less -g -s '+/^       "$1"'" man zshall
+}
+
 # dquilt: quilt for Debian/Ubuntu packages.
 dquilt() {
   quilt --quiltrc=${HOME}/.quiltrc-dpkg "$@"
@@ -756,9 +780,16 @@ compdef _quilt dquilt=quilt
 stty -ixon 2>/dev/null
 
 
+AUTOENV_FILE_LEAVE=.env
+AUTOENV_LOOK_UPWARDS=1
+source ~/.dotfiles/lib/zsh-autoenv/autoenv.zsh
+
+
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
-# zsh_profile_stop
+# zsh_stop_debug_xtrace
 
 true # return code 0
+
+# vim: foldlevel=0
