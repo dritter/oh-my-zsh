@@ -85,8 +85,16 @@ function title {
     print -Pn $'\e]1;$1\a'
 
   elif [[ $TERM == screen* ]]; then
-    # GNU screen: set %t portion of "hardstatus".
-    print -Pn $'\ek$2\e\\'
+    if [[ $TERM == screen*-it ]]; then
+      # Outer tmux is not visible, but TERM indicates that it is being used
+      # (e.g. in OpenVZ containers).
+      # Term title (available as #T in tmux).
+      print -Pn $'\e]2;$2\a'
+      print -Pn $'\e]1;$1\a'
+    else
+      # GNU screen: set %t portion of "hardstatus".
+      print -Pn $'\ek$2\e\\'
+    fi
 
   elif [[ $TERM == xterm* ]] || [[ $TERM == rxvt* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     # ESC]0;stringBEL -- Set icon name and window title to string
