@@ -261,6 +261,7 @@ compdef _docker docker-shell=_docker_containers
 
 # Export COLORTERM as LC_MY_SSH_COLORTERM, to be passed on through ssh, via
 # SendEnv in ~/.ssh/config and LC_* whitelist on the server.
+# NOTE: "AcceptEnv" is empty by default, useful: "LANG LC_*"
 if (( $+COLORTERM )) && ! (( $+LC_MY_SSH_COLORTERM )); then
   export LC_MY_SSH_COLORTERM=$COLORTERM
 elif [[ -n $SSH_CLIENT ]]; then
