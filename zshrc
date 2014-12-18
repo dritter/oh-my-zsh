@@ -285,10 +285,12 @@ fi
 
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
 if ! tput longname &> /dev/null; then
+  set -x
   if [[ $TERM == screen*bce ]]; then TERM=screen-bce
   elif [[ $TERM == screen* ]]; then TERM=screen
   else TERM=xterm fi
   export TERM
+  set +x
 fi
 
 setopt GLOB_COMPLETE # helps with "setopt *alias<tab>" at least
