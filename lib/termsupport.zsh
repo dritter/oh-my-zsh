@@ -66,7 +66,7 @@ function title {
               # Only once
               break
             fi
-            new="${new/\#{?window_name,\[\#W\],/}"
+            new="${new/\#\{?window_name,\[\#W\],/}"
             # Remove quotes
             new=${${new#\"}%\"}
             tmux set -wg $i "$new"
