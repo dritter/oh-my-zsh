@@ -96,7 +96,7 @@ function title {
       print -Pn $'\ek$2\e\\'
     fi
 
-  elif [[ $TERM == xterm* ]] || [[ $TERM == rxvt* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
+  elif [[ $TERM == rxvt* ]] || [[ $TERM == xterm* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     # ESC]0;stringBEL -- Set icon name and window title to string
     # ESC]1;stringBEL -- Set icon name to string
     # ESC]2;stringBEL -- Set window title to string
