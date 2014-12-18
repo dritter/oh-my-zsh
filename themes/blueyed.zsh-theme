@@ -31,11 +31,15 @@ _strip_escape_codes() {
     echo $1 | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
 }
 
+is_urxvt() {
+    [[ $TERM == rxvt* ]] || [[ $COLORTERM == rxvt* ]]
+}
+
 # Check if we're running in gnome-terminal.
 # This gets used to e.g. auto-switch the profile.
 is_gnome_terminal() {
     # Common case, since I am using URxvt now.
-    [[ $COLORTERM == rxvt* ]] && return 1
+    is_urxvt && return 1
     # Old-style, got dropped.. :/
     [[ $COLORTERM == "gnome-terminal" ]] && return 0
     # Check /proc, but only on the local system.
@@ -577,7 +581,7 @@ _auto-my-set-cursor-shape() {
 my-set-cursor-shape() {
     [[ $is_mc_shell == 1 ]] && return
     # Not supported with gnome-terminal and "linux".
-    [[ $COLORTERM == rxvt* ]] || return
+    is_urxvt || return
 
     local code
     case "$1" in
@@ -600,7 +604,7 @@ my-set-cursor-shape() {
 
 # Vim mode indicator {{{1
 zle-keymap-select zle-line-init () {
-    if [[ $COLORTERM == rxvt* ]]; then
+    if is_urxvt; then
         if [ $KEYMAP = vicmd ]; then
             _auto-my-set-cursor-shape block_blink
         else
@@ -638,7 +642,7 @@ function get_x_focused_win_id() {
     xprop -root 2>/dev/null | sed -n '/^_NET_ACTIVE_WINDOW/ s/.* // p'
 }
 
-if [[ $COLORTERM == rxvt-xpm ]] && [[ -n $DISPLAY ]]; then
+if is_urxvt && [[ -n $DISPLAY ]]; then
     function set_my_confirm_client_kill() {
       # xprop -id $(get_x_focused_win_id) -f my_confirm_client_kill 8c
       xprop -id $WINDOWID -f my_confirm_client_kill 8c \
