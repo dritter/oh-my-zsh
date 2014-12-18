@@ -29,9 +29,9 @@ function title {
       # container
       PREFIX="[$(hostname)#$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')] "
       # SUFFIX=" (${(%):-%~})"
-    elif [[ $(pwd -P) == /var/lib/vz/private/[0-9]* ]]; then
+    elif [[ ${PWD:A} == /var/lib/vz/private/[0-9]* ]]; then
       # HN, in container dir
-      RELPWD=${$(pwd -P)#/var/lib/vz/private/}
+      RELPWD=${${PWD:A}#/var/lib/vz/private/}
       # SUFFIX=" (HN:${RELPWD%%/*}~${RELPWD##[[:digit:]]##/#})"
     fi
   fi
