@@ -587,29 +587,47 @@ _auto-my-set-cursor-shape() {
     _my_cursor_shape=auto
 }
 # Can be called manually, and will not be autoset then anymore.
+# Not supported with gnome-terminal and "linux".
 my-set-cursor-shape() {
     [[ $is_mc_shell == 1 ]] && return
-    # Not supported with gnome-terminal and "linux".
-    is_urxvt || return
+
+    if [[ $1 == auto ]]; then
+        _my_cursor_shape=auto
+        echo "Using 'auto' again."
+        return
+    fi
 
     local code
-    case "$1" in
-        block_blink)     code='\e[1 q' ;;
-        block)           code='\e[2 q' ;;
-        underline_blink) code='\e[3 q' ;;
-        underline)       code='\e[4 q' ;;
-        bar_blink)       code='\e[5 q' ;;
-        bar)             code='\e[6 q' ;;
-        auto) echo "Using 'auto' again." ;;
-        # NOTE: bar/ibeam not supported by urxvt.
-        *) echo "my-set-cursor-shape: unknown arg: $1"; return 1 ;;
-    esac
+    if is_urxvt; then
+        case "$1" in
+            block_blink)     code='\e[1 q' ;;
+            block)           code='\e[2 q' ;;
+            underline_blink) code='\e[3 q' ;;
+            underline)       code='\e[4 q' ;;
+            bar_blink)       code='\e[5 q' ;;
+            bar)             code='\e[6 q' ;;
+            *) echo "my-set-cursor-shape: unknown arg: $1"; return 1 ;;
+        esac
+    elif (( $+KONSOLE_PROFILE_NAME )); then
+        case "$1" in
+            block_blink)     code='\e]50;CursorShape=0;BlinkingCursorEnabled=1\x7' ;;
+            block)           code='\e]50;CursorShape=0;BlinkingCursorEnabled=0\x7' ;;
+            underline_blink) code='\e]50;CursorShape=2;BlinkingCursorEnabled=1\x7' ;;
+            underline)       code='\e]50;CursorShape=2;BlinkingCursorEnabled=0\x7' ;;
+            bar_blink)       code='\e]50;CursorShape=1;BlinkingCursorEnabled=1\x7' ;;
+            bar)             code='\e]50;CursorShape=1;BlinkingCursorEnabled=0\x7' ;;
+            *) echo "my-set-cursor-shape: unknown arg: $1"; return 1 ;;
+        esac
+    elif [[ $_my_cursor_shape != auto ]]; then
+        echo "Terminal is not supported." >&2
+    fi
+
     if [[ -n $code ]]; then
         printf $code
     fi
     _my_cursor_shape=$1
-    return 0
 }
+compdef -e '_arguments "1: :(block_blink block underline_blink underline bar_blink bar auto)"' my-set-cursor-shape
 
 # Vim mode indicator {{{1
 zle-keymap-select zle-line-init () {
