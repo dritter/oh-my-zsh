@@ -613,7 +613,7 @@ my-set-cursor-shape() {
 
 # Vim mode indicator {{{1
 zle-keymap-select zle-line-init () {
-    if is_urxvt; then
+    if is_urxvt || (( $+KONSOLE_PROFILE_NAME )); then
         if [ $KEYMAP = vicmd ]; then
             _auto-my-set-cursor-shape block_blink
         else
