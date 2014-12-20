@@ -46,6 +46,7 @@ is_gnome_terminal() {
     is_urxvt && return 1
     # Old-style, got dropped.. :/
     [[ $COLORTERM == "gnome-terminal" ]] && return 0
+    (( $+KONSOLE_PROFILE_NAME )) && return 1
     # Check /proc, but only on the local system.
     if [[ -z $SSH_CLIENT ]] && [[ ${$(</proc/$PPID/cmdline):t} == gnome-terminal* ]]; then
         return 0
