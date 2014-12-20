@@ -55,11 +55,11 @@ is_gnome_terminal() {
 
 my_get_gitdir() {
     local base=$1
-    [[ -z $base ]] && base=$(command git rev-parse --show-toplevel)
+    [[ -z $base ]] && base=$($_git_cmd rev-parse --show-toplevel)
     local gitdir=$base/.git
     if [[ -f $gitdir ]]; then
         # XXX: the output might be across two lines (fixed in the meantime); handled/fixed that somewhere else already, but could not find it.
-        gitdir=$(command git rev-parse --resolve-git-dir $gitdir | head -n1)
+        gitdir=$($_git_cmd rev-parse --resolve-git-dir $gitdir | head -n1)
     fi
     echo $gitdir
 }
@@ -472,7 +472,7 @@ function +vi-git-stash() {
     gitdir=$(my_get_gitdir ${hook_com[base]})
 
     if [[ -s $gitdir/refs/stash ]] ; then
-        stashes=$(command git --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
+        stashes=$($_git_cmd --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
         hook_com[misc]+="$bracket_open$hitext${stashes} stashed$bracket_close"
     fi
     return
@@ -483,12 +483,12 @@ function +vi-git-stash() {
 function +vi-git-untracked() {
     [[ $1 == 0 ]] || return  # do this only once vcs_info_msg_0_.
 
-    if [[ $(command git rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
-        # command git status --porcelain | grep '??' &> /dev/null ; then
+    if [[ $($_git_cmd rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
+        # $_git_cmd status --porcelain | grep '??' &> /dev/null ; then
         # This will show the marker if there are any untracked files in repo.
         # If instead you want to show the marker only if there are untracked
         # files in $PWD, use:
-        [[ -n $(command git ls-files --others --exclude-standard) ]] ; then
+        [[ -n $($_git_cmd ls-files --others --exclude-standard) ]] ; then
         hook_com[staged]+='✗ '
     fi
 }
@@ -514,7 +514,7 @@ function +vi-git-st() {
     local -a gitstatus
 
     # Determine short revision for rprompt.
-    # rprompt_extra_rev=$(command git describe --always --abbrev=1 ${hook_com[revision]})
+    # rprompt_extra_rev=$($_git_cmd describe --always --abbrev=1 ${hook_com[revision]})
 
     # return if check-for-changes is false:
     if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
@@ -522,7 +522,7 @@ function +vi-git-st() {
     fi
 
     # Are we on a remote-tracking branch?
-    remote=${$(command git rev-parse --verify ${hook_com[branch]}@{upstream} \
+    remote=${$($_git_cmd rev-parse --verify ${hook_com[branch]}@{upstream} \
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
 
     # NOTE: "branch" might come shortened as "$COMMIT[0,7]..." from Zsh.
@@ -548,13 +548,13 @@ function +vi-git-st() {
         return 0
     else
         # for git prior to 1.7
-        # ahead=$(command git rev-list origin/${hook_com[branch]}..HEAD | wc -l)
-        ahead=$(command git rev-list ${hook_com[branch]}@{upstream}..HEAD 2>/dev/null | wc -l)
+        # ahead=$($_git_cmd rev-list origin/${hook_com[branch]}..HEAD | wc -l)
+        ahead=$($_git_cmd rev-list ${hook_com[branch]}@{upstream}..HEAD 2>/dev/null | wc -l)
         (( $ahead )) && gitstatus+=( "${normtext}+${ahead}" )
 
         # for git prior to 1.7
-        # behind=$(command git rev-list HEAD..origin/${hook_com[branch]} | wc -l)
-        behind=$(command git rev-list HEAD..${hook_com[branch]}@{upstream} 2>/dev/null | wc -l)
+        # behind=$($_git_cmd rev-list HEAD..origin/${hook_com[branch]} | wc -l)
+        behind=$($_git_cmd rev-list HEAD..${hook_com[branch]}@{upstream} 2>/dev/null | wc -l)
         (( $behind )) && gitstatus+=( "${alerttext}-${behind}" )
 
         remote=${remote%/$local_branch}
@@ -699,6 +699,7 @@ FMT_BRANCH="%{$fg_no_bold[blue]%}↳ %s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%
 # FMT_BRANCH=" %{$fg_no_bold[blue]%}%s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
 FMT_ACTION="%{$fg_no_bold[cyan]%}(%a%)"   # e.g. (rebase-i)
 
+# zstyle ':vcs_info:*+*:*' debug true
 zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
