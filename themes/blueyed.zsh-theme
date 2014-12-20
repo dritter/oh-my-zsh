@@ -205,11 +205,14 @@ prompt_blueyed_precmd () {
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
-    if (( $ZSH_IS_SLOW_DIR )) || ! vcs_info 'prompt' &>/dev/null; then
-        # No vcs_info available, only set cwd
-        prompt_vcs=""
-    else
-        prompt_vcs="${PR_RESET}$vcs_info_msg_0_"
+    prompt_vcs=""
+    # Check for exported GIT_DIR (used when working on bup backups).
+    # Force usage of vcs_info then, also on slow dirs.
+    if [[ ${(t)GIT_DIR} == *-export* ]]; then
+        prompt_vcs+="${warntext}GIT_DIR! "
+    fi
+    if [[ -n $prompt_vcs ]] || ! (( $ZSH_IS_SLOW_DIR )) && vcs_info 'prompt' &>/dev/null; then
+        prompt_vcs+="${PR_RESET}$vcs_info_msg_0_"
         if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
             prompt_vcs+=' ?'
         fi
