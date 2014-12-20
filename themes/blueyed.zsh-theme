@@ -14,6 +14,10 @@
 autoload -U add-zsh-hook
 autoload -Uz vcs_info
 
+# Query/use custom command for `git`.
+# See also ../plugins/git/git.plugin.zsh
+zstyle -s ":vcs_info:git:*:-all-" "command" _git_cmd || _git_cmd=$(whence -p git)
+
 # Skip prompt setup in virtualenv/bin/activate.
 # This causes a glitch with `pyenv shell venv_name` when it gets activated.
 VIRTUAL_ENV_DISABLE_PROMPT=1
