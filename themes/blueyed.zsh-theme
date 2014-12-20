@@ -505,6 +505,7 @@ function +vi-git-shallow() {
 function +vi-git-st() {
     [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
 
+    local ahead_and_behind_cmd ahead_and_behind
     local ahead behind remote
     local branch_color remote_color local_branch local_branch_disp
     local -a gitstatus
@@ -545,12 +546,16 @@ function +vi-git-st() {
     else
         # for git prior to 1.7
         # ahead=$($_git_cmd rev-list origin/${hook_com[branch]}..HEAD | wc -l)
-        ahead=$($_git_cmd rev-list ${hook_com[branch]}@{upstream}..HEAD 2>/dev/null | wc -l)
+
+        # Gets the commit difference counts between local and remote.
+        ahead_and_behind_cmd='git rev-list --count --left-right HEAD...@{upstream}'
+        # Get ahead and behind counts.
+        ahead_and_behind="$(${(z)ahead_and_behind_cmd} 2> /dev/null)"
+
+        ahead="$ahead_and_behind[(w)1]"
         (( $ahead )) && gitstatus+=( "${normtext}+${ahead}" )
 
-        # for git prior to 1.7
-        # behind=$($_git_cmd rev-list HEAD..origin/${hook_com[branch]} | wc -l)
-        behind=$($_git_cmd rev-list HEAD..${hook_com[branch]}@{upstream} 2>/dev/null | wc -l)
+        behind="$ahead_and_behind[(w)2]"
         (( $behind )) && gitstatus+=( "${alerttext}-${behind}" )
 
         remote=${remote%/$local_branch}
