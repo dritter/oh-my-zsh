@@ -67,10 +67,6 @@ my_get_gitdir() {
 # Switch between light and dark variants (solarized). {{{
 ZSH_THEME_VARIANT_CONFIG_FILE=~/.config/zsh-theme-variant
 theme_variant() {
-    # XXX: Might be slow!
-    # from zprof:
-    #  1)    1       25361,75 25361,75   97,68%  25354,73 25354,73   97,66%  theme-variant
-    #        1/1         7,01     7,01    0,03%      7,01     7,01             zsh-set-dircolors [17]
     if [[ "$1" == "auto" ]]; then
         if [[ -n $commands[get-daytime-period] ]] \
             && [[ "$(get-daytime-period)" == 'Daytime' ]]; then
