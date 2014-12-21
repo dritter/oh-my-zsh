@@ -10,6 +10,7 @@
 # Some signs: ✚ ⬆ ⬇ ✖ ✱ ➜ ✭ ═ ◼ ♺ ❮ ❯ λ
 #
 # TODO: setup $prompt_cwd in chpwd hook only (currently adding the hook causes infinite recursion via vcs_info)
+# NOTE: prezto's git-info: https://github.com/sorin-ionescu/prezto/blob/master/modules/git/functions/git-info#L202
 
 autoload -U add-zsh-hook
 autoload -Uz vcs_info

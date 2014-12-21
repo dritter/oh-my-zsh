@@ -803,6 +803,15 @@ AUTOENV_LOOK_UPWARDS=1
 source ~/.dotfiles/lib/zsh-autoenv/autoenv.zsh
 
 
+# Verbose completion.
+# Source: http://www.linux-mag.com/id/1106/
+# zstyle ':completion:*' verbose yes
+# zstyle ':completion:*:descriptions' format '%B%d%b'
+# zstyle ':completion:*:messages' format '%d'
+# zstyle ':completion:*:warnings' format 'No matches for: %d'
+# zstyle ':completion:*' group-name ''
+
+
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
