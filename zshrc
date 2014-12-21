@@ -631,7 +631,7 @@ _nomatch () {
   $cmd "${~@}"
 }
 compdef _precommand _nomatch
-alias ag='_nomatch ag --smart-case'
+[[ -n $commands[ag] ]] && alias ag='_nomatch ag --smart-case'
 
 
 # Make aliases work with sudo; source: http://serverfault.com/a/178956/14449
