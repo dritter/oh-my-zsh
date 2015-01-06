@@ -68,6 +68,8 @@ my_get_gitdir() {
 
 # Switch between light and dark variants (solarized). {{{
 ZSH_THEME_VARIANT_CONFIG_FILE=~/.config/zsh-theme-variant
+# $1: theme to use: auto/light/dark.
+# $2: "init" when called during shell setup.
 theme_variant() {
     if [[ "$1" == "auto" ]]; then
         if [[ -n $commands[get-daytime-period] ]] \
@@ -82,7 +84,10 @@ theme_variant() {
             *) echo "theme_variant: unknown arg: $1"; return 1 ;;
         esac
     fi
-    echo $1 > $ZSH_THEME_VARIANT_CONFIG_FILE
+    # Only write conf when not "init".
+    if [[ "$2" != "init" ]]; then
+        echo $1 > $ZSH_THEME_VARIANT_CONFIG_FILE
+    fi
 
     if [[ "$variant" == "light" ]] && is_gnome_terminal; then
         DIRCOLORS_FILE=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-light
@@ -124,10 +129,12 @@ theme_variant() {
 # Init once and export the value.
 # This gets used in Vim to auto-set the background, too.
 if [[ -z "$ZSH_THEME_VARIANT" ]]; then
-    [[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]] \
-        && ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE) \
-        || ZSH_THEME_VARIANT=auto
-    theme_variant $ZSH_THEME_VARIANT
+    if [[ -f $ZSH_THEME_VARIANT_CONFIG_FILE ]]; then
+        ZSH_THEME_VARIANT=$(<$ZSH_THEME_VARIANT_CONFIG_FILE)
+    else
+        ZSH_THEME_VARIANT=auto
+    fi
+    theme_variant $ZSH_THEME_VARIANT init
 fi
 # }}}
 
