@@ -671,16 +671,18 @@ function get_x_focused_win_id() {
 }
 
 if is_urxvt && [[ -n $DISPLAY ]]; then
+    zmodload zsh/datetime  # for $EPOCHSECONDS
+
     function set_my_confirm_client_kill() {
       # xprop -id $(get_x_focused_win_id) -f my_confirm_client_kill 8c
-      xprop -id $WINDOWID -f my_confirm_client_kill 8c \
+      xprop -id $WINDOWID -f my_confirm_client_kill 32c \
           -set my_confirm_client_kill $1
     }
     function prompt_blueyed_confirmkill_preexec() {
       set_my_confirm_client_kill 1
     }
     function prompt_blueyed_confirmkill_precmd() {
-      set_my_confirm_client_kill 0
+      set_my_confirm_client_kill $EPOCHSECONDS
     }
     add-zsh-hook preexec prompt_blueyed_confirmkill_preexec
     add-zsh-hook precmd  prompt_blueyed_confirmkill_precmd
