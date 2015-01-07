@@ -7,13 +7,14 @@ _setup_grep_alias() {
         echo | grep $1 "" >/dev/null 2>&1
     }
 
+    local GREP_OPTIONS
     # Color grep results.
-    local GREP_OPTIONS="--color=auto"
+    GREP_OPTIONS=(--color=auto)
 
     if grep-flag-available --exclude-dir=.cvs; then
-        GREP_OPTIONS+=" --exclude-dir=$VCS_FOLDERS"
+        GREP_OPTIONS+=(--exclude-dir=$VCS_FOLDERS)
     elif grep-flag-available --exclude=.cvs; then
-        GREP_OPTIONS+=" --exclude=$VCS_FOLDERS"
+        GREP_OPTIONS+=(--exclude=$VCS_FOLDERS)
     fi
 
     # Re-define alias.
@@ -21,5 +22,8 @@ _setup_grep_alias() {
 
     # Clean up.
     unfunction grep-flag-available
+
+    # Run it on first invocation.
+    command grep $GREP_OPTIONS
 }
 alias grep=_setup_grep_alias
