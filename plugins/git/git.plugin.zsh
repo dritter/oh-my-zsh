@@ -73,9 +73,10 @@ alias gdtc='git difftool --cached'
 alias gf='git fetch'
 alias gfa='git fetch --all --prune'
 alias gl='git l'
-# git log with patches. '-m --first-parent' shows diff for first parent.
-alias glp='gl -p -m'
-alias glpf='gl -p -m --first-parent'
+# git log with patches.
+alias glp='gl -p'
+# '-m --first-parent' shows diff for first parent.
+alias glpm='gl -p -m --first-parent'
 alias glg='git log --stat --max-count=5'
 alias glgg='git log --graph --max-count=5'
 alias gls='git ls-files'
