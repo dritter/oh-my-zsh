@@ -52,11 +52,13 @@ gdo() {
 compdef _git gdo=git-diff
 # `git log` against upstream (usually origin/master)
 glo() {
+  local opt
   [ x$1 = x ] && opt='--stat' || opt="$@"
   _git_against_upstream log "$opt"
 }
 compdef _git glo=git-log
 _git_against_upstream() {
+  local cmd
   [ x$1 = x ] && { echo "Missing command."; return 1; }
   cmd=(git $@ '@{upstream}..HEAD')
   echo $cmd
