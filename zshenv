@@ -36,11 +36,12 @@ prepend_path_if_not_in_already ~/.dotfiles/usr/bin ~/bin
 prepend_path_if_not_in_already ~/.local/bin
 
 # Add various "bin" directories to $path
-# (e.g. /usr/local/apache2/bin is used @bp)
 # TODO: might add both /usr/local/apache2_2.2.16/bin /usr/local/apache2_2.2.24/bin to path!
 #       Reverse-sort as a workaround?
 #       Or only use symlinks (apache2 points there)
-for i in /usr/local/*(N/:A) /opt/*(N/:A) /var/lib/gems/*(N/:A) ; do
+# NOTE: /usr/local/apache2/bin etc get setup @bp via /etc/profile.d/ already.
+# for i in /usr/local/*(N/:A) /opt/*(N/:A) /var/lib/gems/*(N/:A) ; do
+for i in /var/lib/gems/*(N/:A) ; do
   test -d $i/bin || continue
   append_path_if_not_in_already $i/bin
 done
