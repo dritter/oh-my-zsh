@@ -117,9 +117,6 @@ lsh() { l  --color -t "$@" | head -n $((LINES > 23 ? 20 : LINES-3)) }
 # commands starting with % for pasting from web
 alias %=' '
 
-# Using a script instead.
-# alias gv='gvim --remote-silent'
-
 # Custom aliases (from ~/.bash_aliases)
 # Get previous ubuntu version from changelog (the one to use with -v for e.g. debuild)
 alias debverprevubuntu="dpkg-parsechangelog --format rfc822 --count 1000 | grep '^Version: ' | grep ubuntu | head -n2 | tail -n1 | sed 's/^Version: //'"
@@ -203,6 +200,7 @@ function o() {
   if (( $# > 1 )); then
     echo -n "Open multiple files? [yn] "
     read -q || return
+    echo
   fi
   if [ $commands[xdg-open] ]; then
     for f; do
@@ -215,7 +213,6 @@ function o() {
   fi
 }
 alias 7zpwd="7z a -mx0 -mhe=on -p"
-# alias ag="ack-grep" # `ag` is a command by itself
 alias lh="ls -alt | head"
 
 
@@ -241,12 +238,12 @@ wless() {
 # (use a function to allow for setting temp. environment, e.g. `FOO=bar ssh`)
 ssh() {
   if ! ssh-add -l >/dev/null 2>&1; then
-    ssh-add;
+    ssh-add
   fi
   command ssh "$@"
 }
 
-# make (overwriting) file operations interactive by default
+# Make (overwriting) file operations interactive by default.
 alias cp="cp -i"
 alias mv="mv -i"
 
@@ -257,7 +254,7 @@ c() {
 }
 mdc() { mkdir "$@" && cd "$1" }
 
-# verynice: wrap with ionice (if possible) and "nice -n19"
+# verynice: wrap with ionice (if possible) and "nice -n19" {{{
 _verynice_ionice_cmd=
 get_verynice_cmd() {
   if [[ -z $_verynice_ionice_cmd && -x ${commands[ionice]} ]]; then
@@ -275,22 +272,13 @@ veryrenice() {
   $=_verynice_ionice_cmd -p $@
   renice 19 $@
 }
+# }}}
 
 # Mercurial
 alias hgu="hg pull -u"
 alias hgl="hg log -G" # -G via graphlog extension
 alias hgd="hg diff"
 alias hgc="hg commit"
-
-# Quickly lookup entry in Wikipedia.
-# Source: https://github.com/msanders/dotfiles/blob/master/.aliases
-wiki() {
-  if [[ $1 == "" ]]; then
-    echo "usage: wiki [term]";
-  else
-    dig +short txt $1.wp.dg.cx;
-  fi
-}
 
 if [ $commands[screen] ]; then
 screen() {
