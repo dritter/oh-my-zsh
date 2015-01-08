@@ -297,4 +297,10 @@ screen() {
 }
 fi
 
+# Colored cat/less.
+alias ccat='pygmentize -g'
+cless() {
+  pygmentize -g "$@" | less
+}
+
 alias idn='idn --quiet'
