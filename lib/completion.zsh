@@ -43,7 +43,8 @@ cdpath=(.)
 
 # Use caching so that commands like apt and dpkg complete are useable
 zstyle ':completion::complete:*' use-cache 1
-zstyle ':completion::complete:*' cache-path $ZSH/cache/
+# Use zsh's default cache dir (${ZDOTDIR:-$HOME}/.zcompcache}).
+# zstyle ':completion::complete:*' cache-path $ZSH/cache/
 
 # Complete hosts from IP addresses, too
 zstyle ':completion:*' use-ip true
