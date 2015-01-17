@@ -33,7 +33,14 @@ _strip_escape_codes() {
     # XXX: does not work with MacOS default sed either?!
     # echo "${(%)1}" | sed "s/\x1B\[\([0-9]\{1,3\}\(;[0-9]\{1,3\}\)?\)?[m|K]//g"
     # echo "${(%)1}" | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
+    # NOTE: fails with sed on busybox (BusyBox v1.16.1).
     echo $1 | $sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})?)?[m|K]//g"
+}
+
+# Via http://stackoverflow.com/a/10564427/15690.
+get_visible_length() {
+    local zero='%([BSUbfksu]|([FB]|){*})'
+    echo ${#${(S%%)1//$~zero}}
 }
 
 is_urxvt() {
@@ -436,22 +443,19 @@ prompt_blueyed_precmd () {
 
     # Attach $rprompt to $prompt, aligned to $TERMWIDTH
     local -h TERMWIDTH=$((${COLUMNS}-1))
-    local -h rprompt_len=${#${"$(_strip_escape_codes ${(%)rprompt})"}}
-    local -h prompt_len=${#${"$(_strip_escape_codes ${(%)prompt})"}}
+    local -h rprompt_len=$(get_visible_length $rprompt)
+    local -h prompt_len=$(get_visible_length $prompt)
     PR_FILLBAR="%f${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
 
     # local -h prompt_sign='%b%(#.%F{green}.%F{red})❯%F{yellow}❯%(#.%F{red}.%F{green})❯%f%b'
     local -h prompt_sign="%b%(?.%F{blue}.%F{red})❯%(#.${roottext}.${prompttext})❯%f"
 
-# NOTE: Konsole has problems with rendering the special sign if it's colored!
-#     PROMPT="${prompt}${PR_FILLBAR}${rprompt}
-# $prompt_vcs%f❯ "
-    PROMPT="${prompt}${PR_FILLBAR}${rprompt}
+    PS1="${prompt}${PR_FILLBAR}${rprompt}
 ${prompt_vcs}${prompt_sign}${PR_RESET} "
 
     # When invoked from gvim ('zsh -i') make it less hurting
     if [[ -n $MYGVIMRC ]]; then
-        PROMPT=$(_strip_escape_codes $PROMPT)
+        PS1=$(_strip_escape_codes $PS1)
     fi
 
     # End profiling
