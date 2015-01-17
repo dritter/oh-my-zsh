@@ -22,19 +22,9 @@ _setup_grep_alias() {
     unfunction grep-flag-available
 
     # Remove alias and setup function.
-    unalias grep
-    setopt localoptions norcexpandparam
-    eval "grep() {
-        local options
-        options=(${(@)GREP_OPTIONS})
-        # Add '-r' if grepping a dir.
-        if [[ -d \$@[\$#] ]]; then
-            options+=(-r)
-        fi
-        command grep \$options \"\$@\"
-    }"
+    alias grep="grep ${GREP_OPTIONS}"
 
     # Run it on first invocation.
-    grep $GREP_OPTIONS "$@"
+    grep "$@"
 }
 alias grep=_setup_grep_alias
