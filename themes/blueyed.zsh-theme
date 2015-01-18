@@ -53,7 +53,9 @@ is_gnome_terminal() {
     # Common case, since I am using URxvt now.
     is_urxvt && return 1
     # Old-style, got dropped.. :/
-    [[ $COLORTERM == "gnome-terminal" ]] && return 0
+    if [[ -n $COLORTERM ]]; then
+        [[ $COLORTERM == "gnome-terminal" ]] && return 0 || return 1
+    fi
     (( $+KONSOLE_PROFILE_NAME )) && return 1
     # Check /proc, but only on the local system.
     if [[ -z $SSH_CLIENT ]] && [[ ${$(</proc/$PPID/cmdline):t} == gnome-terminal* ]]; then
@@ -753,4 +755,4 @@ prompt_blueyed_setup() {
     prompt_blueyed_precmd
 }
 
-#  vim: set ft=zsh ts=4 sw=4 et:
+# vim: set ft=zsh ts=4 sw=4 et:
