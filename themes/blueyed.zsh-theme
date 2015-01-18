@@ -610,7 +610,7 @@ my-set-cursor-shape() {
     fi
 
     local code
-    if is_urxvt; then
+    if [[ $_USE_XTERM_CURSOR_CODES == 1 ]]; then
         case "$1" in
             block_blink)     code='\e[1 q' ;;
             block)           code='\e[2 q' ;;
@@ -643,7 +643,7 @@ compdef -e '_arguments "1: :(block_blink block underline_blink underline bar_bli
 
 # Vim mode indicator {{{1
 zle-keymap-select zle-line-init () {
-    if is_urxvt || (( $+KONSOLE_PROFILE_NAME )); then
+    if (( $_USE_XTERM_CURSOR_CODES )) || (( $+KONSOLE_PROFILE_NAME )); then
         if [ $KEYMAP = vicmd ]; then
             _auto-my-set-cursor-shape block_blink
         else
