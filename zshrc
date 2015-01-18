@@ -297,7 +297,8 @@ fi
 if ! tput longname &> /dev/null; then
   echo "tput longname failed, setting fallback TERM:"
   set -x
-  if [[ $TERM == screen*bce ]]; then TERM=screen-bce
+  if   [[ $TERM == screen-256color-it ]]; then TERM=screen-256color
+  elif [[ $TERM == screen*bce ]]; then TERM=screen-bce
   elif [[ $TERM == screen* ]]; then TERM=screen
   else TERM=xterm fi
   export TERM
