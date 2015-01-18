@@ -689,7 +689,7 @@ function get_x_focused_win_id() {
     xprop -root 2>/dev/null | sed -n '/^_NET_ACTIVE_WINDOW/ s/.* // p'
 }
 
-if is_urxvt && [[ -n $DISPLAY ]]; then
+if [[ -z $SSH_CLIENT ]] && is_urxvt && [[ -n $DISPLAY ]]; then
     zmodload zsh/datetime  # for $EPOCHSECONDS
 
     function set_my_confirm_client_kill() {
