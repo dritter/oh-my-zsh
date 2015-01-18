@@ -597,11 +597,12 @@ _auto-my-set-cursor-shape() {
     if [[ $_my_cursor_shape != "auto" ]]; then
         return
     fi
-    my-set-cursor-shape "$@"
+    my-set-cursor-shape "$@" auto
     _my_cursor_shape=auto
 }
 # Can be called manually, and will not be autoset then anymore.
 # Not supported with gnome-terminal and "linux".
+# $1: style; $2: "auto", when called automatically.
 my-set-cursor-shape() {
     [[ $is_mc_shell == 1 ]] && return
 
@@ -632,14 +633,19 @@ my-set-cursor-shape() {
             bar)             code='\e]50;CursorShape=1;BlinkingCursorEnabled=0\x7' ;;
             *) echo "my-set-cursor-shape: unknown arg: $1"; return 1 ;;
         esac
-    elif [[ $_my_cursor_shape != auto ]]; then
-        echo "Terminal is not supported." >&2
+    else
+        if [[ $2 != auto ]]; then
+            echo "Terminal is not supported." >&2
+        fi
+        return
     fi
 
     if [[ -n $code ]]; then
         printf $code
     fi
-    _my_cursor_shape=$1
+    if [[ $2 != auto ]]; then
+        _my_cursor_shape=$1
+    fi
 }
 compdef -e '_arguments "1: :(block_blink block underline_blink underline bar_blink bar auto)"' my-set-cursor-shape
 
