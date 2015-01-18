@@ -295,14 +295,20 @@ fi
 
 # Fix up TERM if there's no info for the currently set one (might cause programs to fail)
 if ! tput longname &> /dev/null; then
-  echo "tput longname failed, setting fallback TERM:"
-  set -x
-  if   [[ $TERM == screen-256color-it ]]; then TERM=screen-256color
-  elif [[ $TERM == screen*bce ]]; then TERM=screen-bce
-  elif [[ $TERM == screen* ]]; then TERM=screen
-  else TERM=xterm fi
-  export TERM
-  set +x
+  echo "tput longname failed (TERM=$TERM)!"
+  if [[ ! -e ~/.terminfo && -d ~/.dotfiles/terminfo ]]; then
+    echo "Linking terminfo, you should probably restart the shell."
+    ln -s .dotfiles/terminfo ~/.terminfo
+  else
+    echo "Setting fallback TERM:"
+    set -x
+    if   [[ $TERM == screen-256color-it ]]; then TERM=screen-256color
+    elif [[ $TERM == screen*bce ]]; then TERM=screen-bce
+    elif [[ $TERM == screen* ]]; then TERM=screen
+    else TERM=xterm fi
+    export TERM
+    set +x
+  fi
 fi
 
 # Use xterm compatible escape codes for cursor shapes?
