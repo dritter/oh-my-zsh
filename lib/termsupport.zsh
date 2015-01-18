@@ -79,30 +79,20 @@ function title {
       fi
       export _tmux_name_reset=${TMUX}_${TMUX_PANE}
     fi
+  fi
 
-    # Term title (available as #T in tmux).
-    print -Pn $'\e]2;$2\a'
-    print -Pn $'\e]1;$1\a'
-
-  elif [[ $TERM == screen* ]]; then
-    if [[ $TERM == screen*-it ]]; then
-      # Outer tmux is not visible, but TERM indicates that it is being used
-      # (e.g. in OpenVZ containers).
-      # Term title (available as #T in tmux).
-      print -Pn $'\e]2;$2\a'
-      print -Pn $'\e]1;$1\a'
-    else
-      # GNU screen: set %t portion of "hardstatus".
-      print -Pn $'\ek$2\e\\'
-    fi
-
-  elif [[ $TERM == rxvt* ]] || [[ $TERM == xterm* ]] || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
+  if [[ $TERM == rxvt* ]] || [[ $TERM == xterm* ]] \
+    || [[ $TERM == screen* ]] \
+    || [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     # ESC]0;stringBEL -- Set icon name and window title to string
     # ESC]1;stringBEL -- Set icon name to string
     # ESC]2;stringBEL -- Set window title to string
-    print -Pn $'\e]2;$2\a' # set window name
+    print -Pn $'\e]2;$2\a' # set window name (available as #T in tmux).
     print -Pn $'\e]1;$1\a' # set icon (=tab) name (will override window name on broken terminal)
   fi
+
+  # # GNU screen: set %t portion of "hardstatus".
+  # print -Pn $'\ek$2\e\\'
 }
 # Manually set the title and disable autosetting it.
 set_title() {
