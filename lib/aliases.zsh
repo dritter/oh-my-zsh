@@ -92,6 +92,7 @@ ffind() {
   # NOTE: action before pruning, so that you can search for e.g. "bower_components".
   cmd=(find $opts $dir -mindepth 1  \( $args \) -o \( \
       \( -type d -name ".*" \) \
+      -o \( -type d -name __pycache__ \) \
       -o \( -type d -name _build \) \
       -o \( -type d -name node_modules \) \
       -o \( -type d -name bower_components \) \
