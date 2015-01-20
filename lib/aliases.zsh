@@ -90,14 +90,14 @@ ffind() {
   # -H: resolve symlinks from arguments.
   # -mindepth 1: do not prune arguments, so that `ffind ~/.vim` works.
   # NOTE: action before pruning, so that you can search for e.g. "bower_components".
-  cmd=(find $opts $dir -mindepth 1 \
+  cmd=(find $opts $dir -mindepth 1
       \( ! -name '*.pyc' ! -regex '.*\.sw[po]' \)
-      -a \( $args \) -o \( \
-      \( -type d -name ".*" \) \
-      -o \( -type d -name __pycache__ \) \
-      -o \( -type d -name _build \) \
-      -o \( -type d -name node_modules \) \
-      -o \( -type d -name bower_components \) \
+      -a \( $args \) -o \(
+      \( -type d -name ".*" \)
+      -o \( -type d -name __pycache__ \)
+      -o \( -type d -name _build \)
+      -o \( -type d -name node_modules \)
+      -o \( -type d -name bower_components \)
     \) -prune)
   # cmd=(find $dir \( ${args} \))
   (( $debug )) && echo "DEBUG: cmd:  ${(Q)${(z)cmd}}" >&2
