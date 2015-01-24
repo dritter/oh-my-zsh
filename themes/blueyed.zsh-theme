@@ -25,8 +25,6 @@ VIRTUAL_ENV_DISABLE_PROMPT=1
 
 PR_RESET="%{${reset_color}%}"
 
-# Detect Midnight Commander, which needs special handling regarding its prompt.
-[ -z "${MC_SID+x}" ]; is_mc_shell=$?
 # Remove any ANSI color codes (via www.commandlinefu.com/commands/view/3584/)
 _strip_escape_codes() {
     [[ -n $commands[gsed] ]] && sed=gsed || sed=sed # gsed with coreutils on MacOS
@@ -228,7 +226,8 @@ prompt_blueyed_precmd () {
     if [[ ${(t)GIT_DIR} == *-export* ]]; then
         prompt_vcs+="${warntext}GIT_DIR! "
     fi
-    if [[ -n $prompt_vcs ]] || ! (( $ZSH_IS_SLOW_DIR )) && vcs_info 'prompt' &>/dev/null; then
+    if [[ -n $prompt_vcs ]] || ! (( $ZSH_IS_SLOW_DIR )) \
+            && vcs_info 'prompt' &>/dev/null; then
         prompt_vcs+="${PR_RESET}$vcs_info_msg_0_"
         if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
             prompt_vcs+=' ?'
@@ -308,7 +307,7 @@ prompt_blueyed_precmd () {
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
-    prompt_cwd="$cwdtext${cwd}"
+    prompt_cwd="${cwdtext}${cwd}"
 
     # user@host for SSH connections or when inside an OpenVZ container.
     local userathost
@@ -347,15 +346,15 @@ prompt_blueyed_precmd () {
     if [[ -n $VIRTUAL_ENV ]]; then
         rprompt_extra+=("${rprompthl}ⓔ ${normtext}${VIRTUAL_ENV##*/}")
     fi
+
     if [[ -n $ENVSHELL ]]; then
         prompt_extra+=("${rprompthl}ENV:${normtext}${ENVSHELL##*/}")
-    fi
-
     # ENVDIR (used for tmm, ':A:t' means tail of absolute path).
     # Only display it when not in an envshell already.
-    if [[ -z $ENVSHELL ]] && [[ -n $ENVDIR ]]; then
+    elif [[ -n $ENVDIR ]]; then
         rprompt_extra+=("${rprompt}envdir:${ENVDIR:A:t}")
     fi
+
     if [[ -n $DJANGO_CONFIGURATION ]]; then
         rprompt_extra+=("${rprompt}djc:$DJANGO_CONFIGURATION")
     fi
@@ -372,7 +371,7 @@ prompt_blueyed_precmd () {
     # fi
 
     # Assemble RPS1 (different from rprompt, which is right-aligned in PS1).
-    if [[ "$is_mc_shell" == "0" ]]; then
+    if ! (( $+MC_SID )); then  # Skip midnight commander.
         RPS1_list=()
 
         # Distribution (if on a remote system)
@@ -512,7 +511,6 @@ function +vi-git-untracked() {
 function +vi-git-shallow() {
     [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
 
-    echo $(my_get_gitdir ${hook_com[base]})/shallow >> /tmp/1
     if [[ -f $(my_get_gitdir)/shallow ]]; then
         hook_com[misc]+="${bracket_open}${hitext}shallow${bracket_close}"
     fi
@@ -531,18 +529,18 @@ function +vi-git-st() {
     # Determine short revision for rprompt.
     # rprompt_extra_rev=$($_git_cmd describe --always --abbrev=1 ${hook_com[revision]})
 
-    # return if check-for-changes is false:
-    if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
-        return 0
-    fi
-
-    # Are we on a remote-tracking branch?
-    remote=${$($_git_cmd rev-parse --verify ${hook_com[branch]}@{upstream} \
-        --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
+    # # return if check-for-changes is false:
+    # if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
+    #     return 0
+    # fi
 
     # NOTE: "branch" might come shortened as "$COMMIT[0,7]..." from Zsh.
     #       (gitbranch="${${"$(< $gitdir/HEAD)"}[1,7]}…").
     local_branch=${hook_com[branch]}
+
+    # Are we on a remote-tracking branch?
+    remote=${$($_git_cmd rev-parse --verify ${local_branch}@{upstream} \
+        --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
 
     # Init local_branch_disp: shorten branch.
     if [[ $local_branch == bisect/* ]]; then
@@ -561,34 +559,40 @@ function +vi-git-st() {
     if [[ -z ${remote} ]] ; then
         hook_com[branch]="${branch_color}${local_branch_disp}"
         return 0
-    else
-        # for git prior to 1.7
-        # ahead=$($_git_cmd rev-list origin/${hook_com[branch]}..HEAD | wc -l)
-
-        # Gets the commit difference counts between local and remote.
-        ahead_and_behind_cmd='git rev-list --count --left-right HEAD...@{upstream}'
-        # Get ahead and behind counts.
-        ahead_and_behind="$(${(z)ahead_and_behind_cmd} 2> /dev/null)"
-
-        ahead="$ahead_and_behind[(w)1]"
-        (( $ahead )) && gitstatus+=( "${normtext}+${ahead}" )
-
-        behind="$ahead_and_behind[(w)2]"
-        (( $behind )) && gitstatus+=( "${alerttext}-${behind}" )
-
-        remote=${remote%/$local_branch}
-
-        # Abbreviate "master@origin" to "m@o" (common/normal).
-        if [[ $remote == "origin" ]] ; then
-          remote=o
-          [[ $local_branch == "master" ]] && local_branch_disp="m"
-        else
-          remote_color="%{$fg_bold[blue]%}"
-        fi
-
-        hook_com[branch]="${branch_color}${local_branch_disp}$remote_color@${remote}"
-        [[ -n $gitstatus ]] && hook_com[branch]+="$bracket_open$normtext${(j:/:)gitstatus}$bracket_close"
     fi
+
+    # Handle remote tracking branches.
+
+    # for git prior to 1.7
+    # ahead=$($_git_cmd rev-list origin/${hook_com[branch]}..HEAD | wc -l)
+
+    # Gets the commit difference counts between local and remote.
+    ahead_and_behind_cmd='git rev-list --count --left-right HEAD...@{upstream}'
+    # Get ahead and behind counts.
+    ahead_and_behind="$(${(z)ahead_and_behind_cmd} 2> /dev/null)"
+
+    ahead="$ahead_and_behind[(w)1]"
+    (( $ahead )) && gitstatus+=( "${normtext}+${ahead}" )
+
+    behind="$ahead_and_behind[(w)2]"
+    (( $behind )) && gitstatus+=( "${alerttext}-${behind}" )
+
+    remote=${remote%/$local_branch}
+
+    # Abbreviate "master@origin" to "m@o" (common/normal).
+    if [[ $remote == "origin" ]] ; then
+      remote=o
+      [[ $local_branch == "master" ]] && local_branch_disp="m"
+    # Abbreviate "master@origin" to "m@o" (common/normal).
+    elif [[ $remote == "origin/master" ]] ; then
+      remote=o/m
+      [[ $local_branch == "master" ]] && local_branch_disp="m"
+    else
+      remote_color="%{$fg_bold[blue]%}"
+    fi
+
+    hook_com[branch]="${branch_color}${local_branch_disp}$remote_color@${remote}"
+    [[ -n $gitstatus ]] && hook_com[branch]+="$bracket_open$normtext${(j:/:)gitstatus}$bracket_close"
     return 0
 }
 
@@ -604,7 +608,7 @@ _auto-my-set-cursor-shape() {
 # Not supported with gnome-terminal and "linux".
 # $1: style; $2: "auto", when called automatically.
 my-set-cursor-shape() {
-    [[ $is_mc_shell == 1 ]] && return
+    (( $+MC_SID )) && return  # Not for midnight commander.
 
     if [[ $1 == auto ]]; then
         _my_cursor_shape=auto
@@ -695,7 +699,7 @@ if [[ -z $SSH_CLIENT ]] && is_urxvt && [[ -n $DISPLAY ]]; then
     function set_my_confirm_client_kill() {
       # xprop -id $(get_x_focused_win_id) -f my_confirm_client_kill 8c
       xprop -id $WINDOWID -f my_confirm_client_kill 32c \
-          -set my_confirm_client_kill $1
+          -set my_confirm_client_kill $1 &!
     }
     function prompt_blueyed_confirmkill_preexec() {
       set_my_confirm_client_kill 1
