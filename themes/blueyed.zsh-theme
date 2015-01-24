@@ -244,7 +244,8 @@ prompt_blueyed_precmd () {
     # Fallback to default, if "target" is used
     [ "$ln_color" = "target" ] && ln_color="01;36"
     [[ -z $ln_color ]] && ln_color="%{${fg_bold[cyan]}%}" || ln_color="%{"$'\e'"[${ln_color}m%}"
-    local colored cur color i cwd_split
+    local cur color color_off i cwd_split
+    local -a colored
     if [[ $cwd != '/' ]]; then
         # split $cwd at '/'
         cwd_split=(${(ps:/:)${cwd}})
@@ -270,33 +271,32 @@ prompt_blueyed_precmd () {
                 fi
             fi
 
+            color= color_off=
             # color repository root
             if [[ "$cur" = $vcs_info_msg_2_ ]]; then
                 color=${repotext}
             # color Git repo (not root according to vcs_info then)
             elif [[ -e $cur/.git ]]; then
                 color=${repotext}
-            # color symlink segment
-            elif [[ -h $cur ]]; then
-                color=${ln_color}
             # color non-existing segment
             elif [[ ! -e $cur ]]; then
                 color=${warntext}
             # color non-writable segment
             elif [[ ! -w $cur ]]; then
                 color=${nonrwtext}
-            else
+            fi
+            # Symlink: underlined.
+            if [[ -h $cur ]]; then
+                color+="%U"
+                color_off="%u"
+            fi
+            if ! (( $#color )); then
                 color=${cwdtext}
             fi
-            # Add slash, if not the first segment.
-            if [[ -n $colored ]] ; then
-                colored+=${color}/${i:gs/%/%%/}
-            else
-                colored+=${color}${i:gs/%/%%/}
-            fi
+            colored+=(${color}${i:gs/%/%%/}${color_off})
             cur+='/'
         done
-        cwd=${colored}
+        cwd=${(pj:/:)colored}
     fi
 
     # Display repo and shortened revision as of vcs_info, if available.
