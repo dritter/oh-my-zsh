@@ -25,6 +25,6 @@ _setup_grep_alias() {
     alias grep="grep ${GREP_OPTIONS}"
 
     # Run it on first invocation.
-    grep "$@"
+    command grep ${GREP_OPTIONS} "$@"
 }
 alias grep=_setup_grep_alias
