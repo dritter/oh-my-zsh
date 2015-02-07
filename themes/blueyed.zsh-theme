@@ -719,6 +719,139 @@ function prompt_blueyed_cursorstyle_preexec() {
 }
 # }}}
 
+
+# zstat_mime helper, conditionally defined.
+# Load zstat module, but only its builtin `zstat`.
+if ! zmodload -F zsh/stat b:zstat 2>/dev/null; then
+  # If the module is not available, define a wrapper around `stat`, and use its
+  # terse output instead of format, which is not supported by busybox.
+  # Assume '+mtime' as $1.
+  zstat_mtime() {
+    stat -t $1 2>/dev/null | cut -f13 -d ' '
+  }
+else
+  zstat_mtime() {
+    zstat +mtime $1 2>/dev/null
+  }
+fi
+
+
+### Run vcs_info selectively to increase speed. {{{
+# Based on ~/Vcs/zsh/Misc/vcs_info-examples.
+# zstyle ':vcs_info:*' check-for-changes true
+# zstyle ':vcs_info:*' get-revision true
+
+_ZSH_VCS_INFO_FORCE_GETDATA=1
+_ZSH_VCS_INFO_CUR_VCS=
+_ZSH_VCS_INFO_LAST_MTIME=
+
+zstyle ':vcs_info:*+start-up:*' hooks start-up
++vi-start-up() {
+    ret=1  # do not run by default.
+    if [[ -n $_ZSH_VCS_INFO_FORCE_DETECT ]] \
+        || [[ -n $_ZSH_VCS_INFO_FORCE_GETDATA ]]; then
+        ret=0
+    fi
+    _ZSH_VCS_INFO_FORCE_DETECT=
+}
+
+zstyle ':vcs_info:*+pre-get-data:*' hooks pre-get-data
++vi-pre-get-data() {
+    _ZSH_VCS_INFO_CUR_VCS=$vcs
+    echo "vcs_info: hook: pre-get-data: vcs=$vcs" >> /tmp/debug.log
+
+    # Only Git and Mercurial support and need caching. Abort if any other
+    # VCS is used.
+    [[ "$vcs" != git && "$vcs" != hg ]] && return
+
+    ret=1  # do not run by default.
+    if [[ -n $_ZSH_VCS_INFO_FORCE_GETDATA ]]; then
+        _ZSH_VCS_INFO_FORCE_GETDATA=
+        ret=0
+    fi
+    echo "vcs_info: hook: pre-get-data: ret=$ret" >> /tmp/debug.log
+}
+
+_force_vcs_info_check_git_mtime() {
+    # Check mtime of .git dir. If changed force refresh of vcs_info data.
+
+    (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return
+    if [[ $_ZSH_VCS_INFO_CUR_VCS != git ]]; then
+        return
+    fi
+
+    mtime=$(zstat_mtime $_ZSH_VCS_INFO_CUR_GITDIR)
+    if [[ $_ZSH_VCS_INFO_LAST_MTIME != $mtime ]]; then
+        if [[ $_ZSH_VCS_INFO_LAST_MTIME != "" ]]; then
+            _ZSH_VCS_INFO_FORCE_GETDATA=1
+            echo "preexec: mtime changed." >> /tmp/debug.log
+        fi
+        _ZSH_VCS_INFO_LAST_MTIME=$mtime
+    fi
+}
+
+# Must run vcs_info when changing directories.
+# Optimized for git: only trigger vcs_info, if the git dir changed.
+_force_vcs_info_chpwd() {
+    (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return  # might be set from preexec already.
+
+    # Force refresh with "cd .".
+    if [[ $PWD == $_ZSH_VCS_INFO_PREV_PWD ]]; then
+        _ZSH_VCS_INFO_FORCE_GETDATA=1
+        return
+    fi
+    _ZSH_VCS_INFO_PREV_PWD=$PWD
+
+    if [[ $_ZSH_VCS_INFO_CUR_VCS == git ]]; then
+        local gitdir
+        gitdir=$(my_get_gitdir)
+
+        if [[ -n $gitdir ]]; then
+            if [[ $gitdir != $_ZSH_VCS_INFO_CUR_GITDIR ]]; then
+                _ZSH_VCS_INFO_FORCE_GETDATA=1
+                _ZSH_VCS_INFO_LAST_MTIME=
+            else
+                _force_vcs_info_check_git_mtime
+            fi
+            _ZSH_VCS_INFO_CUR_GITDIR=$gitdir
+        else
+            # Changed to some non-git dir.
+            unset _ZSH_VCS_INFO_CUR_VCS
+            unset _ZSH_VCS_INFO_CUR_GITDIR
+            _ZSH_VCS_INFO_FORCE_GETDATA=1
+        fi
+    else
+        _ZSH_VCS_INFO_FORCE_GETDATA=1
+    fi
+}
+add-zsh-hook chpwd _force_vcs_info_chpwd
+_force_vcs_info_chpwd  # init.
+
+# Force vcs_info when the expanded, full command contains relevant strings.
+# This also handles resumed jobs (via `fg`), based on code from termsupport.zsh.
+_force_vcs_info_preexec() {
+    (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return
+
+    local lookfor='(git|hg|bcompare|vim)'
+    if [[ $3 == ${~lookfor}* ]] \
+        || ( (( $#_zsh_resolved_jobspec )) \
+            && [[ $_zsh_resolved_jobspec == *${~lookfor}* ]] ); then
+        _ZSH_VCS_INFO_FORCE_GETDATA=1
+    else
+        local -a typed
+        typed=(${(z)1})
+        if [[ $(whence -avf ${typed[1]}) == *${~lookfor}* ]] ; then
+            _ZSH_VCS_INFO_FORCE_GETDATA=1
+        else
+            # Check mtime.
+            _force_vcs_info_check_git_mtime
+        fi
+    fi
+}
+add-zsh-hook preexec _force_vcs_info_preexec
+# }}}
+
+
 color_for_host() {
     # FYI: list of colors: cyan, white, yellow, magenta, black, blue, red, default, grey, green
     colors=(cyan yellow magenta blue green)
