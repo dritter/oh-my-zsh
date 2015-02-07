@@ -477,16 +477,16 @@ function +vi-git-stash() {
 
     # Return if check-for-changes is false:
     if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
-        hook_com[misc]+="$bracket_open$hitext? stashed$bracket_close"
+        rprompt_extra+=("$hitext? stashed")
         return
     fi
 
     # Resolve git dir (necessary for submodules)
-    gitdir=$(my_get_gitdir ${hook_com[base]})
+    gitdir=$vcs_comm[gitdir]
 
-    if [[ -s $gitdir/refs/stash ]] ; then
+    if [[ -s ${gitdir}/refs/stash ]] ; then
         stashes=$($_git_cmd --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
-        hook_com[misc]+="$bracket_open$hitext${stashes} stashed$bracket_close"
+        rprompt_extra+=("$hitext${stashes} stashed")
     fi
     return
 }
@@ -511,8 +511,8 @@ function +vi-git-untracked() {
 function +vi-git-shallow() {
     [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
 
-    if [[ -f $(my_get_gitdir)/shallow ]]; then
-        hook_com[misc]+="${bracket_open}${hitext}shallow${bracket_close}"
+    if [[ -f ${vcs_comm[gitdir]}/shallow ]]; then
+        hook_com[misc]+="${hitext}shallow "
     fi
 }
 
