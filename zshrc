@@ -656,6 +656,10 @@ compdef _precommand _nomatch
 # For handling functions (e.g. _nomatch) see http://www.zsh.org/mla/users/1999/msg00155.html.
 alias sudo='sudo '
 
+alias tignews='tig HEAD@{1}..HEAD@{0}'
+alias tigin='tig ..@{u}'
+alias tigfin='git fetch && tig ..@{u}'
+
 viack() {
   vi -c "Ack $*"
 }
