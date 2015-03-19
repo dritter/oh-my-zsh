@@ -15,7 +15,14 @@ alias gbm='git branch --merged'
 alias gbl='git blame'
 alias gc='git commit -v'
 alias gca='git commit -v -a'
-alias gcl='git clone --recursive'
+gcl() {
+  set -x
+  git clone --recursive $@
+  if [[ $# == 1 ]]; then
+    cd ${1:t}
+  fi
+}
+compdef _git gcl=git-clone
 
 # Helper: call a given command with (optional) files as first args at the end.
 command_with_files() {
@@ -36,8 +43,6 @@ alias gcm='noglob _nomatch command_with_files "git commit -m"'
 # gcma() { git commit --amend -m "${(V)*}" }
 # gcma() { git commit --amend -m "$*" }
 alias gcma='noglob _nomatch command_with_files "git commit --amend -m"'
-alias gca='git commit -v -a'
-alias gcl='git clone --recursive'
 alias gco='git checkout'
 alias gcom='git checkout master'
 alias gcount='git shortlog -sn'
