@@ -35,9 +35,11 @@ fi
 
 if [[ "${terminfo[khome]}" != "" ]]; then
   bindkey "${terminfo[khome]}" beginning-of-line      # [Home] - Go to beginning of line
+  bindkey -M vicmd "${terminfo[khome]}" vi-beginning-of-line
 fi
 if [[ "${terminfo[kend]}" != "" ]]; then
   bindkey "${terminfo[kend]}"  end-of-line            # [End] - Go to end of line
+  bindkey -M vicmd "${terminfo[kend]}" end-of-line
 fi
 
 bindkey ' ' magic-space                               # [Space] - do history expansion
@@ -52,6 +54,7 @@ fi
 bindkey '^?' backward-delete-char                     # [Backspace] - delete backward
 if [[ "${terminfo[kdch1]}" != "" ]]; then
   bindkey "${terminfo[kdch1]}" delete-char            # [Delete] - delete forward
+  bindkey -M vicmd "${terminfo[kdch1]}" vi-delete-char
 else
   bindkey "^[[3~" delete-char
   bindkey "^[3;5~" delete-char
@@ -64,7 +67,9 @@ autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[OA' up-line-or-beginning-search
 bindkey '^[[B' down-line-or-beginning-search
+bindkey '^[OB' down-line-or-beginning-search
 # Shift-up / Shift-down: consider first word only
 bindkey '^[[1;2A' up-line-or-search
 bindkey '^[[1;2B' down-line-or-search
