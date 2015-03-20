@@ -114,12 +114,20 @@ bindkey '\e[3~' delete-char    # delete key
 bindkey -M viins '^r' history-incremental-search-backward
 bindkey -M vicmd '^r' history-incremental-search-backward
 
+# push-line, which handles PS2 and starts vi insert mode.
+my-push-line-and-insert() {
+  zle push-line-or-edit
+  zle vi-insert
+}
+zle -N my-push-line-and-insert
+bindkey -M vicmd 'q' my-push-line-and-insert
+bindkey -M viins '\eq' my-push-line-and-insert
+
 # Edit current line in $EDITOR
 autoload edit-command-line
 zle -N edit-command-line
 bindkey -M vicmd 'v' edit-command-line
 bindkey -M vicmd 'u' undo # stacked undo!
-bindkey -M vicmd 'q' push-line
 # Map run-help also in vicmd mode.
 bindkey -M vicmd "\eh" run-help
 bindkey -M viins 'jk' vi-cmd-mode
