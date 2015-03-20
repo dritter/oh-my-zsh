@@ -4,16 +4,13 @@
 
 # Make sure that the terminal is in application mode when zle is active, since
 # only then values from $terminfo are valid
-# if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
-#   function zle-line-init() {
-#     echoti smkx
-#   }
-#   function zle-line-finish() {
-#     echoti rmkx
-#   }
-#   zle -N zle-line-init
-#   zle -N zle-line-finish
-# fi
+# NOTE: this calls any previously defined zle widgets (chained).
+if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
+  eval "zle-line-init()   { echoti smkx; $functions[zle-line-init]; }"
+  eval "zle-line-finish() { echoti rmkx; $functions[zle-line-finish]; }"
+  zle -N zle-line-init
+  zle -N zle-line-finish
+fi
 
 bindkey -v                                            # Use vim key bindings
 
