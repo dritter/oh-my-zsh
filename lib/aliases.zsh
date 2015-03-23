@@ -14,7 +14,7 @@ psgrep() {
   if ! [[ $pids ]]; then
     echo "No processes found." >&2; return 1
   fi
-  ps up $(pgrep -f $@)
+  ps up ${=pids}
 }
 
 # Show history
