@@ -7,8 +7,15 @@ alias po='popd'
 alias _='sudo'
 alias please='sudo'
 
-#alias g='grep -in'
-alias psgrep='ps aux | grep'
+# ps + grep.
+psgrep() {
+  local pids
+  pids=$(pgrep -f $@)
+  if ! [[ $pids ]]; then
+    echo "No processes found." >&2; return 1
+  fi
+  ps up $(pgrep -f $@)
+}
 
 # Show history
 if [ "$HIST_STAMPS" = "mm/dd/yyyy" ]
