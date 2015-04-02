@@ -265,6 +265,9 @@ if zmodload zsh/regex 2>/dev/null; then # might not be available (e.g. on DS212+
   bindkey -M isearch . self-insert 2>/dev/null
 fi
 
+# . => "cd ." (reloads vcs_info); otherwise source.
+.() { [ $# = 0 ] && cd . || builtin . "$@"; }
+
 # Completion for custom docker scripts.
 compdef _docker docker-shell=_docker_containers
 
