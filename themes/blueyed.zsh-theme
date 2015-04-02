@@ -890,7 +890,7 @@ zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" "
 zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   ""   ""
 zstyle ':vcs_info:*:prompt:*' max-exports 4
 # patch-format for Git, used during rebase.
-zstyle ':vcs_info:git*:prompt:*' patch-format "%{$fg_no_bold[cyan]%}Applied: %p [%n/%a]"
+zstyle ':vcs_info:git*:prompt:*' patch-format "%{$fg_no_bold[cyan]%}Patch: %p [%n/%a]"
 
 
 # Interface to zsh's promptinit.
