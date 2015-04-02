@@ -4,7 +4,7 @@
 #Limited support for Apple Terminal (Terminal can't set window or tab separately)
 # NOTE: '${(%):-%~}' => short PWD, with named dirs
 # NOTE: tab title is used by awesomeWM when minimized.
-function title {
+function _title {
   [[ -z $2 ]] && 2=$1
   1=${(V)${(pj: :)${(f)1}}}
   2=${(V)${(pj: :)${(f)2}}}
@@ -95,15 +95,15 @@ function title {
   # print -Pn $'\ek$2\e\\'
 }
 # Manually set the title and disable autosetting it.
-set_title() {
-  title $1 $2
+title() {
+  _title $1 $2
   export DISABLE_AUTO_TITLE=true
 }
 
 ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<_" # 15 char left truncated PWD.
-ZSH_THEME_TERM_TITLE_IDLE="%~_"
+ZSH_THEME_TERM_TITLE_IDLE="⩫ %~_"
 
-#Appears when you have the prompt
+# Appears when you have the prompt.
 function omz_termsupport_precmd {
   [ "$DISABLE_AUTO_TITLE" != "true" ] || return
 
@@ -113,22 +113,23 @@ function omz_termsupport_precmd {
     local suffix=""
   fi
 
-  title ${(%)ZSH_THEME_TERM_TAB_TITLE_IDLE}${suffix} \
+  _title ${(%)ZSH_THEME_TERM_TAB_TITLE_IDLE}${suffix} \
         ${(%)ZSH_THEME_TERM_TITLE_IDLE}${suffix}
 }
 
-#Appears at the beginning of (and during) of command execution
-function omz_termsupport_preexec {
-  if [[ "$DISABLE_AUTO_TITLE" == "true" ]] || [[ "$EMACS" == *term* ]]; then
-    return
-  fi
-
-  emulate -L zsh
-  setopt extended_glob
+# Resolve resumed jobs (`fg`), used in title and _force_vcs_info_preexec.
+# Sets $_zsh_resolved_jobspec.
+typeset -g _zsh_resolved_jobspec
+_expand_jobspec_via_jobtexts_preexec() {
   local -a typed; typed=(${(z)1}) # split what the user has typed into words using shell parsing
   # Resolve jobspecs, e.g. when "fg" or "%-" is used:
   local jobspec
-  local -a newtyped
+
+  # # Needed here, or in omz_termsupport_preexec?!
+  # emulate -L zsh
+  # setopt localoptions extended_glob
+
+  _zsh_resolved_jobspec=()
   if [[ $typed[1] == fg ]] ; then
     # Set typed to jobtext for first argument. If there are more, add "(+x jobs)".
     # Use jobspec from $typed[2] if not empty and it does not start with "[;&|]" (starting next command)
@@ -137,16 +138,25 @@ function omz_termsupport_preexec {
     else
       jobspec='%+'
     fi
-    newtyped=(${(z)${jobtexts[$jobspec]}})
-    # XXX: ???
-    if (( ${+typed[3]} )) ; then
-      newtyped+=(" (+ $(( ${#typed}-2 )) jobs)")
-    fi
+    (( ${+jobtexts[$jobspec]} )) \
+      && _zsh_resolved_jobspec=${(z)${jobtexts[$jobspec]}}
   elif [[ $typed[1] == %* ]] && (( $+jobtexts[$typed[1]] )); then
     jobspec=$typed[1]
-    newtyped=(${(z)${jobtexts[$jobspec]}})
+    _zsh_resolved_jobspec=${(z)${jobtexts[$jobspec]}}
   fi
-  (( $#newtyped )) && typed=($newtyped)
+}
+
+#Appears at the beginning of (and during) of command execution
+function omz_termsupport_preexec {
+  if [[ "$DISABLE_AUTO_TITLE" == "true" ]] || [[ "$EMACS" == *term* ]]; then
+    return
+  fi
+
+  local -a typed; typed=(${(z)1}) # split what the user has typed into words using shell parsing
+
+  if (( $#_zsh_resolved_jobspec )); then
+    typed=(${(z)_zsh_resolved_jobspec})
+  fi
 
   # Get the cmd out of what was typed:
   # Get the index of the first item not matching the list.
@@ -171,14 +181,13 @@ function omz_termsupport_preexec {
   # append cwd to window title
   window_title+=" [${(%):-%~}]"
 
-  export _ZSH_LAST_CMD_TITLE=$CMD
-
-  # title $window_name $window_title # let the terminal app itself handle cropping
+  export _ZSH_LAST_CMD_TITLE=$window_title  # used in omz_termsupport_precmd.
 
   # NOTE: tab/icon name is used by awesomeWM when minimized.
-  title $window_title $window_title # let the terminal app itself handle cropping
+  _title $window_title $window_title # let the terminal app itself handle cropping
 }
 
 autoload -U add-zsh-hook
 add-zsh-hook precmd  omz_termsupport_precmd
+add-zsh-hook preexec _expand_jobspec_via_jobtexts_preexec
 add-zsh-hook preexec omz_termsupport_preexec
