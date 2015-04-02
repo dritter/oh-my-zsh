@@ -1,36 +1,37 @@
 # Setup hub function for git, if it is available; http://github.com/defunkt/hub
-if [ "$commands[(I)hub]" ] && [ "$commands[(I)ruby]" ]; then
-    # Autoload _git completion functions
-    if declare -f _git > /dev/null; then
-      _git
-    fi
-    
-    if declare -f _git_commands > /dev/null; then
-        _hub_commands=(
-            'alias:show shell instructions for wrapping git'
-            'pull-request:open a pull request on GitHub'
-            'fork:fork origin repo on GitHub'
-            'create:create new repo on GitHub for the current project'
-            'browse:browse the project on GitHub'
-            'compare:open GitHub compare view'
-        )
-        # Extend the '_git_commands' function with hub commands
-        eval "$(declare -f _git_commands | sed -e 's/base_commands=(/base_commands=(${_hub_commands} /')"
-    fi
-    # eval `hub alias -s zsh`
-    function git(){
+if [[ "$commands[(I)hub2]" ]]; then
+    _hub_command=hub2
+elif [[ "$commands[(I)hub]" ]] && [[ "$commands[(I)ruby]" ]]; then
+    _hub_command=hub
+fi
+
+if [[ -n $_hub_command ]]; then
+    eval 'function git(){
         if ! (( $+_has_working_hub  )); then
-            hub --version &> /dev/null
+            '$_hub_command' --version &> /dev/null
             _has_working_hub=$(($? == 0))
         fi
         if (( $_has_working_hub )) ; then
-            hub "$@"
+            '$_hub_command' "$@"
         else
             command git "$@"
         fi
-    }
-    # use the git command for vcs_info, instead of hub!
+        local ret=$?
+        # Force vcs_info to be run.
+        _ZSH_VCS_INFO_FORCE_GETDATA=1
+        return $ret
+    }'
+    unset _hub_command
+
+    # Use the git command for vcs_info, instead of hub!
     zstyle ':vcs_info:git:*:-all-' command $(whence -p git)
+
+    # Use hub's compdef for git.
+    if whence _hub >/dev/null; then
+        compdef _hub git
+    else
+        echo "NOTE: _hub not available for compdef!"
+    fi
 fi
 
 # Functions #################################################################

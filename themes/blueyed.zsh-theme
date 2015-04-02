@@ -942,7 +942,7 @@ _force_vcs_info_chpwd  # init.
 _force_vcs_info_preexec() {
     (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return
 
-    if _user_execed_command $1 $2 $3 '(git|hg|bcompare|vim|nvim)'; then
+    if _user_execed_command $1 $2 $3 '(git|hg|bcompare|nvim|vim)'; then
         _ZSH_VCS_INFO_FORCE_GETDATA=1
     else
         # Check mtime.
