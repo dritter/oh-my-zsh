@@ -64,12 +64,28 @@ is_gnome_terminal() {
 
 my_get_gitdir() {
     local base=$1
-    [[ -z $base ]] && base=$($_git_cmd rev-parse --show-toplevel)
+    if [[ -z $base ]]; then
+        if (( ${+_zsh_cache_pwd[gitdir_base]} )) \
+            && [[ -e ${_zsh_cache_pwd[gitdir_base]} ]]; then
+            base=${_zsh_cache_pwd[gitdir_base]}
+            # echo "using cached base: $base" >> /tmp/debug.log
+        else
+            base=$($_git_cmd rev-parse --show-toplevel 2>/dev/null) || return
+            _zsh_cache_pwd[gitdir_base]=base
+        fi
+    fi
+
+    if (( ${+_zsh_cache_pwd[gitdir_$base]} )) \
+        && [[ -e ${_zsh_cache_pwd[gitdir_$base]} ]]; then
+        echo ${_zsh_cache_pwd[gitdir_$base]}
+    fi
+
     local gitdir=$base/.git
     if [[ -f $gitdir ]]; then
         # XXX: the output might be across two lines (fixed in the meantime); handled/fixed that somewhere else already, but could not find it.
         gitdir=$($_git_cmd rev-parse --resolve-git-dir $gitdir | head -n1)
     fi
+    _zsh_cache_pwd[gitdir_$base]=$gitdir
     echo $gitdir
 }
 
@@ -191,6 +207,7 @@ prompt_blueyed_precmd () {
     local -h exitstatus=$_ZSH_LAST_EXIT_STATUS
     local -h    normtext="%{$fg_no_bold[default]%}"
     local -h      hitext="%{$fg_bold[magenta]%}"
+    local -h    venvtext="%{$fg_bold[magenta]%}"
     local -h    histtext="$normtext"
     local -h  distrotext="%{$fg_bold[green]%}"
     local -h  jobstext_s="%{$fg_bold[magenta]%}"
@@ -220,6 +237,11 @@ prompt_blueyed_precmd () {
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
+    # Pick up any info from preexec commands.
+    if [[ -n $_zsh_prompt_preexec_info ]]; then
+        rprompt_extra=($_zsh_prompt_preexec_info)
+    fi
+
     prompt_vcs=""
     # Check for exported GIT_DIR (used when working on bup backups).
     # Force usage of vcs_info then, also on slow dirs.
@@ -227,12 +249,15 @@ prompt_blueyed_precmd () {
         prompt_vcs+="${warntext}GIT_DIR! "
     fi
     if [[ -n $prompt_vcs ]] || ! (( $ZSH_IS_SLOW_DIR )) \
-            && vcs_info 'prompt' &>/dev/null; then
-        prompt_vcs+="${PR_RESET}$vcs_info_msg_0_"
+            && vcs_info 'prompt'; then
+        prompt_vcs+="$vcs_info_msg_0_"
         if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
             prompt_vcs+=' ?'
         fi
-        rprompt_extra+=("${vcs_info_msg_1_}")
+        if [[ -n ${vcs_info_msg_1_} ]]; then
+            # "misc" vcs info, e.g. "shallow", right trimmed:
+            rprompt_extra+=("${vcs_info_msg_1_%% #}")
+        fi
     fi
 
     # Shorten named/hashed dirs.
@@ -245,7 +270,9 @@ prompt_blueyed_precmd () {
     [[ -z $ln_color ]] && ln_color="%{${fg_bold[cyan]}%}" || ln_color="%{"$'\e'"[${ln_color}m%}"
     local cur color color_off i cwd_split
     local -a colored
-    if [[ $cwd != '/' ]]; then
+    if [[ $cwd == '/' ]]; then
+        cwd=${nonrwtext}/
+    else
         # split $cwd at '/'
         cwd_split=(${(ps:/:)${cwd}})
         if [[ $cwd[1] == '/' ]]; then
@@ -307,13 +334,19 @@ prompt_blueyed_precmd () {
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
-    prompt_cwd="${cwdtext}${cwd}"
+    prompt_cwd="${bracket_open}${cwd}${bracket_close}"
 
     # user@host for SSH connections or when inside an OpenVZ container.
     local userathost
     if [[ -n $SSH_CLIENT ]] \
         || [[ -e /proc/user_beancounters && ! -d /proc/bc ]]; then
-        local -h     user="%(#.$roottext.$normtext)%n"
+
+        local user
+        if [[ $UID == 1000 ]]; then
+            user="${fg_no_bold[green]}%n"
+        else
+            user="%(#.$roottext.$normtext)%n"
+        fi
 
         # http_proxy defines color of "@" between user and host
         if [[ -n $http_proxy ]] ; then
@@ -324,7 +357,7 @@ prompt_blueyed_precmd () {
 
         local -h     host="%{${fg_no_bold[$(color_for_host)]}%}%m"
 
-        userathost="${user}${prompt_at}${host} "
+        userathost="${user}${prompt_at}${host}"
     fi
 
     # Debian chroot
@@ -338,21 +371,64 @@ prompt_blueyed_precmd () {
     if [[ -r /proc/user_beancounters && ! -d /proc/bc ]]; then
         prompt_extra+=("${normtext}[CTID:$(sed -n 3p /proc/user_beancounters | cut -f1 -d: | tr -d '[:space:]')]")
     fi
-    # pyenv
-    if [[ -n $PYENV_VERSION ]]; then
-        rprompt_extra+=("${rprompthl}🐍 ${normtext}${PYENV_VERSION}")
-    fi
+
+    _get_pyenv_version() {
+        if ! (( ${+_zsh_cache_pwd[pyenv_version]} )); then
+            # Call _pyenv_setup, if it's still defined (not being called yet).
+            # This avoids calling it for both subshells below.
+            if [[ $functions[_pyenv_setup] ]]; then
+                _pyenv_setup
+            fi
+            _zsh_cache_pwd[pyenv_version]=$(pyenv version-name)
+            _zsh_cache_pwd[pyenv_global]=${(pj+:+)${(f)"$(pyenv global)"}}
+        fi
+    }
+
     # virtualenv
     if [[ -n $VIRTUAL_ENV ]]; then
-        rprompt_extra+=("${rprompthl}ⓔ ${normtext}${VIRTUAL_ENV##*/}")
+        if ! (( $path[(I)$VIRTUAL_ENV/bin] )); then
+            _get_pyenv_version
+            if [[ ${VIRTUAL_ENV##*/} != ${_zsh_cache_pwd[pyenv_version]} ]]; then
+                # VIRTUAL_ENV set, but not in path and not pyenv's name: add a note.
+                prompt_extra+=("${venvtext}ⓔ ${VIRTUAL_ENV##*/} (NOT_PATH)")
+            else
+                prompt_extra+=("${venvtext}ⓔ ${VIRTUAL_ENV##*/}")
+            fi
+        else
+            prompt_extra+=("${venvtext}ⓔ ${VIRTUAL_ENV##*/}")
+        fi
+    fi
+
+    local pyenv_version
+    if ! (( $_ZSH_PYENV_SETUP )); then
+        # Skip calling pyenv, if it hasn't been used already.
+        pyenv_version=?
+    else
+        if [[ ${(t)PYENV_VERSION} == *-export* ]]; then
+            pyenv_version=${PYENV_VERSION}
+        else
+            _get_pyenv_version
+            pyenv_version=${_zsh_cache_pwd[pyenv_version]}
+        fi
+    fi
+    local pyenv_prompt
+    if [[ $pyenv_version != ${_zsh_cache_pwd[pyenv_global]} ]]; then
+        pyenv_prompt=("${normtext}🐍 ${pyenv_version}")
+        if [[ $pyenv_version == '?' ]]; then
+            rprompt_extra+=($pyenv_prompt)
+        else
+            prompt_extra+=($pyenv_prompt)
+        fi
     fi
 
     if [[ -n $ENVSHELL ]]; then
-        prompt_extra+=("${rprompthl}ENV:${normtext}${ENVSHELL##*/}")
+        prompt_extra+=("${rprompthl}ENVSHELL:${normtext}${ENVSHELL##*/}")
     # ENVDIR (used for tmm, ':A:t' means tail of absolute path).
     # Only display it when not in an envshell already.
     elif [[ -n $ENVDIR ]]; then
         rprompt_extra+=("${rprompt}envdir:${ENVDIR:A:t}")
+    elif [[ ${(t)ENV} == *-export* ]]; then
+        rprompt_extra+=("${rprompt}ENV:${ENV}")
     fi
 
     if [[ -n $DJANGO_CONFIGURATION ]]; then
@@ -394,6 +470,7 @@ prompt_blueyed_precmd () {
     else
         prompt_extra+=("$normtext(mc)")
     fi
+    local char_hr="⎯"
 
     # exit status
     local -h disp
@@ -403,21 +480,17 @@ prompt_blueyed_precmd () {
             disp+=" (SIG$signals[$exitstatus-128])"
         fi
         # TODO: might make this informative only (to the right) and use a different prompt sign color to indicate $? != 0
-        prompt_extra+=("${bracket_open}${exiterrtext}${disp}${bracket_close}")
+        prompt_extra+=("${exiterrtext}${disp}")
     fi
 
     # Running and suspended jobs, parsed via $jobstates
     local -h jobstatus=""
     if [ ${#jobstates} -ne 0 ] ; then
-        local -h suspended=0 running=0 j
-        for j in $jobstates; do
-            if [[ $j[1,9] == "suspended" ]] ; then (( suspended++ )) ; continue; fi
-            if [[ $j[1,7] == "running" ]] ; then (( running++ )) ; continue; fi
-            # "done" is ignored
-        done
+        local suspended=${#${jobstates[(R)suspended*]}}
+        local running=${#${jobstates[(R)running*]}}
         [[ $suspended -gt 0 ]] && jobstatus+="${jobstext_s}${suspended}s"
         [[ $running -gt 0 ]] && jobstatus+="${jobstext_r}${running}r"
-        [[ -z $jobstatus ]] || prompt_extra+=("${bracket_open}${normtext}jobs:${jobstatus}${bracket_close}")
+        [[ -z $jobstatus ]] || prompt_extra+=("${normtext}jobs:${jobstatus}")
     fi
 
     # local -h    prefix="%{$normtext%}❤ "
@@ -431,28 +504,41 @@ prompt_blueyed_precmd () {
         rprompt_extra+=("${normtext}%*")
     fi
 
-    # printf ':%s\n' $rprompt_extra
     # whitespace and reset for extra prompts if non-empty:
-    [[ -n $prompt_extra ]]  &&  prompt_extra=" ${(j: :)prompt_extra}$PR_RESET"
-    [[ -n $rprompt_extra ]] && rprompt_extra="${(j: :)rprompt_extra}$PR_RESET"
+    local join_with="${bracket_close}${bracket_open}"
+    [[ -n $prompt_extra ]]  &&  prompt_extra="${(pj: :)prompt_extra}"
+    [[ -n $rprompt_extra ]] && rprompt_extra="${bracket_open}${(pj: :)rprompt_extra}${bracket_close}"
 
     # Assemble prompt:
-    local -h prompt="${userathost}${prompt_cwd}${prompt_extra}"
-    local -h rprompt="$rprompt_extra${PR_RESET}"
+    local -h prompt="${userathost:+ $userathost }${prompt_cwd}${prompt_extra:+ $prompt_extra}"
+    local -h rprompt="${rprompt_extra}"
     # right trim:
-    prompt="${prompt%% #} "
+    prompt="${prompt%% #}"
 
-    # Attach $rprompt to $prompt, aligned to $TERMWIDTH
+    # Attach $rprompt to $prompt, aligned to $TERMWIDTH.
+    # Use -1 to avoid redrawing of the last line of terminal output, e.g after "git status" etc.
     local -h TERMWIDTH=$((${COLUMNS}-1))
-    local -h rprompt_len=$(get_visible_length $rprompt)
     local -h prompt_len=$(get_visible_length $prompt)
-    PR_FILLBAR="%f${(l:(($TERMWIDTH - ( ($rprompt_len + $prompt_len) % $TERMWIDTH))):: :)}"
+    local -h rprompt_len=$(get_visible_length $rprompt)
 
-    # local -h prompt_sign='%b%(#.%F{green}.%F{red})❯%F{yellow}❯%(#.%F{red}.%F{green})❯%f%b'
-    local -h prompt_sign="%b%(?.%F{blue}.%F{red})❯%(#.${roottext}.${prompttext})❯%f"
+    local fillbar_len=$(($TERMWIDTH - ($rprompt_len + $prompt_len)))
+    if (( $fillbar_len > 0 )); then
+        if (( $fillbar_len > 3 )); then
+            # There is room for a hr-prefix.
+            prompt="%b%F{black}${char_hr}${char_hr}${char_hr}${prompt}"
+            fillbar_len=$(( $fillbar_len - 3 ))
+        fi
+        PR_FILLBAR="%b%F{black}${(pl:$fillbar_len::$char_hr:)}%f"
+    else
+        PR_FILLBAR=
+    fi
+
+    local -h prompt_sign="%{%(?.${fg_no_bold[blue]}.${fg_no_bold[red]})%}❯%{%(#.${roottext}.${prompttext})%}❯"
+
+    prompt_vcs=${repotext}${${prompt_vcs/#git:/ λ }%% #}
 
     PS1="${prompt}${PR_FILLBAR}${rprompt}
-${prompt_vcs}${prompt_sign}${PR_RESET} "
+${prompt_vcs}${prompt_sign} ${PR_RESET}"
 
     # When invoked from gvim ('zsh -i') make it less hurting
     if [[ -n $MYGVIMRC ]]; then
@@ -464,6 +550,18 @@ ${prompt_vcs}${prompt_sign}${PR_RESET} "
     # exec 2>&3 3>&-
 }
 
+# Init vars for/via preexec.
+_zsh_init_preexec() {
+    _zsh_prompt_preexec_info=()
+}
+add-zsh-hook preexec _zsh_init_preexec
+
+# Cache for values based on current working directory.
+typeset -g -A _zsh_cache_pwd
+_zsh_cache_pwd_chpwd() {
+    _zsh_cache_pwd=()
+}
+add-zsh-hook chpwd _zsh_cache_pwd_chpwd
 
 # register vcs_info hooks
 zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st git-untracked git-shallow
@@ -472,21 +570,28 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st git-untracked git-s
 function +vi-git-stash() {
     [[ $1 == 0 ]] || return  # do this only once for vcs_info_msg_0_.
 
-    local -a stashes
-    local gitdir
-
     # Return if check-for-changes is false:
     if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
-        rprompt_extra+=("$hitext? stashed")
+        hook_com[misc]+="$hitext☰ ? "
         return
     fi
 
-    # Resolve git dir (necessary for submodules)
-    gitdir=$vcs_comm[gitdir]
+    if [[ -s ${vcs_comm[gitdir]}/refs/stash ]] ; then
+        local -a stashes
+        stashes=(${(f)"$($_git_cmd --git-dir="${vcs_comm[gitdir]}" stash list)"})
 
-    if [[ -s ${gitdir}/refs/stash ]] ; then
-        stashes=$($_git_cmd --git-dir="$gitdir" --work-tree=. stash list 2>/dev/null | wc -l)
-        rprompt_extra+=("$hitext${stashes} stashed")
+        if (( $#stashes )); then
+            # Format: stash@{0}: WIP on persistent-tag-properties: 472e3b1 Handle persistent tag layout in tag.new
+            local top_stash_branch
+            top_stash_branch="${${${stashes[1]}#stash*:\ (WIP\ on|On)\ }%%:*}"
+
+            if [[ $top_stash_branch == $hook_com[branch] ]]; then
+                hook_com[misc]+="$hitext☶ "
+            else
+                hook_com[misc]+="$hitext☵ "
+            fi
+            hook_com[misc]+="✖${#stashes} "
+        fi
     fi
     return
 }
@@ -512,7 +617,7 @@ function +vi-git-shallow() {
     [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
 
     if [[ -f ${vcs_comm[gitdir]}/shallow ]]; then
-        hook_com[misc]+="${hitext}shallow "
+        hook_com[misc]+="${hitext}㿼 "
     fi
 }
 
@@ -654,7 +759,7 @@ my-set-cursor-shape() {
 compdef -e '_arguments "1: :(block_blink block underline_blink underline bar_blink bar auto)"' my-set-cursor-shape
 
 # Vim mode indicator {{{1
-zle-keymap-select zle-line-init () {
+_zsh_vim_mode_indicator () {
     if (( $_USE_XTERM_CURSOR_CODES )) || (( $+KONSOLE_PROFILE_NAME )); then
         if [ $KEYMAP = vicmd ]; then
             _auto-my-set-cursor-shape block_blink
@@ -682,6 +787,8 @@ zle-keymap-select zle-line-init () {
         my-reset-prompt
     fi
 }
+eval "zle-keymap-select () { $functions[_zsh_vim_mode_indicator]; $functions[zle-keymap-select]; }"
+eval "zle-line-init     () { $functions[_zsh_vim_mode_indicator]; $functions[zle-line-init]; }"
 zle -N zle-keymap-select
 zle -N zle-line-init
 # Init.
@@ -693,12 +800,15 @@ function get_x_focused_win_id() {
     xprop -root 2>/dev/null | sed -n '/^_NET_ACTIVE_WINDOW/ s/.* // p'
 }
 
-if [[ -z $SSH_CLIENT ]] && is_urxvt && [[ -n $DISPLAY ]]; then
+if [[ -z $SSH_CLIENT ]] && is_urxvt && [[ -n $DISPLAY ]] &&
+    [[ -n $WINDOWID ]] && [[ -z $TMUX ]]; then
     zmodload zsh/datetime  # for $EPOCHSECONDS
+
+    _zsh_initial_display=$DISPLAY
 
     function set_my_confirm_client_kill() {
       # xprop -id $(get_x_focused_win_id) -f my_confirm_client_kill 8c
-      xprop -id $WINDOWID -f my_confirm_client_kill 32c \
+      xprop -display $_zsh_initial_display -id $WINDOWID -f my_confirm_client_kill 32c \
           -set my_confirm_client_kill $1 &!
     }
     function prompt_blueyed_confirmkill_preexec() {
@@ -832,24 +942,53 @@ _force_vcs_info_chpwd  # init.
 _force_vcs_info_preexec() {
     (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return
 
-    local lookfor='(git|hg|bcompare|vim)'
-    if [[ $3 == ${~lookfor}* ]] \
-        || ( (( $#_zsh_resolved_jobspec )) \
-            && [[ $_zsh_resolved_jobspec == *${~lookfor}* ]] ); then
+    if _user_execed_command $1 $2 $3 '(git|hg|bcompare|vim|nvim)'; then
         _ZSH_VCS_INFO_FORCE_GETDATA=1
     else
-        local -a typed
-        typed=(${(z)1})
-        if [[ $(whence -avf ${typed[1]}) == *${~lookfor}* ]] ; then
-            _ZSH_VCS_INFO_FORCE_GETDATA=1
-        else
-            # Check mtime.
-            _force_vcs_info_check_git_mtime
-        fi
+        # Check mtime.
+        _force_vcs_info_check_git_mtime
     fi
+    # echo "[preexec] vcs_info: forcing data refresh."
 }
 add-zsh-hook preexec _force_vcs_info_preexec
 # }}}
+
+# Look for $4 (in "word boundaries") in preexec arguments ($1, $2, $3).
+_user_execed_command() {
+    local lookfor="(*[[:space:]])#$4([[:space:]-]*)#"
+    local ret=1
+    if [[ $3 == ${~lookfor} ]]; then
+        _zsh_prompt_preexec_info+=("%{${fg[cyan]}%}⟳")
+        ret=0
+    else
+        local lookfor_quoted="(*[[:space:]=])#(|[\"\'\(])$4([[:space:]-]*)#"
+        local -a typed
+        if (( $#_zsh_resolved_jobspec )); then
+            typed=(${(z)_zsh_resolved_jobspec})
+        else
+            typed=(${(z)1})
+        fi
+        # Look into resolved aliases etc, allowing the command to be quoted.
+        # E.g. with `gcm`: noglob _nomatch command_with_files "git commit --amend -m"
+        local whence_typed="$(whence -f ${typed[1]})"
+        if [[ ${whence_typed} == ${~lookfor_quoted} ]] ; then
+            _zsh_prompt_preexec_info+=("%{${fg[cyan]}%}⟳2")
+            ret=0
+        elif [[ $commands[$typed[1]]:A:t == ${~lookfor} ]]; then
+            _zsh_prompt_preexec_info+=("%{${fg[cyan]}%}⟳3")
+            ret=0
+        fi
+    fi
+    return $ret
+}
+
+_pyenv_version_preexec() {
+    if _user_execed_command $1 $2 $3 'pyenv'; then
+        echo "Refresh"
+        unset "_zsh_cache_pwd[pyenv_version]"
+    fi
+}
+add-zsh-hook preexec _pyenv_version_preexec
 
 
 color_for_host() {
@@ -877,7 +1016,7 @@ hash_value_from_list() {
 # vcs_info styling formats {{{1
 # XXX: %b is the whole path for CVS, see ~/src/b2evo/b2evolution/blogs/plugins
 # NOTE: %b gets colored via hook_com.
-FMT_BRANCH="%{$fg_no_bold[blue]%}↳ %s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
+FMT_BRANCH="%s:%{$fg_no_bold[blue]%}%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
 # FMT_BRANCH=" %{$fg_no_bold[blue]%}%s:%b%{$fg_bold[blue]%}%{$fg_bold[magenta]%}%u%c" # e.g. master¹²
 FMT_ACTION="%{$fg_no_bold[cyan]%}(%a%)"   # e.g. (rebase-i)
 
