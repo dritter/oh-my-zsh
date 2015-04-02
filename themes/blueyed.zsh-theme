@@ -602,11 +602,9 @@ function +vi-git-untracked() {
     [[ $1 == 0 ]] || return  # do this only once vcs_info_msg_0_.
 
     if [[ $($_git_cmd rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
-        # $_git_cmd status --porcelain | grep '??' &> /dev/null ; then
-        # This will show the marker if there are any untracked files in repo.
-        # If instead you want to show the marker only if there are untracked
-        # files in $PWD, use:
-        [[ -n $($_git_cmd ls-files --others --exclude-standard) ]] ; then
+            # Uses "sed q1" to make it quicker!
+            ! $_git_cmd status --porcelain | sed -n '/^??/q1'
+            then
         hook_com[staged]+='✗ '
     fi
 }
