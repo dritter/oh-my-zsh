@@ -327,9 +327,7 @@ prompt_blueyed_precmd () {
 
     # Display repo and shortened revision as of vcs_info, if available.
     if [[ -n $vcs_info_msg_3_ ]]; then
-        # rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${rprompt_extra_rev})
-        rprompt_extra+=(${repotext}${vcs_info_msg_2_:t}@${vcs_info_msg_3_})
-        # rprompt_extra+=(${repotext}@${vcs_info_msg_3_})
+        rprompt_extra+=("${repotext}@${vcs_info_msg_3_}")
     fi
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
@@ -628,9 +626,6 @@ function +vi-git-st() {
     local ahead behind remote
     local branch_color remote_color local_branch local_branch_disp
     local -a gitstatus
-
-    # Determine short revision for rprompt.
-    # rprompt_extra_rev=$($_git_cmd describe --always --abbrev=1 ${hook_com[revision]})
 
     # # return if check-for-changes is false:
     # if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
