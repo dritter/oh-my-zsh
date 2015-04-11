@@ -523,10 +523,10 @@ prompt_blueyed_precmd () {
     if (( $fillbar_len > 0 )); then
         if (( $fillbar_len > 3 )); then
             # There is room for a hr-prefix.
-            prompt="%b%F{black}${char_hr}${char_hr}${char_hr}${prompt}"
+            prompt="${PR_RESET}${char_hr}${char_hr}${char_hr}${prompt}"
             fillbar_len=$(( $fillbar_len - 3 ))
         fi
-        PR_FILLBAR="%b%F{black}${(pl:$fillbar_len::$char_hr:)}%f"
+        PR_FILLBAR="${PR_RESET}${(pl:$fillbar_len::$char_hr:)}"
     else
         PR_FILLBAR=
     fi
