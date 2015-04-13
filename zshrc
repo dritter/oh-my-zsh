@@ -172,7 +172,6 @@ bindkey -M vicmd "??" history-beginning-search-forward
 bindkey "\eh" run-help
 
 # TODO: http://zshwiki.org/home/zle/bindkeys%22%22
-# see also lib/wordnav.zsh
 bindkey -M vicmd "\eOH" beginning-of-line
 bindkey -M vicmd "\eOF" end-of-line
 # bindkey "\e[1;3D" backward-word
