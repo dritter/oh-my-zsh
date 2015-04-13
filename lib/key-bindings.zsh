@@ -123,10 +123,6 @@ zle -N my-push-line-and-insert
 bindkey -M vicmd 'q' my-push-line-and-insert
 bindkey -M viins '\eq' my-push-line-and-insert
 
-# Edit current line in $EDITOR
-autoload edit-command-line
-zle -N edit-command-line
-bindkey -M vicmd 'v' edit-command-line
 bindkey -M vicmd 'u' undo # stacked undo!
 # Map run-help also in vicmd mode.
 bindkey -M vicmd "\eh" run-help
