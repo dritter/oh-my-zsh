@@ -1,10 +1,15 @@
-#usage: title short_tab_title looooooooooooooooooooooggggggg_windows_title
-#http://www.faqs.org/docs/Linux-mini/Xterm-Title.html#ss3.1
-#Fully support screen, iterm, and probably most modern xterm and rxvt
-#Limited support for Apple Terminal (Terminal can't set window or tab separately)
-# NOTE: '${(%):-%~}' => short PWD, with named dirs
-# NOTE: tab title is used by awesomeWM when minimized.
+# Set terminal window and tab/icon title
+#
+# usage: title short_tab_title [long_window_title]
+#
+# See: http://www.faqs.org/docs/Linux-mini/Xterm-Title.html#ss3.1
+# Fully supports screen, iterm, and probably most modern xterm and rxvt
+# (In screen, only short_tab_title is used)
+# NOTES:
+#  - '${(%):-%~}' => short PWD, with named dirs
+#  - tab title is used by awesomeWM when minimized.
 function _title {
+  # [[ "$EMACS" == *term* ]] && return
   [[ -z $2 ]] && 2=$1
   1=${(V)${(pj: :)${(f)1}}}
   2=${(V)${(pj: :)${(f)2}}}
@@ -103,7 +108,7 @@ title() {
 ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<…<%~%<<_" # 15 char left truncated PWD.
 ZSH_THEME_TERM_TITLE_IDLE="⩫ %~_"
 
-# Appears when you have the prompt.
+# Runs before showing the prompt
 function omz_termsupport_precmd {
   [ "$DISABLE_AUTO_TITLE" != "true" ] || return
 
@@ -146,9 +151,9 @@ _expand_jobspec_via_jobtexts_preexec() {
   fi
 }
 
-#Appears at the beginning of (and during) of command execution
+# Runs before executing the command
 function omz_termsupport_preexec {
-  if [[ "$DISABLE_AUTO_TITLE" == "true" ]] || [[ "$EMACS" == *term* ]]; then
+  if [[ "$DISABLE_AUTO_TITLE" == "true" ]]; then
     return
   fi
 
@@ -180,7 +185,6 @@ function omz_termsupport_preexec {
   local window_title="${typed}"
   # append cwd to window title
   window_title+=" [${(%):-%~}]"
-
   export _ZSH_LAST_CMD_TITLE=$window_title  # used in omz_termsupport_precmd.
 
   # NOTE: tab/icon name is used by awesomeWM when minimized.

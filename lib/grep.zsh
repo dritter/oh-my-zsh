@@ -1,7 +1,6 @@
 # Ignore VCS folders (if the necessary grep flags are available).
-VCS_FOLDERS="{.bzr,.cvs,.git,.hg,.svn}"
-
 _setup_grep_alias() {
+    local VCS_FOLDERS="{.bzr,.cvs,.git,.hg,.svn}"
     local GREP_OPTIONS
     GREP_OPTIONS=()
 

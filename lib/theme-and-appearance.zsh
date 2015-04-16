@@ -1,7 +1,6 @@
 # ls colors
-autoload colors; colors;
+autoload -U colors && colors
 export LSCOLORS="Gxfxcxdxbxegedabagacad"
-export LS_COLORS
 
 # Enable ls colors
 # NOTE: called from themes/blueyed.zsh-theme.
@@ -54,5 +53,5 @@ ZSH_THEME_GIT_PROMPT_DIRTY="*"              # Text to display if the branch is d
 ZSH_THEME_GIT_PROMPT_CLEAN=""               # Text to display if the branch is clean
 
 # Setup the prompt with pretty colors
-setopt prompt_subst
-
+# Change: do not use prompt_subst by default, the theme should enable it.
+# setopt prompt_subst

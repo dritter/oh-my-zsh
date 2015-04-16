@@ -89,9 +89,11 @@ alias glgg='git log --graph --max-count=5'
 alias gls='git ls-files'
 alias glsu='git ls-files -o --exclude-standard'
 alias gm='git merge'
+alias gmt='git mergetool --no-prompt'
 alias gp='git push'
 alias gpl='git pull --ff-only --verbose'
 alias gpll='git pull'
+alias gpoat='git push origin --all && git push origin --tags'
 alias gr='git remote'
 
 # Rebase
@@ -345,6 +347,3 @@ alias gignore='git update-index --assume-unchanged'
 alias gunignore='git update-index --no-assume-unchanged'
 # list temporarily ignored files
 alias gignored='git ls-files -v | grep "^[[:lower:]]"'
-
-
-

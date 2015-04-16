@@ -39,12 +39,11 @@ fi
 # NOTE: should have been this probably
 # zstyle ':completion:*:cd:*' tag-order !named-directories
 # zstyle ':completion:*:cd:*' tag-order local-directories directory-stack path-directories
-cdpath=(.)
 
 # Use caching so that commands like apt and dpkg complete are useable
 zstyle ':completion::complete:*' use-cache 1
 # Use zsh's default cache dir (${ZDOTDIR:-$HOME}/.zcompcache}).
-# zstyle ':completion::complete:*' cache-path $ZSH/cache/
+# zstyle ':completion::complete:*' cache-path $ZSH_CACHE_DIR
 
 # Complete hosts from IP addresses, too
 zstyle ':completion:*' use-ip true
