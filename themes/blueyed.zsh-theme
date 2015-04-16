@@ -542,7 +542,7 @@ prompt_blueyed_precmd () {
         prompt_len=$(( $prompt_len + 3 ))
     fi
     # Dynamically adjusted fillbar, via SIGWINCH / zle reset-prompt.
-    PR_FILLBAR="\${(pl:\$((\$COLUMNS - ($rprompt_len + $prompt_len)))::$char_hr:)}"
+    PR_FILLBAR="${PR_RESET}\${(pl:\$((\$COLUMNS - ($rprompt_len + $prompt_len)))::$char_hr:)}"
 
     local -h prompt_sign="%{%(?.${fg_no_bold[blue]}.${fg_no_bold[red]})%}❯%{%(#.${roottext}.${prompttext})%}❯"
 
