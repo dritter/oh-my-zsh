@@ -1,4 +1,5 @@
 # blueyed's theme for zsh
+# # TODO: to interface with zsh's promptinit, move this to prompt_blueyed_setup function / file.
 #
 # Features:
 #  - color hostnames according to its hashed value (see color_for_host)
@@ -1024,10 +1025,5 @@ zstyle ':vcs_info:*:prompt:*' max-exports 4
 # patch-format for Git, used during rebase.
 zstyle ':vcs_info:git*:prompt:*' patch-format "%{$fg_no_bold[cyan]%}Patch: %p [%n/%a]"
 
-
-# Interface to zsh's promptinit.
-prompt_blueyed_setup() {
-    prompt_blueyed_precmd
-}
 
 # vim: set ft=zsh ts=4 sw=4 et:
