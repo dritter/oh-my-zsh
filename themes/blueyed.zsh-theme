@@ -16,6 +16,24 @@
 autoload -U add-zsh-hook
 autoload -Uz vcs_info
 
+setopt prompt_subst  # Required for PR_FILLBAR.
+
+# Ensure that the prompt is redrawn when the terminal size changes (SIGWINCH).
+# Taken from plugins/vi-mode/vi-mode.plugin.zsh, and bart's prompt.
+prompt_blueyed_winch() {
+    setopt localoptions nolocaltraps noksharrays unset
+
+    # Delete ourself from TRAPWINCH if not using our precmd.
+    if [[ $precmd_functions = *prompt_blueyed_precmd* ]]; then
+        zle && { zle reset-prompt; zle -R }
+    else
+        functions[TRAPWINCH]="${functions[TRAPWINCH]//prompt_blueyed_winch}"
+    fi
+}
+# Paste our special command into TRAPWINCH.
+functions[TRAPWINCH]="${functions[TRAPWINCH]//prompt_blueyed_winch}
+    prompt_blueyed_winch"
+
 # Query/use custom command for `git`.
 # See also ../plugins/git/git.plugin.zsh
 zstyle -s ":vcs_info:git:*:-all-" "command" _git_cmd || _git_cmd=$(whence -p git)
@@ -514,23 +532,17 @@ prompt_blueyed_precmd () {
     # right trim:
     prompt="${prompt%% #}"
 
-    # Attach $rprompt to $prompt, aligned to $TERMWIDTH.
-    # Use -1 to avoid redrawing of the last line of terminal output, e.g after "git status" etc.
-    local -h TERMWIDTH=$((${COLUMNS}-1))
+    # Attach $rprompt to $prompt, aligned to $COLUMNS.
     local -h prompt_len=$(get_visible_length $prompt)
     local -h rprompt_len=$(get_visible_length $rprompt)
-
-    local fillbar_len=$(($TERMWIDTH - ($rprompt_len + $prompt_len)))
-    if (( $fillbar_len > 0 )); then
-        if (( $fillbar_len > 3 )); then
-            # There is room for a hr-prefix.
-            prompt="${PR_RESET}${char_hr}${char_hr}${char_hr}${prompt}"
-            fillbar_len=$(( $fillbar_len - 3 ))
-        fi
-        PR_FILLBAR="${PR_RESET}${(pl:$fillbar_len::$char_hr:)}"
-    else
-        PR_FILLBAR=
+    local fillbar_len=$(($COLUMNS - ($rprompt_len + $prompt_len)))
+    if (( $fillbar_len > 3 )); then
+        # There is room for a hr-prefix.
+        prompt="${PR_RESET}${char_hr}${char_hr}${char_hr}${prompt}"
+        prompt_len=$(( $prompt_len + 3 ))
     fi
+    # Dynamically adjusted fillbar, via SIGWINCH / zle reset-prompt.
+    PR_FILLBAR="\${(pl:\$((\$COLUMNS - ($rprompt_len + $prompt_len)))::$char_hr:)}"
 
     local -h prompt_sign="%{%(?.${fg_no_bold[blue]}.${fg_no_bold[red]})%}❯%{%(#.${roottext}.${prompttext})%}❯"
 
