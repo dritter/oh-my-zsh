@@ -836,6 +836,44 @@ source ~/.dotfiles/lib/zsh-autoenv/autoenv.zsh
 # zstyle ':completion:*' group-name ''
 
 
+# Directories {{{
+# Changing/making/removing directory
+setopt auto_pushd
+setopt pushd_ignore_dups
+setopt pushdminus
+
+alias md='mkdir -p'
+alias rd=rmdir
+alias d='dirs -v | head -10'
+
+# mkdir & cd to it
+function mcd() {
+  mkdir -p "$1" && cd "$1"
+}
+# }}}
+
+# misc {{{
+## smart urls
+autoload -U url-quote-magic
+zle -N self-insert url-quote-magic
+
+## jobs
+setopt long_list_jobs
+
+## pager
+export PAGER="less"
+
+# only define LC_CTYPE if undefined
+if [[ -z "$LC_CTYPE" && -z "$LC_ALL" ]]; then
+        export LC_CTYPE=${LANG%%:*} # pick the first entry from LANG
+fi
+# }}}
+
+# Settings for Debian/Ubuntu.
+export DEBFULLNAME='Daniel Hahler'
+export DEBEMAIL='ubuntu@thequod.de'
+
+
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
