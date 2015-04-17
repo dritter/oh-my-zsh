@@ -123,7 +123,11 @@ theme_variant() {
     else
         case "$1" in
             light|dark) variant=$1 ;;
-            *) echo "theme_variant: unknown arg: $1"; return 1 ;;
+            *)
+                echo "Current theme variant: $ZSH_THEME_VARIANT."
+                echo "Theme in config: $(<$ZSH_THEME_VARIANT_CONFIG_FILE)."
+                echo "Use 'auto', 'dark' or 'light' to change it."
+                return 0 ;;
         esac
     fi
     # Only write conf when not "init".
@@ -131,7 +135,7 @@ theme_variant() {
         echo $1 > $ZSH_THEME_VARIANT_CONFIG_FILE
     fi
 
-    if [[ "$variant" == "light" ]] && is_gnome_terminal; then
+    if [[ "$variant" == "light" ]]; then
         DIRCOLORS_FILE=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-light
     else
         # DIRCOLORS_FILE=~/.dotfiles/lib/dircolors-solarized/dircolors.ansi-dark
@@ -141,31 +145,52 @@ theme_variant() {
     zsh-set-dircolors
 
     # Setup/change gnome-terminal profile.
-    if [[ "$ZSH_THEME_VARIANT" != "$variant" ]] && is_gnome_terminal; then
-        local wanted_gnome_terminal_profile="Solarized-$variant"
-        # local id_light=e6e34acf-124a-43bd-ad32-46fb0765ad76
-        # local id_dark=b1dcc9dd-5262-4d8d-a863-c897e6d979b9
+    if [[ "$ZSH_THEME_VARIANT" != "$variant" ]]; then
+        if is_urxvt; then
+            local curbg changed_xrdb
+            curbg="$(xrdb -query|sed -n -e '/^\*background:/ {p;q}' | tr -d '[:space:]' | cut -f2 -d:)"
+            if [[ $curbg == '#fdf6e3' ]]; then
+                if [[ $variant == "dark" ]]; then
+                    # xrdb -DSOLARIZED_DARK ~/.Xresources
+                    xrdb -merge ~/.dotfiles/lib/solarized-xresources/Xresources.dark
+                    changed_xrdb=1
+                fi
+            elif [[ $variant == "light" ]]; then
+                # xrdb -DSOLARIZED_LIGHT ~/.Xresources
+                xrdb -merge ~/.dotfiles/lib/solarized-xresources/Xresources.light
+                changed_xrdb=1
+            fi
 
-        local default_profile_id=${$(dconf read /org/gnome/terminal/legacy/profiles:/default)//\'/}
-        # echo "default_profile_id:$default_profile_id"
-        local default_profile_name=${$(dconf read /org/gnome/terminal/legacy/profiles:/":"$default_profile_id/visible-name)//\'/}
-        # echo "default_profile_name:$default_profile_name"
+            if [[ $changed_xrdb == 1 ]]; then
+                echo "Changed xrdb theme to $variant (curbg: $curbg; variant=$variant)."
+            fi
+        elif is_gnome_terminal; then
+            local wanted_gnome_terminal_profile="Solarized-$variant"
+            # local id_light=e6e34acf-124a-43bd-ad32-46fb0765ad76
+            # local id_dark=b1dcc9dd-5262-4d8d-a863-c897e6d979b9
 
-        # local -h cur_profile=$(gconftool-2 --get /apps/gnome-terminal/global/default_profile)
-        if [[ $default_profile_name != $wanted_gnome_terminal_profile ]]; then
-            # Get ID of wanted profile.
+            local default_profile_id=${$(dconf read /org/gnome/terminal/legacy/profiles:/default)//\'/}
+            # echo "default_profile_id:$default_profile_id"
+            local default_profile_name=${$(dconf read /org/gnome/terminal/legacy/profiles:/":"$default_profile_id/visible-name)//\'/}
+            # echo "default_profile_name:$default_profile_name"
 
-            wanted_gnome_terminal_profile_id=$(
-                dconf dump "/org/gnome/terminal/legacy/profiles:/" \
-                | grep -P "^(visible-name='$wanted_gnome_terminal_profile'|\[:)" \
-                | grep '^visible-name' -B1 | head -n1 \
-                | sed -e 's/^\[://' -e 's/]$//')
+            # local -h cur_profile=$(gconftool-2 --get /apps/gnome-terminal/global/default_profile)
+            if [[ $default_profile_name != $wanted_gnome_terminal_profile ]]; then
+                # Get ID of wanted profile.
 
-            echo "Changing gnome-terminal default profile to: $wanted_gnome_terminal_profile ($wanted_gnome_terminal_profile_id)."
-            # gconftool-2 --set --type string /apps/gnome-terminal/global/default_profile $gnome_terminal_profile
-            dconf write /org/gnome/terminal/legacy/profiles:/default "'$wanted_gnome_terminal_profile_id'"
+                wanted_gnome_terminal_profile_id=$(
+                    dconf dump "/org/gnome/terminal/legacy/profiles:/" \
+                    | grep -P "^(visible-name='$wanted_gnome_terminal_profile'|\[:)" \
+                    | grep '^visible-name' -B1 | head -n1 \
+                    | sed -e 's/^\[://' -e 's/]$//')
+
+                echo "Changing gnome-terminal default profile to: $wanted_gnome_terminal_profile ($wanted_gnome_terminal_profile_id)."
+                # gconftool-2 --set --type string /apps/gnome-terminal/global/default_profile $gnome_terminal_profile
+                dconf write /org/gnome/terminal/legacy/profiles:/default "'$wanted_gnome_terminal_profile_id'"
+            fi
         fi
     fi
+    # Used in ~/.vimrc.
     export ZSH_THEME_VARIANT=$variant
 }
 # Init once and export the value.
