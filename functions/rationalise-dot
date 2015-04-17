@@ -1,6 +1,8 @@
 # Auto-expand "..." to "../..", "...." to "../../.." etc.
 # It skips certain commands (git, tig, p4).
 
+local MATCH # keep the regex match from leaking to the environment.
+
 # Skip pasted text.
 if (( PENDING > 0 )); then
   zle self-insert
