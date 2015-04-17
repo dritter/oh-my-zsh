@@ -17,7 +17,7 @@ esac
 setopt append_history
 setopt extended_history
 setopt hist_expire_dups_first
-setopt no_hist_ignore_dups
+setopt hist_ignore_dups # ignore duplication command history list
 setopt hist_ignore_space
 setopt no_hist_verify
 setopt inc_append_history
