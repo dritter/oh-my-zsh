@@ -686,8 +686,8 @@ function +vi-git-st() {
     # Init local_branch_disp: shorten branch.
     if [[ $local_branch == bisect/* ]]; then
         local_branch_disp="-"
-    elif (( $#local_branch > 13 )) && ! [[ $local_branch == */* ]]; then
-        local_branch_disp="${local_branch:0:12}…"
+    elif (( $#local_branch > 21 )) && ! [[ $local_branch == */* ]]; then
+        local_branch_disp="${local_branch:0:20}…"
     else
         local_branch_disp=$local_branch
     fi
