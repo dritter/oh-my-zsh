@@ -538,17 +538,19 @@ prompt_blueyed_precmd () {
     local fillbar_len=$(($COLUMNS - ($rprompt_len + $prompt_len)))
     if (( $fillbar_len > 3 )); then
         # There is room for a hr-prefix.
-        prompt="${PR_RESET}${char_hr}${char_hr}${char_hr}${prompt}"
+        prompt="${char_hr}${char_hr}${char_hr}${prompt}"
         prompt_len=$(( $prompt_len + 3 ))
     fi
     # Dynamically adjusted fillbar, via SIGWINCH / zle reset-prompt.
-    PR_FILLBAR="${PR_RESET}\${(pl:\$((\$COLUMNS - ($rprompt_len + $prompt_len)))::$char_hr:)}"
+    # NOTE: -1 offset is used to fix redrawing issues after (un)maximizing,
+    # when the screen is filled (the last line(s) get overwritten, and move to the top).
+    PR_FILLBAR="${PR_RESET}\${(pl:\$((\$COLUMNS - ($rprompt_len + $prompt_len) - 1))::$char_hr:)}"
 
     local -h prompt_sign="%{%(?.${fg_no_bold[blue]}.${fg_no_bold[red]})%}❯%{%(#.${roottext}.${prompttext})%}❯"
 
     prompt_vcs=${repotext}${${prompt_vcs/#git:/ λ }%% #}
 
-    PS1="${prompt}${PR_FILLBAR}${rprompt}
+    PS1="${PR_RESET}${prompt}${PR_FILLBAR}${rprompt}
 ${prompt_vcs}${prompt_sign} ${PR_RESET}"
 
     # When invoked from gvim ('zsh -i') make it less hurting
