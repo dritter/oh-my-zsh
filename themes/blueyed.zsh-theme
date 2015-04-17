@@ -81,13 +81,15 @@ is_gnome_terminal() {
     return 1
 }
 
+
+# Get the .git dir (cached).
+# Not uses anymore currently.
 my_get_gitdir() {
     local base=$1
     if [[ -z $base ]]; then
         if (( ${+_zsh_cache_pwd[gitdir_base]} )) \
             && [[ -e ${_zsh_cache_pwd[gitdir_base]} ]]; then
             base=${_zsh_cache_pwd[gitdir_base]}
-            # echo "using cached base: $base" >> /tmp/debug.log
         else
             base=$($_git_cmd rev-parse --show-toplevel 2>/dev/null) || return
             _zsh_cache_pwd[gitdir_base]=base
@@ -97,6 +99,7 @@ my_get_gitdir() {
     if (( ${+_zsh_cache_pwd[gitdir_$base]} )) \
         && [[ -e ${_zsh_cache_pwd[gitdir_$base]} ]]; then
         echo ${_zsh_cache_pwd[gitdir_$base]}
+        return
     fi
 
     local gitdir=$base/.git
@@ -588,12 +591,6 @@ ${prompt_vcs}${prompt_sign} ${PR_RESET}"
     # exec 2>&3 3>&-
 }
 
-# Init vars for/via preexec.
-_zsh_init_preexec() {
-    _zsh_prompt_preexec_info=()
-}
-add-zsh-hook preexec _zsh_init_preexec
-
 # Cache for values based on current working directory.
 typeset -g -A _zsh_cache_pwd
 _zsh_cache_pwd_chpwd() {
@@ -887,52 +884,80 @@ fi
 # zstyle ':vcs_info:*' check-for-changes true
 # zstyle ':vcs_info:*' get-revision true
 
-_ZSH_VCS_INFO_FORCE_GETDATA=1
+# Init gets done through _force_vcs_info_chpwd.
+_ZSH_VCS_INFO_CUR_GITDIR=
 _ZSH_VCS_INFO_CUR_VCS=
+_ZSH_VCS_INFO_FORCE_GETDATA=
+_ZSH_VCS_INFO_DIR_CHANGED=
 _ZSH_VCS_INFO_LAST_MTIME=
 
 zstyle ':vcs_info:*+start-up:*' hooks start-up
 +vi-start-up() {
     ret=1  # do not run by default.
-    if [[ -n $_ZSH_VCS_INFO_FORCE_DETECT ]] \
-        || [[ -n $_ZSH_VCS_INFO_FORCE_GETDATA ]]; then
+
+    if [[ -n $_ZSH_VCS_INFO_FORCE_GETDATA ]]; then
+        debug "vcs_info: hook: start-up: forced"
+        _ZSH_VCS_INFO_LAST_MTIME=
         ret=0
+
+    elif [[ -n $_ZSH_VCS_INFO_DIR_CHANGED ]]; then
+        debug "vcs_info: hook: start-up: changed dir"
+        ret=0
+
+    elif [[ $_ZSH_VCS_INFO_CUR_VCS == git ]]; then
+        # Check mtime of .git dir.
+        # If it changed force refresh of vcs_info data.
+        local gitdir mtime
+
+        gitdir=$_ZSH_VCS_INFO_CUR_GITDIR
+        mtime=$(zstat_mtime $gitdir)
+        if [[ $_ZSH_VCS_INFO_LAST_MTIME != $mtime ]]; then
+            _ZSH_VCS_INFO_FORCE_GETDATA=1
+            _ZSH_VCS_INFO_LAST_MTIME=$mtime
+            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳m")
+            ret=0
+        fi
+    else
+        debug "vcs_info: hook: start-up: skip!"
     fi
-    _ZSH_VCS_INFO_FORCE_DETECT=
 }
 
 zstyle ':vcs_info:*+pre-get-data:*' hooks pre-get-data
 +vi-pre-get-data() {
-    _ZSH_VCS_INFO_CUR_VCS=$vcs
-    echo "vcs_info: hook: pre-get-data: vcs=$vcs" >> /tmp/debug.log
+    _ZSH_VCS_INFO_CUR_VCS=$vcs  # for start-up hook.
 
     # Only Git and Mercurial support and need caching. Abort if any other
     # VCS is used.
     [[ "$vcs" != git && "$vcs" != hg ]] && return
 
-    ret=1  # do not run by default.
+    if [[ -n $_ZSH_VCS_INFO_DIR_CHANGED ]]; then
+        _ZSH_VCS_INFO_DIR_CHANGED=
+        if [[ $vcs == git ]]; then
+            local gitdir=${${vcs_comm[gitdir]}:a}
+            if [[ $gitdir != $_ZSH_VCS_INFO_CUR_GITDIR ]]; then
+                _ZSH_VCS_INFO_FORCE_GETDATA=1
+                _ZSH_VCS_INFO_CUR_GITDIR=$gitdir
+                _ZSH_VCS_INFO_LAST_MTIME=
+                _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳cd")
+            fi
+        else
+            # Changed to some non-git dir.
+            _ZSH_VCS_INFO_FORCE_GETDATA=1
+            _ZSH_VCS_INFO_CUR_GITDIR=
+            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳cd2")
+        fi
+    fi
+
+    if [[ $vcs == git && -z $_ZSH_VCS_INFO_LAST_MTIME ]]; then
+        local gitdir=${${vcs_comm[gitdir]}:a}
+        _ZSH_VCS_INFO_LAST_MTIME=$(zstat_mtime $gitdir)
+        debug "Setting new mtime: $_ZSH_VCS_INFO_LAST_MTIME"
+    fi
+
+    ret=1  # Do not run by default.
     if [[ -n $_ZSH_VCS_INFO_FORCE_GETDATA ]]; then
         _ZSH_VCS_INFO_FORCE_GETDATA=
-        ret=0
-    fi
-    echo "vcs_info: hook: pre-get-data: ret=$ret" >> /tmp/debug.log
-}
-
-_force_vcs_info_check_git_mtime() {
-    # Check mtime of .git dir. If changed force refresh of vcs_info data.
-
-    (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return
-    if [[ $_ZSH_VCS_INFO_CUR_VCS != git ]]; then
-        return
-    fi
-
-    mtime=$(zstat_mtime $_ZSH_VCS_INFO_CUR_GITDIR)
-    if [[ $_ZSH_VCS_INFO_LAST_MTIME != $mtime ]]; then
-        if [[ $_ZSH_VCS_INFO_LAST_MTIME != "" ]]; then
-            _ZSH_VCS_INFO_FORCE_GETDATA=1
-            echo "preexec: mtime changed." >> /tmp/debug.log
-        fi
-        _ZSH_VCS_INFO_LAST_MTIME=$mtime
+        ret=0  # Refresh.
     fi
 }
 
@@ -944,31 +969,11 @@ _force_vcs_info_chpwd() {
     # Force refresh with "cd .".
     if [[ $PWD == $_ZSH_VCS_INFO_PREV_PWD ]]; then
         _ZSH_VCS_INFO_FORCE_GETDATA=1
+        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳f")
         return
     fi
     _ZSH_VCS_INFO_PREV_PWD=$PWD
-
-    if [[ $_ZSH_VCS_INFO_CUR_VCS == git ]]; then
-        local gitdir
-        gitdir=$(my_get_gitdir)
-
-        if [[ -n $gitdir ]]; then
-            if [[ $gitdir != $_ZSH_VCS_INFO_CUR_GITDIR ]]; then
-                _ZSH_VCS_INFO_FORCE_GETDATA=1
-                _ZSH_VCS_INFO_LAST_MTIME=
-            else
-                _force_vcs_info_check_git_mtime
-            fi
-            _ZSH_VCS_INFO_CUR_GITDIR=$gitdir
-        else
-            # Changed to some non-git dir.
-            unset _ZSH_VCS_INFO_CUR_VCS
-            unset _ZSH_VCS_INFO_CUR_GITDIR
-            _ZSH_VCS_INFO_FORCE_GETDATA=1
-        fi
-    else
-        _ZSH_VCS_INFO_FORCE_GETDATA=1
-    fi
+    _ZSH_VCS_INFO_DIR_CHANGED=1
 }
 add-zsh-hook chpwd _force_vcs_info_chpwd
 _force_vcs_info_chpwd  # init.
@@ -981,11 +986,7 @@ _force_vcs_info_preexec() {
 
     if _user_execed_command $1 $2 $3 '(git|hg|bcompare|nvim|vim)'; then
         _ZSH_VCS_INFO_FORCE_GETDATA=1
-    else
-        # Check mtime.
-        _force_vcs_info_check_git_mtime
     fi
-    # echo "[preexec] vcs_info: forcing data refresh."
 }
 add-zsh-hook preexec _force_vcs_info_preexec
 # }}}
