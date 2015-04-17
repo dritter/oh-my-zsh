@@ -708,7 +708,7 @@ function +vi-git-st() {
     # ahead=$($_git_cmd rev-list origin/${hook_com[branch]}..HEAD | wc -l)
 
     # Gets the commit difference counts between local and remote.
-    ahead_and_behind_cmd='git rev-list --count --left-right HEAD...@{upstream}'
+    ahead_and_behind_cmd="$_git_cmd rev-list --count --left-right HEAD...@{upstream}"
     # Get ahead and behind counts.
     ahead_and_behind="$(${(z)ahead_and_behind_cmd} 2> /dev/null)"
 
