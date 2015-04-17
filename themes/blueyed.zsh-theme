@@ -991,29 +991,27 @@ add-zsh-hook preexec _force_vcs_info_preexec
 # }}}
 
 # Look for $4 (in "word boundaries") in preexec arguments ($1, $2, $3).
+# $3 is the resolved command.
 # It adds an indicator to $_zsh_prompt_vcs_info.
+# Returns 0 if the command has (probably) been called, 1 otherwise.
 _user_execed_command() {
     local lookfor="(*[[:space:]])#$4([[:space:]-]*)#"
     local ret=1
     if [[ $3 == ${~lookfor} ]]; then
-        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳")
+        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳c1")
         ret=0
     else
         local lookfor_quoted="(*[[:space:]=])#(|[\"\'\(])$4([[:space:]-]*)#"
-        local -a typed
+        local -a cmd
         if (( $#_zsh_resolved_jobspec )); then
-            typed=(${(z)_zsh_resolved_jobspec})
+            cmd=(${(z)_zsh_resolved_jobspec})
         else
-            typed=(${(z)1})
+            cmd=(${(z)3})
         fi
         # Look into resolved aliases etc, allowing the command to be quoted.
         # E.g. with `gcm`: noglob _nomatch command_with_files "git commit --amend -m"
-        local whence_typed="$(whence -f ${typed[1]})"
-        if [[ ${whence_typed} == ${~lookfor_quoted} ]] ; then
-            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳2")
-            ret=0
-        elif [[ $commands[$typed[1]]:A:t == ${~lookfor} ]]; then
-            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳3")
+        if [[ $(whence -f ${cmd[1]}) == ${~lookfor_quoted} ]] ; then
+            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳c2")
             ret=0
         fi
     fi
