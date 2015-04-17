@@ -641,7 +641,10 @@ function +vi-git-untracked() {
 
     if [[ $($_git_cmd rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
             # Uses "sed q1" to make it quicker!
-            ! $_git_cmd status --porcelain | sed -n '/^??/q1'
+            # NOTE: "git status" changes mtime of .git!
+            # ls-files will also display empty dirs (which is good).
+            # ! $_git_cmd status --porcelain | sed -n '/^??/q1'
+            ! $_git_cmd ls-files --other --directory --exclude-standard | sed -n q1
             then
         hook_com[staged]+='✗ '
     fi
