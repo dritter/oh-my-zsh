@@ -57,7 +57,7 @@ ffind() {
   done
   # If the first argument is a dir, use it as base, but only
   # if there are more arguments or it starts with slash or dot.
-  if [[ -d $1 ]] && ( [[ $# -gt 1 ]] || [[ $1[1] == [./]* ]] ) ; then
+  if [[ -d $1 ]] && ( [[ $# -gt 1 ]] || [[ $1 == [./]* ]] ) ; then
     dir=$1; shift
     (( $debug )) && echo "DEBUG: finding in $dir" >&2
   else
@@ -112,13 +112,13 @@ ffind() {
 }
 
 # ls
-export LS_OPTIONS='--color=auto -h --hide=*.pyc'
-alias ls='ls ${=LS_OPTIONS}'
-alias l='ls -F'
-alias la='ls -aF'
-alias ll='ls -lF'
-alias lla='ls -laF'
-alias lll='ll -a --color | less -R'
+LS_OPTIONS=(--color=auto -h --hide='*.pyc' -F)
+alias ls='ls ${LS_OPTIONS}'
+alias l='ls'
+alias la='ls -a'
+alias ll='ls -l'
+alias lla='ll -a'
+alias lll='lla --color | less -R'
 lth() { ll --color -t "$@" | head -n $((LINES > 23 ? 20 : LINES-3)) }
 lsh() { l  --color -t "$@" | head -n $((LINES > 23 ? 20 : LINES-3)) }
 
