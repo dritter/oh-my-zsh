@@ -246,13 +246,6 @@ export LESS="-j5 -R -i -S -X"
 alias lessx='LESS="-j5 -R -i -S" less'
 compdef lessx=less
 
-# named directories/shortcuts (~l => /var/log)
-# local ones in ~/.zshrc.local
-hash -d l=/var/log
-hash -d d=~/Downloads
-hash -d df=~/.dotfiles
-hash -d omz=~/.dotfiles/oh-my-zsh
-
 # just type '...' to get '../..'
 # Originally by grml, improved by Mikachu
 if zmodload zsh/regex 2>/dev/null; then # might not be available (e.g. on DS212+)
