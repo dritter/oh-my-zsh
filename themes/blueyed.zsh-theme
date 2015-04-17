@@ -269,14 +269,13 @@ prompt_blueyed_precmd () {
     local -h     rprompt="$normtext"
     local -h   rprompthl="$lighttext"
     local -h  prompttext="%{$fg_no_bold[green]%}"
-    if [[ $ZSH_THEME_VARIANT == "light" ]] && is_gnome_terminal; then
+    if [[ $ZSH_THEME_VARIANT == "light" ]]; then
         local -h   dimmedtext="%{$fg_no_bold[white]%}"
     else
         local -h   dimmedtext="%{$fg_no_bold[black]%}"
     fi
-    local -h   darkdelim="$dimmedtext"
-    local -h bracket_open="${darkdelim}["
-    local -h bracket_close="${darkdelim}]"
+    local -h bracket_open="${dimmedtext}["
+    local -h bracket_close="${dimmedtext}]"
 
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
