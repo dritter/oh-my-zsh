@@ -1,5 +1,25 @@
-local MATCH
-if [[ $LBUFFER =~ '(^|/| |	|'$'\n''|\||;|&)\.\.$' ]]; then
+# Auto-expand "..." to "../..", "...." to "../../.." etc.
+# It skips certain commands (git, tig, p4).
+
+# Skip pasted text.
+if (( PENDING > 0 )); then
+  zle self-insert
+  return
+fi
+
+# Recursively resolve aliases and echo the command.
+resolve_alias_cmd() {
+  typeset -a cmd last
+  cmd=(${(z)1})
+  while (( ${+aliases[$cmd[1]]} )) \
+      && [[ ${aliases[$cmd[1]]} != $cmd ]]; do
+    cmd=(${(z)aliases[${cmd[1]}]})
+  done
+  echo $cmd[1]
+}
+
+if [[ $LBUFFER =~ '(^|/| |	|'$'\n''|\||;|&)\.\.$' ]] \
+  && ! [[ $(resolve_alias_cmd $LBUFFER) =~ '^(git|tig|p4)' ]]; then
   LBUFFER+=/
   zle self-insert
   zle self-insert
