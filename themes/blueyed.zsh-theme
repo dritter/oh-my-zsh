@@ -1018,10 +1018,12 @@ _user_execed_command() {
     return $ret
 }
 
+
+# Maintain cache for pyenv_version.
+# It gets reset automatically when changing directories.
 _pyenv_version_preexec() {
     if _user_execed_command $1 $2 $3 'pyenv'; then
-        echo "Refresh"
-        unset "_zsh_cache_pwd[pyenv_version]"
+        unset '_zsh_cache_pwd[pyenv_version]'
     fi
 }
 add-zsh-hook preexec _pyenv_version_preexec
