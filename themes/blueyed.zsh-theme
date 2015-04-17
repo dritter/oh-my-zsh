@@ -280,11 +280,6 @@ prompt_blueyed_precmd () {
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra
 
-    # Pick up any info from preexec commands.
-    if [[ -n $_zsh_prompt_preexec_info ]]; then
-        rprompt_extra=($_zsh_prompt_preexec_info)
-    fi
-
     prompt_vcs=""
     # Check for exported GIT_DIR (used when working on bup backups).
     # Force usage of vcs_info then, also on slow dirs.
@@ -297,6 +292,12 @@ prompt_blueyed_precmd () {
         if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
             prompt_vcs+=' ?'
         fi
+
+        # Pick up any info from preexec and vcs_info hooks.
+        if [[ -n $_zsh_prompt_vcs_info ]]; then
+            rprompt_extra=($_zsh_prompt_vcs_info)
+        fi
+
         if [[ -n ${vcs_info_msg_1_} ]]; then
             # "misc" vcs info, e.g. "shallow", right trimmed:
             rprompt_extra+=("${vcs_info_msg_1_%% #}")
@@ -972,6 +973,7 @@ _force_vcs_info_chpwd  # init.
 # Force vcs_info when the expanded, full command contains relevant strings.
 # This also handles resumed jobs (via `fg`), based on code from termsupport.zsh.
 _force_vcs_info_preexec() {
+    _zsh_prompt_vcs_info=()
     (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return
 
     if _user_execed_command $1 $2 $3 '(git|hg|bcompare|nvim|vim)'; then
@@ -986,11 +988,12 @@ add-zsh-hook preexec _force_vcs_info_preexec
 # }}}
 
 # Look for $4 (in "word boundaries") in preexec arguments ($1, $2, $3).
+# It adds an indicator to $_zsh_prompt_vcs_info.
 _user_execed_command() {
     local lookfor="(*[[:space:]])#$4([[:space:]-]*)#"
     local ret=1
     if [[ $3 == ${~lookfor} ]]; then
-        _zsh_prompt_preexec_info+=("%{${fg[cyan]}%}⟳")
+        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳")
         ret=0
     else
         local lookfor_quoted="(*[[:space:]=])#(|[\"\'\(])$4([[:space:]-]*)#"
@@ -1004,10 +1007,10 @@ _user_execed_command() {
         # E.g. with `gcm`: noglob _nomatch command_with_files "git commit --amend -m"
         local whence_typed="$(whence -f ${typed[1]})"
         if [[ ${whence_typed} == ${~lookfor_quoted} ]] ; then
-            _zsh_prompt_preexec_info+=("%{${fg[cyan]}%}⟳2")
+            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳2")
             ret=0
         elif [[ $commands[$typed[1]]:A:t == ${~lookfor} ]]; then
-            _zsh_prompt_preexec_info+=("%{${fg[cyan]}%}⟳3")
+            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳3")
             ret=0
         fi
     fi
