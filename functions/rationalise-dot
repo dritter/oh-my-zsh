@@ -1,5 +1,7 @@
 # Auto-expand "..." to "../..", "...." to "../../.." etc.
 # It skips certain commands (git, tig, p4).
+#
+# resolve-alias is defined in a separate function.
 
 local MATCH # keep the regex match from leaking to the environment.
 
@@ -9,19 +11,8 @@ if (( PENDING > 0 )); then
   return
 fi
 
-# Recursively resolve aliases and echo the command.
-resolve_alias_cmd() {
-  typeset -a cmd last
-  cmd=(${(z)1})
-  while (( ${+aliases[$cmd[1]]} )) \
-      && [[ ${aliases[$cmd[1]]} != $cmd ]]; do
-    cmd=(${(z)aliases[${cmd[1]}]})
-  done
-  echo $cmd[1]
-}
-
 if [[ $LBUFFER =~ '(^|/| |	|'$'\n''|\||;|&)\.\.$' ]] \
-  && ! [[ $(resolve_alias_cmd $LBUFFER) =~ '^(git|tig|p4)' ]]; then
+  && ! [[ $(resolve-alias $LBUFFER) =~ '^(git|tig|p4)' ]]; then
   LBUFFER+=/
   zle self-insert
   zle self-insert
