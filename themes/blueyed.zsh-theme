@@ -951,7 +951,6 @@ zstyle ':vcs_info:*+pre-get-data:*' hooks pre-get-data
     if [[ $vcs == git && -z $_ZSH_VCS_INFO_LAST_MTIME ]]; then
         local gitdir=${${vcs_comm[gitdir]}:a}
         _ZSH_VCS_INFO_LAST_MTIME=$(zstat_mtime $gitdir)
-        debug "Setting new mtime: $_ZSH_VCS_INFO_LAST_MTIME"
     fi
 
     ret=1  # Do not run by default.
@@ -961,11 +960,10 @@ zstyle ':vcs_info:*+pre-get-data:*' hooks pre-get-data
     fi
 }
 
-# Must run vcs_info when changing directories.
-# Optimized for git: only trigger vcs_info, if the git dir changed.
+# Register directory changes: vcs_info must be run then usually.
+# This is (later) optimized for git, where it's only triggered if the gitdir
+# changed.
 _force_vcs_info_chpwd() {
-    (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return  # might be set from preexec already.
-
     # Force refresh with "cd .".
     if [[ $PWD == $_ZSH_VCS_INFO_PREV_PWD ]]; then
         _ZSH_VCS_INFO_FORCE_GETDATA=1
