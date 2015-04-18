@@ -290,7 +290,6 @@ ggpush() {
   cfg_remote=${$($_git_cmd rev-parse --verify $branch@{upstream} \
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
   cfg_remote=${cfg_remote%%/*}
-  echo "cfg_remote: $cfg_remote"
 
   if [[ -z $remote ]]; then
     if [[ -z $cfg_remote ]]; then
