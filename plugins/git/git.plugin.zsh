@@ -286,31 +286,34 @@ ggpush() {
 
   remote=${args[1]}
   branch=${args[2]-$(current_branch)}
-  if [[ -z $remote ]]; then
-    # XXX: may resolve to "origin/develop" for new local branches..
-    remote=${$(command git rev-parse --verify $branch@{upstream} \
+  # XXX: may resolve to "origin/develop" for new local branches..
+  cfg_remote=${$($_git_cmd rev-parse --verify $branch@{upstream} \
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
-    # remote=${remote%/$branch}
-    remote=${remote%/*}
+  cfg_remote=${cfg_remote%%/*}
+  echo "cfg_remote: $cfg_remote"
 
+  if [[ -z $remote ]]; then
+    if [[ -z $cfg_remote ]]; then
+      remote=$($_git_cmd config ggpush.default-remote)
+      if ! [[ -z $remote ]]; then
+        echo "Using ggpush.default-remote: $remote"
+      fi
+    fi
     if [[ -z $remote ]]; then
-      remote=$(command git config github.user)
+      remote=$($_git_cmd config github.user)
+      echo "Using remote for github.user: $remote"
       if ! [[ -z $remote ]]; then
         # Verify remote from github.user:
-        if ! command git ls-remote --exit-code $remote &> /dev/null; then
-          echo "NOTE: remote for github.user does not exist ($remote)."
-          remote=
+        if ! $_git_cmd ls-remote --exit-code $remote &> /dev/null; then
+          echo "NOTE: remote for github.user does not exist ($remote). Forking.."
+          hub fork
         fi
       fi
       if [[ -z $remote ]]; then
         echo "ERR: cannot determine remote."
         return 1
       fi
-      echo "WARN: using remote from github.user: $remote"
-      echo "      Using '-u' to set upstream."
-      if (( ${git_opts[(i)-u]} > ${#git_opts} )); then
-        git_opts+=(-u)
-      fi
+      echo "NOTE: using remote from github.user: $remote"
     fi
 
     # Ask for confirmation with '-f' and autodetected remote.
@@ -319,6 +322,13 @@ ggpush() {
       echo -n "Do you want to continue with detected $remote:$branch? [y/N] "
       read -q || return 1
       echo
+    fi
+
+  elif [[ -z $cfg_remote ]]; then
+    # No remote given, and nothing configured: use `-u`.
+    echo "NOTE: Using '-u' to set upstream."
+    if (( ${git_opts[(i)-u]} > ${#git_opts} )); then
+      git_opts+=(-u)
     fi
   fi
 
