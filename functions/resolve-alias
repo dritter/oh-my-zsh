@@ -1,0 +1,8 @@
+# Recursively resolve aliases and echo the command.
+typeset -a cmd
+cmd=(${(z)1})
+while (( ${+aliases[$cmd[1]]} )) \
+    && [[ ${aliases[$cmd[1]]} != $cmd ]]; do
+  cmd=(${(z)aliases[${cmd[1]}]})
+done
+echo $cmd
