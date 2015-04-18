@@ -1,7 +1,7 @@
 # Query/use custom command for `git`.
-local git_cmd
-zstyle -s ":vcs_info:git:*:-all-" "command" git_cmd
-: ${git_cmd:=git}
+local _git_cmd
+zstyle -s ":vcs_info:git:*:-all-" "command" _git_cmd
+: ${_git_cmd:=git}
 
 # Aliases
 alias g='git'
@@ -252,20 +252,20 @@ alias gsd='git svn dcommit'
 # it's not a symbolic ref, but in a Git repo.
 function current_branch() {
   local ref
-  ref=$($git_cmd symbolic-ref --quiet HEAD 2> /dev/null)
+  ref=$($_git_cmd symbolic-ref --quiet HEAD 2> /dev/null)
   local ret=$?
   if [[ $ret != 0 ]]; then
     [[ $ret == 128 ]] && return  # no git repo.
-    ref=$($git_cmd rev-parse --short HEAD 2> /dev/null) || return
+    ref=$($_git_cmd rev-parse --short HEAD 2> /dev/null) || return
   fi
   echo ${ref#refs/heads/}
 }
 
 function current_repository() {
-  if ! $git_cmd rev-parse --is-inside-work-tree &> /dev/null; then
+  if ! $_git_cmd rev-parse --is-inside-work-tree &> /dev/null; then
     return
   fi
-  echo $($git_cmd remote -v | cut -d':' -f 2)
+  echo $($_git_cmd remote -v | cut -d':' -f 2)
 }
 
 # these aliases take advantage of the previous function
