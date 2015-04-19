@@ -896,12 +896,10 @@ zstyle ':vcs_info:*+start-up:*' hooks start-up
     ret=1  # do not run by default.
 
     if [[ -n $_ZSH_VCS_INFO_FORCE_GETDATA ]]; then
-        debug "vcs_info: hook: start-up: forced"
         _ZSH_VCS_INFO_LAST_MTIME=
         ret=0
 
     elif [[ -n $_ZSH_VCS_INFO_DIR_CHANGED ]]; then
-        debug "vcs_info: hook: start-up: changed dir"
         ret=0
 
     elif [[ $_ZSH_VCS_INFO_CUR_VCS == git ]]; then
@@ -917,8 +915,6 @@ zstyle ':vcs_info:*+start-up:*' hooks start-up
             _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳m")
             ret=0
         fi
-    else
-        debug "vcs_info: hook: start-up: skip!"
     fi
 }
 
