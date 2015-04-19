@@ -843,6 +843,7 @@ alias d='dirs -v | head -10'
 function mcd() {
   mkdir -p "$1" && cd "$1"
 }
+compdef mcd=mkdir
 # }}}
 
 # misc {{{
