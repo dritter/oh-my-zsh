@@ -981,6 +981,7 @@ _force_vcs_info_preexec() {
     (( $_ZSH_VCS_INFO_FORCE_GETDATA )) && return
 
     if _user_execed_command $1 $2 $3 '(git|hg|bcompare|nvim|vim)'; then
+        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳(c)")
         _ZSH_VCS_INFO_FORCE_GETDATA=1
     fi
 }
@@ -995,7 +996,6 @@ _user_execed_command() {
     local lookfor="(*[[:space:]])#$4([[:space:]-]*)#"
     local ret=1
     if [[ $3 == ${~lookfor} ]]; then
-        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳c1")
         ret=0
     else
         local lookfor_quoted="(*[[:space:]=])#(|[\"\'\(])$4([[:space:]-]*)#"
@@ -1008,7 +1008,6 @@ _user_execed_command() {
         # Look into resolved aliases etc, allowing the command to be quoted.
         # E.g. with `gcm`: noglob _nomatch command_with_files "git commit --amend -m"
         if [[ $(whence -f ${cmd[1]}) == ${~lookfor_quoted} ]] ; then
-            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳c2")
             ret=0
         fi
     fi
