@@ -59,11 +59,10 @@ if [[ $USER == root ]]; then
     path+=($i)
   done
 fi
-
 unset i
 
-# make path/PATH entries unique
-typeset -U path
+# Make path/PATH entries unique. Use '-g' for sourcing it from a function.
+typeset -gU path
 
 
 [ -x /usr/local/bin/vim ] && export EDITOR=/usr/local/bin/vim || export EDITOR=vim

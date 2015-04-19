@@ -868,6 +868,12 @@ export DEBFULLNAME='Daniel Hahler'
 export DEBEMAIL='ubuntu@thequod.de'
 
 
+reloadzsh() {
+  source ~/.zshenv
+  source ~/.zshrc
+}
+
+
 # Source local rc file if any {{{1
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
