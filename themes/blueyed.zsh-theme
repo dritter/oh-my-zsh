@@ -357,6 +357,8 @@ prompt_blueyed_precmd () {
             # color non-writable segment
             elif [[ ! -w $cur ]]; then
                 color=${nonrwtext}
+            else
+                color=${normtext}
             fi
             # Symlink: underlined.
             if [[ -h $cur ]]; then
