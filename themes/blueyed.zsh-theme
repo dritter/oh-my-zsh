@@ -149,7 +149,7 @@ theme_variant() {
 
     # Setup/change gnome-terminal profile.
     if [[ "$ZSH_THEME_VARIANT" != "$variant" ]]; then
-        if is_urxvt; then
+        if is_urxvt && [[ -n $commands[xrdb] ]]; then
             local curbg changed_xrdb
             curbg="$(xrdb -query|sed -n -e '/^\*background:/ {p;q}' | tr -d '[:space:]' | cut -f2 -d:)"
             if [[ $curbg == '#fdf6e3' ]]; then
