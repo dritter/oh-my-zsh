@@ -465,9 +465,9 @@ RR() {
 }
 
 # Call Makefile from parent directories, if there is no Makefile in the current
-# dir and '-C' is not used.
+# dir and '-C'/'-f' is not used.
 make () {
-  if ! [ -f Makefile ] && ! (( ${@[(I)-C]} )); then
+  if ! [ -f Makefile ] && ! (( ${@[(I)-f]} )) && ! (( ${@[(I)-C]} )); then
     setopt localoptions extendedglob
     local m
     m=((../)#Makefile(N))
