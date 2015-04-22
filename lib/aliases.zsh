@@ -9,9 +9,13 @@ alias please='sudo'
 
 # ps + grep.
 psgrep() {
-  local pids
+  local i pids
   pids=$(pgrep -f $@)
-  if ! [[ $pids ]]; then
+  # Add numeric args as pids.
+  for i do; if [[ $i =~ '^[[:digit:]]+$' ]]; then
+    pids=($i $pids)
+  fi; done
+  if [[ -z $pids ]]; then
     echo "No processes found." >&2; return 1
   fi
   ps up ${=pids}
