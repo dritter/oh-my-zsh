@@ -15,10 +15,18 @@ alias gbl='git blame'
 alias gc='git commit -v'
 alias gca='git commit -v -a'
 gcl() {
-  set -x
-  git clone --recursive $@
-  if [[ $# == 1 ]]; then
-    cd ${1:t}
+  git clone --recursive $@ || return
+
+  # Test if last arg is available as dir.
+  local last=$@[$#]
+  if [[ -d $last ]]; then
+    cd $last
+  else
+    # Handle automatic dir names: "user/repo" => "repo".
+    local dir=${${last:t}%.git}
+    if [[ -d $dir ]]; then
+      cd $dir
+    fi
   fi
 }
 compdef _git gcl=git-clone
