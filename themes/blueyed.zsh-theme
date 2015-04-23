@@ -420,10 +420,10 @@ prompt_blueyed_precmd () {
     fi
 
     _get_pyenv_version() {
-        if ! (( ${+_zsh_cache_pwd[pyenv_version]} )); then
+        if ! (( $+_zsh_cache_pwd[pyenv_version] )); then
             # Call _pyenv_setup, if it's still defined (not being called yet).
             # This avoids calling it for both subshells below.
-            if [[ $functions[_pyenv_setup] ]]; then
+            if (( $+functions[_pyenv_setup] )); then
                 _pyenv_setup
             fi
             _zsh_cache_pwd[pyenv_version]=$(pyenv version-name)

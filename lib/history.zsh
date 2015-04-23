@@ -20,5 +20,9 @@ setopt hist_expire_dups_first
 setopt hist_ignore_dups # ignore duplication command history list
 setopt hist_ignore_space
 setopt no_hist_verify
-setopt inc_append_history_time
+if (( $+options[inc_append_history_time] )); then
+  setopt inc_append_history_time
+else
+  setopt inc_append_history
+fi
 setopt no_share_history # Do not share history automatically, but import it manually using "fc -RI" when needed

@@ -1,7 +1,7 @@
 # Setup hub function for git, if it is available; http://github.com/defunkt/hub
-if [[ "$commands[(I)hub2]" ]]; then
+if [[ -n "$commands[(I)hub2]" ]]; then
     _hub_command=hub2
-elif [[ "$commands[(I)hub]" ]] && [[ "$commands[(I)ruby]" ]]; then
+elif [[ -n "$commands[(I)hub]" ]] && [[ -n "$commands[(I)ruby]" ]]; then
     _hub_command=hub
 fi
 
