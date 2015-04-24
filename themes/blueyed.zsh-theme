@@ -454,12 +454,12 @@ prompt_blueyed_precmd () {
     fi
 
     local pyenv_version
-    if ! (( $_ZSH_PYENV_SETUP )); then
-        # Skip calling pyenv, if it hasn't been used already.
-        pyenv_version=?
+    if [[ ${(t)PYENV_VERSION} == *-export* ]]; then
+        pyenv_version=${PYENV_VERSION}
     else
-        if [[ ${(t)PYENV_VERSION} == *-export* ]]; then
-            pyenv_version=${PYENV_VERSION}
+        if ! (( $_ZSH_PYENV_SETUP )); then
+            # Skip calling pyenv, if it hasn't been used already.
+            pyenv_version=?
         else
             _get_pyenv_version
             pyenv_version=${_zsh_cache_pwd[pyenv_version]}
