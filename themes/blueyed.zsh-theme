@@ -268,9 +268,8 @@ prompt_blueyed_precmd () {
     local -h    repotext="%{$fg_no_bold[green]%}"
     local -h     invtext="%{$fg_bold[cyan]%}"
     local -h   alerttext="%{$fg_no_bold[red]%}"
-    local -h   lighttext="%{$fg_bold[default]%}"
     local -h     rprompt="$normtext"
-    local -h   rprompthl="$lighttext"
+    local -h   rprompthl="%{$fg_bold[default]%}"
     local -h  prompttext="%{$fg_no_bold[green]%}"
     if [[ $ZSH_THEME_VARIANT == "light" ]]; then
         local -h   dimmedtext="%{$fg_no_bold[white]%}"
