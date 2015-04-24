@@ -524,7 +524,6 @@ prompt_blueyed_precmd () {
     else
         prompt_extra+=("$normtext(mc)")
     fi
-    local char_hr="⎯"
 
     # exit status
     local -h disp
@@ -573,6 +572,7 @@ prompt_blueyed_precmd () {
     local -h prompt_len=$(get_visible_length $prompt)
     local -h rprompt_len=$(get_visible_length $rprompt)
     local fillbar_len=$(($COLUMNS - ($rprompt_len + $prompt_len)))
+    local char_hr="⎯"
     if (( $fillbar_len > 3 )); then
         # There is room for a hr-prefix.
         prompt="${char_hr}${char_hr}${char_hr}${prompt}"
@@ -921,7 +921,7 @@ zstyle ':vcs_info:*+start-up:*' hooks start-up
         if [[ $_ZSH_VCS_INFO_LAST_MTIME != $mtime ]]; then
             _ZSH_VCS_INFO_FORCE_GETDATA=1
             _ZSH_VCS_INFO_LAST_MTIME=$mtime
-            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳m")
+            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳(m)")
             ret=0
         fi
     fi
@@ -943,13 +943,13 @@ zstyle ':vcs_info:*+pre-get-data:*' hooks pre-get-data
                 _ZSH_VCS_INFO_FORCE_GETDATA=1
                 _ZSH_VCS_INFO_CUR_GITDIR=$gitdir
                 _ZSH_VCS_INFO_LAST_MTIME=
-                _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳cd")
+                _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳(cd)")
             fi
         else
             # Changed to some non-git dir.
             _ZSH_VCS_INFO_FORCE_GETDATA=1
             _ZSH_VCS_INFO_CUR_GITDIR=
-            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳cd2")
+            _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳(cd2)")
         fi
     fi
 
@@ -972,7 +972,7 @@ _force_vcs_info_chpwd() {
     # Force refresh with "cd .".
     if [[ $PWD == $_ZSH_VCS_INFO_PREV_PWD ]]; then
         _ZSH_VCS_INFO_FORCE_GETDATA=1
-        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳f")
+        _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳(f)")
         return
     fi
     _ZSH_VCS_INFO_PREV_PWD=$PWD
