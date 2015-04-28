@@ -474,6 +474,11 @@ prompt_blueyed_precmd () {
         fi
     fi
 
+    # .env file (via https://github.com/Tarrasch/zsh-autoenv).
+    if [[ -n $autoenv_env_file ]]; then
+        rprompt_extra+=("${rprompt}.env:${(D)autoenv_env_file:h}")
+    fi
+
     if [[ -n $ENVSHELL ]]; then
         prompt_extra+=("${rprompthl}ENVSHELL:${normtext}${ENVSHELL##*/}")
     # ENVDIR (used for tmm, ':A:t' means tail of absolute path).
