@@ -492,6 +492,26 @@ adbpush() {
   done
 }
 
+# Run the provided expression with `time`.
+# The first arg can be a number of iterations (default 100).
+timeit() {
+  local expr iterations
+  if [[ $1 = <-> ]]; then
+    itertions=$1
+    shift
+  fi
+  if [[ $# > 1 ]]; then
+    expr=($@)
+    expr=(${(q-)expr})
+  else
+    expr=(${(z)@})
+  fi
+
+  time ( for _ in {1..$itertions}; do
+      eval $expr
+    done )
+}
+
 # complete words from tmux pane(s) {{{1
 # Source: http://blog.plenz.com/2012-01/zsh-complete-words-from-tmux-pane.html
 # Gist: https://gist.github.com/blueyed/6856354
