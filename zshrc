@@ -495,9 +495,9 @@ adbpush() {
 # Run the provided expression with `time`.
 # The first arg can be a number of iterations (default 100).
 timeit() {
-  local expr iterations
+  local expr iterations=100
   if [[ $1 = <-> ]]; then
-    itertions=$1
+    iterations=$1
     shift
   fi
   if [[ $# > 1 ]]; then
@@ -507,7 +507,7 @@ timeit() {
     expr=(${(z)@})
   fi
 
-  time ( for _ in {1..$itertions}; do
+  time ( for _ in {1..$iterations}; do
       eval $expr
     done )
 }
