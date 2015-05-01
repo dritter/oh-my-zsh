@@ -329,6 +329,14 @@ if [ "$commands[(I)vim]" ]; then
   alias vi=vim
 fi
 
+# Setup EDITOR env var, should be a command.
+for cmd in nvim vim vi; do
+  if [[ -n $commands[(I)$cmd] ]]; then
+    export EDITOR=$cmd
+    break
+  fi
+done
+
 # Restart network interface
 ifrestart() {
   (( $# > 0 )) || { echo "Missing interface."; return 1; }

@@ -65,7 +65,6 @@ unset i
 typeset -gU path
 
 
-[ -x /usr/local/bin/vim ] && export EDITOR=/usr/local/bin/vim || export EDITOR=vim
 export GPGKEY='3FE63E00'
 
 # Setup pyenv (with completion for zsh).
