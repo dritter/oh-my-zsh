@@ -838,7 +838,7 @@ eval "zle-line-init     () { $functions[_zsh_vim_mode_indicator]; $functions[zle
 zle -N zle-keymap-select
 zle -N zle-line-init
 # Init.
-_auto-my-set-cursor-shape underline_blink
+_auto-my-set-cursor-shape block_blink
 
 # Manage my_confirm_client_kill X client property (used by awesome). {{{
 function get_x_focused_win_id() {
