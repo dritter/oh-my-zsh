@@ -489,10 +489,11 @@ prompt_blueyed_precmd () {
         rprompt_extra+=("${rprompt}ENV:${ENV}")
     fi
 
+    # Django: django-configurations.
     if [[ -n $DJANGO_CONFIGURATION ]]; then
         rprompt_extra+=("${rprompt}djc:$DJANGO_CONFIGURATION")
     fi
-    # Obsolete
+    # Django: settings module.
     if [[ -n $DJANGO_SETTINGS_MODULE ]]; then
         if [[ $DJANGO_SETTINGS_MODULE != 'config.settings' ]] && \
             [[ $DJANGO_SETTINGS_MODULE != 'project.settings.local' ]]; then
@@ -554,12 +555,13 @@ prompt_blueyed_precmd () {
 
     # tmux pane / identifier
     # [[ -n "$TMUX_PANE" ]] && rprompt_extra+=("${TMUX_PANE//\%/%%}")
-    if (( $COLUMNS > 80 )); then
-        # history number
-        rprompt_extra+=("${normtext}!${histtext}%!")
-        # time
-        rprompt_extra+=("${normtext}%*")
-    fi
+
+    # Optional parts for rprompt; skipped, if they would cause a linebreak.
+    typeset -a rprompt_extra_optional
+    # Time.
+    rprompt_extra_optional+=("${normtext}%*")
+    # History number.
+    rprompt_extra_optional+=("${normtext}!${histtext}%!")
 
     # whitespace and reset for extra prompts if non-empty:
     local join_with="${bracket_close}${bracket_open}"
@@ -575,17 +577,34 @@ prompt_blueyed_precmd () {
     # Attach $rprompt to $prompt, aligned to $COLUMNS.
     local -h prompt_len=$(get_visible_length $prompt)
     local -h rprompt_len=$(get_visible_length $rprompt)
-    local fillbar_len=$(($COLUMNS - ($rprompt_len + $prompt_len)))
+
     local char_hr="⎯"
+    local fillbar_len=$(($COLUMNS - ($rprompt_len + $prompt_len)))
+
     if (( $fillbar_len > 3 )); then
         # There is room for a hr-prefix.
         prompt="${char_hr}${char_hr}${char_hr}${prompt}"
         prompt_len=$(( $prompt_len + 3 ))
+
+        # Add optional parts to rprompt.
+        if [[ -n $rprompt_extra_optional ]]; then
+            local len add
+            for i in {1..$#rprompt_extra_optional}; do
+                add=${bracket_open}${rprompt_extra_optional[${i}]}${bracket_close}
+                len=$(get_visible_length $add)
+                if (( $prompt_len + $rprompt_len + $len < $COLUMNS )); then
+                    rprompt+="$add"
+                    rprompt_len=$(( $rprompt_len + $len ))
+                    fillbar_len=$(( $fillbar_len - $len ))
+                fi
+            done
+        fi
     fi
     # Dynamically adjusted fillbar, via SIGWINCH / zle reset-prompt.
     # NOTE: -1 offset is used to fix redrawing issues after (un)maximizing,
     # when the screen is filled (the last line(s) get overwritten, and move to the top).
-    PR_FILLBAR="${PR_RESET}\${(pl:\$((\$COLUMNS - ($rprompt_len + $prompt_len) - 1))::$char_hr:)}"
+    PR_FILLBAR="${PR_RESET}"
+    PR_FILLBAR+="\${(pl~COLUMNS-($rprompt_len + $prompt_len)-1 < 0 ? 0 : COLUMNS-($rprompt_len + $prompt_len)-1~~$char_hr~)}"
 
     local -h prompt_sign="%{%(?.${fg_no_bold[blue]}.${fg_no_bold[red]})%}❯%{%(#.${roottext}.${prompttext})%}❯"
 
@@ -611,10 +630,13 @@ _zsh_cache_pwd_chpwd() {
 }
 add-zsh-hook chpwd _zsh_cache_pwd_chpwd
 
-# register vcs_info hooks
+
+# Register vcs_info hooks.
 zstyle ':vcs_info:git*+set-message:*' hooks git-stash git-st git-untracked git-shallow
 
-# Show count of stashed changes
+
+
+# Show count of stashed changes.
 function +vi-git-stash() {
     [[ $1 == 0 ]] || return  # do this only once for vcs_info_msg_0_.
 
@@ -1079,8 +1101,8 @@ FMT_ACTION="%{$fg_no_bold[cyan]%}(%a%)"   # e.g. (rebase-i)
 zstyle ':vcs_info:*:prompt:*' get-revision true # for %8.8i
 zstyle ':vcs_info:*:prompt:*' unstagedstr '¹'  # display ¹ if there are unstaged changes
 zstyle ':vcs_info:*:prompt:*' stagedstr '²'    # display ² if there are staged changes
-zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" "%R" "%8.8i"
-zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" "%R" "%8.8i"
+zstyle ':vcs_info:*:prompt:*' actionformats "${FMT_BRANCH} ${FMT_ACTION}" "%m" "%R" "%.7i"
+zstyle ':vcs_info:*:prompt:*' formats       "${FMT_BRANCH}"               "%m" "%R" "%.7i"
 zstyle ':vcs_info:*:prompt:*' nvcsformats   ""                            ""   ""   ""
 zstyle ':vcs_info:*:prompt:*' max-exports 4
 # patch-format for Git, used during rebase.
