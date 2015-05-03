@@ -738,6 +738,9 @@ function +vi-git-st() {
     elif [[ $remote == "origin/master" ]] ; then
       remote=o/m
       [[ $local_branch == "master" ]] && local_branch_disp="m"
+    elif [[ ${remote/\//-} == $local_branch ]]; then
+      # username-branchname@username/branchname via `hub`.
+      remote=✓
     else
       remote_color="%{$fg_bold[blue]%}"
     fi
