@@ -280,7 +280,7 @@ prompt_blueyed_precmd () {
     local -h bracket_close="${dimmedtext}]"
 
     local -h prompt_cwd prompt_vcs cwd
-    local -ah prompt_extra rprompt_extra
+    local -ah prompt_extra rprompt_extra RPS1_list
 
     prompt_vcs=""
     # Check for exported GIT_DIR (used when working on bup backups).
@@ -297,7 +297,7 @@ prompt_blueyed_precmd () {
 
         # Pick up any info from preexec and vcs_info hooks.
         if [[ -n $_zsh_prompt_vcs_info ]]; then
-            rprompt_extra=($_zsh_prompt_vcs_info)
+            RPS1_list+=($_zsh_prompt_vcs_info)
         fi
 
         if [[ -n ${vcs_info_msg_1_} ]]; then
@@ -507,8 +507,6 @@ prompt_blueyed_precmd () {
 
     # Assemble RPS1 (different from rprompt, which is right-aligned in PS1).
     if ! (( $+MC_SID )); then  # Skip midnight commander.
-        RPS1_list=()
-
         # Distribution (if on a remote system)
         if [ -n "$SSH_CLIENT" ] ; then
             RPS1_list+=("$distrotext$(get_distro)")
