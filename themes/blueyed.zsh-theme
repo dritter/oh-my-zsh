@@ -278,9 +278,12 @@ prompt_blueyed_precmd () {
     fi
     local -h bracket_open="${dimmedtext}["
     local -h bracket_close="${dimmedtext}]"
+    local -h listdelimitter="${dimmedtext}|"
 
     local -h prompt_cwd prompt_vcs cwd
     local -ah prompt_extra rprompt_extra RPS1_list
+    # Optional parts for rprompt; skipped, if they would cause a linebreak.
+    typeset -a rprompt_extra_optional
 
     prompt_vcs=""
     # Check for exported GIT_DIR (used when working on bup backups).
@@ -476,7 +479,12 @@ prompt_blueyed_precmd () {
 
     # .env file (via https://github.com/Tarrasch/zsh-autoenv).
     if [[ -n $autoenv_env_file ]]; then
-        rprompt_extra+=("${rprompt}.env:${(D)autoenv_env_file:h}")
+        local env_dir=${(D)${${autoenv_env_file:h}%$PWD}}
+        if [[ -z $env_dir ]]; then
+            rprompt_extra_optional+=("${rprompt}.env")
+        else
+            rprompt_extra_optional+=("${rprompt}.env:${env_dir}")
+        fi
     fi
 
     if [[ -n $ENVSHELL ]]; then
@@ -505,26 +513,7 @@ prompt_blueyed_precmd () {
     #     rprompt_extra+=("%fSHLVL:${SHLVL}")
     # fi
 
-    # Assemble RPS1 (different from rprompt, which is right-aligned in PS1).
-    if ! (( $+MC_SID )); then  # Skip midnight commander.
-        # Distribution (if on a remote system)
-        if [ -n "$SSH_CLIENT" ] ; then
-            RPS1_list+=("$distrotext$(get_distro)")
-        fi
-
-        # Keymap indicator for dumb terminals.
-        if [ -n ${_ZSH_KEYMAP_INDICATOR} ]; then
-            RPS1_list+=("${_ZSH_KEYMAP_INDICATOR}")
-        fi
-
-        RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
-        # NOTE: PR_RESET without space might cause off-by-one error with urxvt after `ls <tab>` etc.
-        if (( $#RPS1_list )); then
-            RPS1="${(j: :)RPS1_list}$PR_RESET "
-        else
-            RPS1=
-        fi
-    else
+    if (( $+MC_SID )); then
         prompt_extra+=("$normtext(mc)")
     fi
 
@@ -554,12 +543,10 @@ prompt_blueyed_precmd () {
     # tmux pane / identifier
     # [[ -n "$TMUX_PANE" ]] && rprompt_extra+=("${TMUX_PANE//\%/%%}")
 
-    # Optional parts for rprompt; skipped, if they would cause a linebreak.
-    typeset -a rprompt_extra_optional
-    # Time.
-    rprompt_extra_optional+=("${normtext}%*")
     # History number.
     rprompt_extra_optional+=("${normtext}!${histtext}%!")
+    # Time.
+    rprompt_extra_optional+=("${normtext}%*")
 
     # whitespace and reset for extra prompts if non-empty:
     local join_with="${bracket_close}${bracket_open}"
@@ -579,25 +566,37 @@ prompt_blueyed_precmd () {
     local char_hr="⎯"
     local fillbar_len=$(($COLUMNS - ($rprompt_len + $prompt_len)))
 
-    if (( $fillbar_len > 3 )); then
+    if (( fillbar_len > 3 )); then
         # There is room for a hr-prefix.
         prompt="${char_hr}${char_hr}${char_hr}${prompt}"
-        prompt_len=$(( $prompt_len + 3 ))
+        prompt_len=$(( prompt_len + 3 ))
+        fillbar_len=$(( fillbar_len - 1))
 
-        # Add optional parts to rprompt.
-        if [[ -n $rprompt_extra_optional ]]; then
-            local len add
-            for i in {1..$#rprompt_extra_optional}; do
-                add=${bracket_open}${rprompt_extra_optional[${i}]}${bracket_close}
-                len=$(get_visible_length $add)
-                if (( $prompt_len + $rprompt_len + $len < $COLUMNS )); then
-                    rprompt+="$add"
-                    rprompt_len=$(( $rprompt_len + $len ))
-                    fillbar_len=$(( $fillbar_len - $len ))
-                fi
-            done
+        if (( fillbar_len > 3 )); then
+            # There is room for a hr-suffix.
+            rprompt+="${PR_RESET}${char_hr}${char_hr}${char_hr}"
+            (( prompt_len += 3 ))
+            (( fillbar_len -= 3 ))
         fi
     fi
+
+    # Add optional parts to rprompt or RPS1.
+    if [[ -n $rprompt_extra_optional ]]; then
+        local len add
+        for i in ${rprompt_extra_optional}; do
+            add=${bracket_open}${i}${bracket_close}
+            len=$(get_visible_length $add)
+            if (( $prompt_len + $rprompt_len + $len < $COLUMNS )); then
+                rprompt+="$add"
+                rprompt_len=$(( $rprompt_len + $len ))
+                fillbar_len=$(( $fillbar_len - $len ))
+            else
+                # Fallback: add it in front to RPS1.
+                RPS1_list+=($i)
+            fi
+        done
+    fi
+
     # Dynamically adjusted fillbar, via SIGWINCH / zle reset-prompt.
     # NOTE: -1 offset is used to fix redrawing issues after (un)maximizing,
     # when the screen is filled (the last line(s) get overwritten, and move to the top).
@@ -614,6 +613,27 @@ ${prompt_vcs}${prompt_sign} ${PR_RESET}"
     # When invoked from gvim ('zsh -i') make it less hurting
     if [[ -n $MYGVIMRC ]]; then
         PS1=$(_strip_escape_codes $PS1)
+    fi
+
+    # Assemble RPS1 (different from rprompt, which is right-aligned in PS1).
+    if ! (( $+MC_SID )); then  # Skip for midnight commander: display issues.
+        # Distribution (if on a remote system)
+        if [ -n "$SSH_CLIENT" ] ; then
+            RPS1_list=("$distrotext$(get_distro)" $RPS1_list)
+        fi
+
+        # Keymap indicator for dumb terminals.
+        if [ -n ${_ZSH_KEYMAP_INDICATOR} ]; then
+            RPS1_list=("${_ZSH_KEYMAP_INDICATOR}" $RPS1_list)
+        fi
+
+        RPS1_list=("${(@)RPS1_list:#}") # remove empty elements (after ":#")
+        # NOTE: PR_RESET without space might cause off-by-one error with urxvt after `ls <tab>` etc.
+        if (( $#RPS1_list )); then
+            RPS1="${(pj:$listdelimitter:)RPS1_list}$PR_RESET "
+        else
+            RPS1=
+        fi
     fi
 
     # End profiling
@@ -1024,7 +1044,6 @@ add-zsh-hook preexec _force_vcs_info_preexec
 
 # Look for $4 (in "word boundaries") in preexec arguments ($1, $2, $3).
 # $3 is the resolved command.
-# It adds an indicator to $_zsh_prompt_vcs_info.
 # Returns 0 if the command has (probably) been called, 1 otherwise.
 _user_execed_command() {
     local lookfor="(*[[:space:]])#$4([[:space:]-]*)#"
