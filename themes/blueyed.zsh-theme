@@ -1012,17 +1012,24 @@ _user_execed_command() {
     if [[ $3 == ${~lookfor} ]]; then
         ret=0
     else
-        local lookfor_quoted="(*[[:space:]=])#(|[\"\'\(])$4([[:space:]-]*)#"
         local -a cmd
         if (( $#_zsh_resolved_jobspec )); then
             cmd=(${(z)_zsh_resolved_jobspec})
         else
             cmd=(${(z)3})
         fi
-        # Look into resolved aliases etc, allowing the command to be quoted.
-        # E.g. with `gcm`: noglob _nomatch command_with_files "git commit --amend -m"
-        if [[ $(whence -f ${cmd[1]}) == ${~lookfor_quoted} ]] ; then
-            ret=0
+        # Look into function definitions, max. 50 lines.
+        if (( $+functions[$cmd[1]] )); then
+            if [[ ${${(f)"$(whence -f ${cmd[1]})"}[1,50]} == ${~lookfor} ]] ; then
+                ret=0
+            fi
+        else
+            # Allowing the command to be quoted.
+            # E.g. with `gcm`: noglob _nomatch command_with_files "git commit --amend -m"
+            local lookfor_quoted="(*[[:space:]=])#(|[\"\'\(])$4([[:space:]-]*)#"
+            if [[ $(whence -f ${cmd[1]}) == ${~lookfor_quoted} ]] ; then
+                ret=0
+            fi
         fi
     fi
     return $ret
