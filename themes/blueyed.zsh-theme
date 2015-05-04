@@ -1038,7 +1038,6 @@ _force_vcs_info_chpwd() {
     if [[ $PWD == $_ZSH_VCS_INFO_PREV_PWD ]]; then
         _ZSH_VCS_INFO_FORCE_GETDATA=1
         _zsh_prompt_vcs_info+=("%{${fg[cyan]}%}⟳(f)")
-        return
     fi
     _ZSH_VCS_INFO_PREV_PWD=$PWD
     _ZSH_VCS_INFO_DIR_CHANGED=1
