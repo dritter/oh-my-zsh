@@ -304,8 +304,8 @@ prompt_blueyed_precmd () {
         fi
 
         if [[ -n ${vcs_info_msg_1_} ]]; then
-            # "misc" vcs info, e.g. "shallow", right trimmed:
-            rprompt_extra+=("${vcs_info_msg_1_%% #}")
+            # "misc" vcs info (via hook_com[misc]), e.g. "shallow".
+            rprompt_extra+=(${vcs_info_msg_1_})
         fi
     fi
 
@@ -660,25 +660,43 @@ function +vi-git-stash() {
 
     # Return if check-for-changes is false:
     if ! zstyle -t ':vcs_info:*:prompt:*' 'check-for-changes'; then
-        hook_com[misc]+="$hitext☰ ? "
+        hook_com[misc]+="$hitext☰ ?"
         return
     fi
 
     if [[ -s ${vcs_comm[gitdir]}/refs/stash ]] ; then
         local -a stashes
-        stashes=(${(f)"$($_git_cmd --git-dir="${vcs_comm[gitdir]}" stash list)"})
+        # Get stashes as array, with subject and (relative) date per line.
+        stashes=(${(ps:\n\n:)"$($_git_cmd --git-dir="${vcs_comm[gitdir]}" \
+            stash list --pretty=format:%s%n%cr%n)"})
 
         if (( $#stashes )); then
-            # Format: stash@{0}: WIP on persistent-tag-properties: 472e3b1 Handle persistent tag layout in tag.new
+            # Display a different icon based on where the stash is from.
             local top_stash_branch
+            # Format: stash@{0}: WIP on persistent-tag-properties: 472e3b1 Handle persistent tag layout in tag.new
             top_stash_branch="${${${stashes[1]}#stash*:\ (WIP\ on|On)\ }%%:*}"
-
             if [[ $top_stash_branch == $hook_com[branch] ]]; then
                 hook_com[misc]+="$hitext☶ "
             else
                 hook_com[misc]+="$hitext☵ "
             fi
-            hook_com[misc]+="✖${#stashes} "
+
+            # Add number of stashes, if more than one.
+            if (( $#stashes > 1 )); then
+                hook_com[misc]+="✖${#stashes}"
+            fi
+
+            # Display shortened, relative time of top stash.
+            typeset -a top_stash_time
+            top_stash_time=(${(s: :)${(f)stashes[1]}[2]})
+            local short_time_unit=${top_stash_time[2][1]}
+            if [[ $short_time_unit != s ]]; then
+                if [[ $short_time_unit == m && ${top_stash_time[2][2]} == o ]]; then
+                    # Handle "minutes" and "months".
+                    short_time_unit+=${top_stash_time[2][2]}
+                fi
+                hook_com[misc]+="$normtext(${top_stash_time[1]}$short_time_unit)"
+            fi
         fi
     fi
     return
