@@ -114,7 +114,7 @@ my_get_gitdir() {
 # Switch between light and dark variants (solarized). {{{
 ZSH_THEME_VARIANT_CONFIG_FILE=~/.config/zsh-theme-variant
 # $1: theme to use: auto/light/dark.
-# $2: "init" when called during shell setup.
+# $2: "save" to save the value to the config file.
 theme_variant() {
     if [[ "$1" == "auto" ]]; then
         if [[ -n $commands[get-daytime-period] ]] \
@@ -127,14 +127,13 @@ theme_variant() {
         case "$1" in
             light|dark) variant=$1 ;;
             *)
-                echo "Current theme variant: $ZSH_THEME_VARIANT."
+                echo "Current theme variant: ZSH_THEME_VARIANT=$ZSH_THEME_VARIANT."
                 echo "Theme in config: $(<$ZSH_THEME_VARIANT_CONFIG_FILE)."
                 echo "Use 'auto', 'dark' or 'light' to change it."
                 return 0 ;;
         esac
     fi
-    # Only write conf when not "init".
-    if [[ "$2" != "init" ]]; then
+    if [[ "$2" == "save" ]]; then
         echo $1 > $ZSH_THEME_VARIANT_CONFIG_FILE
     fi
 
@@ -147,7 +146,7 @@ theme_variant() {
     fi
     zsh-set-dircolors
 
-    # Setup/change gnome-terminal profile.
+    # Setup/change xrdb / gnome-terminal profile. {{{
     if [[ "$ZSH_THEME_VARIANT" != "$variant" ]]; then
         if is_urxvt && [[ -n $commands[xrdb] ]]; then
             local curbg changed_xrdb
@@ -192,10 +191,12 @@ theme_variant() {
                 dconf write /org/gnome/terminal/legacy/profiles:/default "'$wanted_gnome_terminal_profile_id'"
             fi
         fi
-    fi
+    fi  # }}}
     # Used in ~/.vimrc.
     export ZSH_THEME_VARIANT=$variant
 }
+compdef -e '_arguments "1: :(auto light dark)" "2: :(save)"' theme_variant
+
 # Init once and export the value.
 # This gets used in Vim to auto-set the background, too.
 if [[ -z "$ZSH_THEME_VARIANT" ]]; then
@@ -204,7 +205,7 @@ if [[ -z "$ZSH_THEME_VARIANT" ]]; then
     else
         ZSH_THEME_VARIANT=auto
     fi
-    theme_variant $ZSH_THEME_VARIANT init
+    theme_variant $ZSH_THEME_VARIANT
 fi
 # }}}
 
