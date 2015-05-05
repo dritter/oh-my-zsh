@@ -667,8 +667,8 @@ function +vi-git-stash() {
         if (( $#stashes )); then
             # Display a different icon based on where the stash is from.
             local top_stash_branch
-            # Format: stash@{0}: WIP on persistent-tag-properties: 472e3b1 Handle persistent tag layout in tag.new
-            top_stash_branch="${${${stashes[1]}#stash*:\ (WIP\ on|On)\ }%%:*}"
+            # Format: WIP on persistent-tag-properties: 472e3b1 Handle persistent tag layout in tag.new
+            top_stash_branch="${${${stashes[1]}#(WIP\ on|On)\ }%%:*}"
             if [[ $top_stash_branch == $hook_com[branch] ]]; then
                 hook_com[misc]+="$hitext☶ "
             else
