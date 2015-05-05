@@ -70,20 +70,48 @@ export GPGKEY='3FE63E00'
 # Setup pyenv (with completion for zsh).
 # It gets done also in ~/.profile, but that does not cover completion and
 # ~/.profile is not sourced for real virtual consoles (VTs).
-if [ -d ~/.pyenv ]; then
+if [[ -d ~/.pyenv ]] && ! (( $+functions[_pyenv_setup] )); then # only once!
   export PYENV_ROOT="$HOME/.pyenv"
-  # prepend_path_if_not_in_already $PYENV_ROOT/bin
-  PATH="$PYENV_ROOT/bin:$PATH"
-  # prepend_path_if_not_in_already $PYENV_ROOT/shims
+  prepend_path_if_not_in_already $PYENV_ROOT/bin
+  prepend_path_if_not_in_already $PYENV_ROOT/shims
 
-  # Setup pyenv function and completion.
-  # NOTE: moved from ~/.zshrc to fix YouCompleteMe/Python in gvim started from Firefox.
-  # XXX: probably not that lazy with this forking..
-  if ! type pyenv | grep -q function; then # only once!
-    # if [ -n "$commands[pyenv]" ] ; then
-      eval "$($PYENV_ROOT/bin/pyenv init -)"
-    # fi
-  fi
+  # Setup pyenv completions always.
+  # (it is useful to have from the beginning, and using it via _pyenv_setup
+  # triggers a job control bug in Zsh).
+  source $PYENV_ROOT/completions/pyenv.zsh
+
+  _ZSH_PYENV_SETUP=0  # used in prompt.
+  _pyenv_setup() {
+    # Manual pyenv init, without "source", which triggers a bug in zsh.
+    # Adding shims to $PATH etc has been already also.
+    # eval "$(command pyenv init - --no-rehash | grep -v '^source')"
+    export PYENV_SHELL=zsh
+    pyenv() {
+      local command
+      command="$1"
+      if [ "$#" -gt 0 ]; then
+        shift
+      fi
+
+      case "$command" in
+        activate|deactivate|rehash|shell|virtualenvwrapper|virtualenvwrapper_lazy)
+          eval "`pyenv "sh-$command" "$@"`";;
+        *)
+          command pyenv "$command" "$@";;
+      esac
+    }
+
+    eval "$(pyenv virtualenv-init -)"
+
+    _ZSH_PYENV_SETUP=1
+    unfunction _pyenv_setup
+  }
+  pyenv() {
+    if [ -n "$commands[pyenv]" ] ; then
+      _pyenv_setup
+      pyenv "$@"
+    fi
+  }
 fi
 
 
