@@ -386,7 +386,7 @@ prompt_blueyed_precmd () {
 
     # TODO: if cwd is too long for COLUMNS-restofprompt, cut longest parts of cwd
     #prompt_cwd="${hitext}%B%50<..<${cwd}%<<%b"
-    prompt_cwd="${bracket_open}${cwd}${bracket_close}"
+    prompt_cwd="${PR_RESET}❮ ${cwd} ${PR_RESET}❯"
 
     # user@host for SSH connections or when inside an OpenVZ container.
     local userathost
@@ -474,9 +474,9 @@ prompt_blueyed_precmd () {
     if [[ $pyenv_version != ${_zsh_cache_pwd[pyenv_global]} ]]; then
         pyenv_prompt=("${normtext}🐍 ${pyenv_version}")
         if [[ $pyenv_version == '?' ]]; then
-            rprompt_extra+=($pyenv_prompt)
+            RPS1_list+=($pyenv_prompt)
         else
-            prompt_extra+=($pyenv_prompt)
+            RPS1_list+=($pyenv_prompt)
         fi
     fi
 
@@ -484,9 +484,9 @@ prompt_blueyed_precmd () {
     if [[ -n $autoenv_env_file ]]; then
         local env_dir=${(D)${${autoenv_env_file:h}%$PWD}}
         if [[ -z $env_dir ]]; then
-            rprompt_extra_optional+=("${rprompt}.env")
+            RPS1_list+=("${rprompt}.env")
         else
-            rprompt_extra_optional+=("${rprompt}.env:${env_dir}")
+            RPS1_list+=("${rprompt}.env:${env_dir}")
         fi
     fi
 
@@ -549,52 +549,44 @@ prompt_blueyed_precmd () {
     # History number.
     rprompt_extra_optional+=("${normtext}!${histtext}%!")
     # Time.
-    rprompt_extra_optional+=("${normtext}%*")
+    rprompt_extra_optional+=("${normtext}⌚ %*")
 
     # whitespace and reset for extra prompts if non-empty:
     local join_with="${bracket_close}${bracket_open}"
     [[ -n $prompt_extra ]]  &&  prompt_extra="${(pj: :)prompt_extra}"
-    [[ -n $rprompt_extra ]] && rprompt_extra="${bracket_open}${(pj: :)rprompt_extra}${bracket_close}"
+    [[ -n $rprompt_extra ]] && rprompt_extra="${(pj: :)rprompt_extra}"
 
     # Assemble prompt:
-    local -h prompt="${userathost:+ $userathost }${prompt_cwd}${prompt_extra:+ $prompt_extra}"
+    local -h prompt="${userathost:+ $userathost }${prompt_cwd}${prompt_extra:+ $prompt_extra} "
     local -h rprompt="${rprompt_extra}"
-    # right trim:
-    prompt="${prompt%% #}"
 
     # Attach $rprompt to $prompt, aligned to $COLUMNS.
     local -h prompt_len=$(get_visible_length $prompt)
     local -h rprompt_len=$(get_visible_length $rprompt)
 
-    local char_hr="⎯"
-    local fillbar_len=$(($COLUMNS - ($rprompt_len + $prompt_len)))
+    # local char_hr="⎯"
+    local char_hr="―"
+    local fillbar_len=$((COLUMNS - (rprompt_len + prompt_len)))
 
     if (( fillbar_len > 3 )); then
         # There is room for a hr-prefix.
-        prompt="${char_hr}${char_hr}${char_hr}${prompt}"
-        prompt_len=$(( prompt_len + 3 ))
-        fillbar_len=$(( fillbar_len - 1))
-
-        if (( fillbar_len > 3 )); then
-            # There is room for a hr-suffix.
-            rprompt+="${PR_RESET}${char_hr}${char_hr}${char_hr}"
-            (( prompt_len += 3 ))
-            (( fillbar_len -= 3 ))
-        fi
+        prompt="${char_hr}${char_hr} ${prompt}"
+        (( prompt_len += 3 ))
+        (( fillbar_len -= 3))
     fi
 
     # Add optional parts to rprompt or RPS1.
     if [[ -n $rprompt_extra_optional ]]; then
         local len add
         for i in ${rprompt_extra_optional}; do
-            add=${bracket_open}${i}${bracket_close}
+            add=" $i"
             len=$(get_visible_length $add)
             if (( $prompt_len + $rprompt_len + $len < $COLUMNS )); then
                 rprompt+="$add"
-                rprompt_len=$(( $rprompt_len + $len ))
-                fillbar_len=$(( $fillbar_len - $len ))
+                (( rprompt_len += len ))
+                (( fillbar_len -= len ))
             else
-                # Fallback: add it in front to RPS1.
+                # Fallback: add it to RPS1.
                 RPS1_list+=($i)
             fi
         done
@@ -603,8 +595,7 @@ prompt_blueyed_precmd () {
     # Dynamically adjusted fillbar, via SIGWINCH / zle reset-prompt.
     # NOTE: -1 offset is used to fix redrawing issues after (un)maximizing,
     # when the screen is filled (the last line(s) get overwritten, and move to the top).
-    PR_FILLBAR="${PR_RESET}"
-    PR_FILLBAR+="\${(pl~COLUMNS-($rprompt_len + $prompt_len)-1 < 0 ? 0 : COLUMNS-($rprompt_len + $prompt_len)-1~~$char_hr~)}"
+    PR_FILLBAR+="\${(pl~(COLUMNS-($rprompt_len + $prompt_len)-1 < 0 ? 0 : COLUMNS-($rprompt_len + $prompt_len)-1)~~$char_hr~)}"
 
     local -h prompt_sign="%{%(?.${fg_no_bold[blue]}.${fg_no_bold[red]})%}❯%{%(#.${roottext}.${prompttext})%}❯"
 
