@@ -710,13 +710,10 @@ function +vi-git-stash() {
 function +vi-git-untracked() {
     [[ $1 == 0 ]] || return  # do this only once for vcs_info_msg_0_.
 
-    if [[ $($_git_cmd rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
-            # Uses "sed q1" to make it quicker!
-            # NOTE: "git status" changes mtime of .git!
-            # ls-files will also display empty dirs (which is good).
-            # ! $_git_cmd status --porcelain | sed -n '/^??/q1'
-            ! $_git_cmd ls-files --other --directory --exclude-standard | sed -n q1
-            then
+    local gitdir=${vcs_comm[gitdir]}
+
+    if $_git_cmd --git-dir $gitdir ls-files --other --directory \
+            --exclude-standard | command grep -q .; then
         hook_com[staged]+='✗ '
     fi
 }
@@ -752,7 +749,7 @@ function +vi-git-st() {
 
     # Are we on a remote-tracking branch?
     remote=${$($_git_cmd rev-parse --verify ${local_branch}@{upstream} \
-        --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
+        --abbrev-ref 2>/dev/null)}
 
     # Init local_branch_disp: shorten branch.
     if [[ $local_branch == bisect/* ]]; then
