@@ -983,6 +983,13 @@ zstyle ':vcs_info:*+start-up:*' hooks start-up
     fi
 }
 
+# Hook for when no VCS was detected: cleanup vars.
+zstyle ':vcs_info:*+no-vcs:*' hooks no-vcs
++vi-no-vcs() {
+    _ZSH_VCS_INFO_CUR_GITDIR=
+    _ZSH_VCS_INFO_CUR_VCS=
+}
+
 zstyle ':vcs_info:*+pre-get-data:*' hooks pre-get-data
 +vi-pre-get-data() {
     _ZSH_VCS_INFO_CUR_VCS=$vcs  # for start-up hook.
