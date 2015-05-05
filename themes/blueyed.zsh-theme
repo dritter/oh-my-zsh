@@ -8,7 +8,9 @@
 #  - Based on http://kriener.org/articles/2009/06/04/zsh-prompt-magic
 #  - Some Git ideas from http://eseth.org/2010/git-in-zsh.html (+vi-git-stash, +vi-git-st, ..)
 #
-# Some signs: ✚ ⬆ ⬇ ✖ ✱ ➜ ✭ ═ ◼ ♺ ❮ ❯ λ
+# Some signs/symbols: ✚ ⬆ ⬇ ✖ ✱ ➜ ✭ ═ ◼ ♺ ❮ ❯ λ ↳
+# See also: http://jrgraphix.net/r/Unicode/2600-26FF
+#
 #
 # TODO: setup $prompt_cwd in chpwd hook only (currently adding the hook causes infinite recursion via vcs_info)
 # NOTE: prezto's git-info: https://github.com/sorin-ionescu/prezto/blob/master/modules/git/functions/git-info#L202
@@ -31,8 +33,8 @@ prompt_blueyed_winch() {
     fi
 }
 # Paste our special command into TRAPWINCH.
-functions[TRAPWINCH]="${functions[TRAPWINCH]//prompt_blueyed_winch}
-    prompt_blueyed_winch"
+# functions[TRAPWINCH]="${functions[TRAPWINCH]//prompt_blueyed_winch}
+#     prompt_blueyed_winch"
 
 # Query/use custom command for `git`.
 # See also ../plugins/git/git.plugin.zsh
@@ -706,7 +708,7 @@ function +vi-git-stash() {
 # vcs_info: git: Show marker (✗) if there are untracked files in repository.
 # (via %c).
 function +vi-git-untracked() {
-    [[ $1 == 0 ]] || return  # do this only once vcs_info_msg_0_.
+    [[ $1 == 0 ]] || return  # do this only once for vcs_info_msg_0_.
 
     if [[ $($_git_cmd rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
             # Uses "sed q1" to make it quicker!
@@ -722,7 +724,7 @@ function +vi-git-untracked() {
 # vcs_info: git: Show marker if the repo is a shallow clone.
 # (via %c).
 function +vi-git-shallow() {
-    [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
+    [[ $1 == 0 ]] || return 0 # do this only once for vcs_info_msg_0_.
 
     if [[ -f ${vcs_comm[gitdir]}/shallow ]]; then
         hook_com[misc]+="${hitext}㿼 "
@@ -732,7 +734,7 @@ function +vi-git-shallow() {
 # Show remote ref name and number of commits ahead-of or behind.
 # This also colors and adjusts ${hook_com[branch]}.
 function +vi-git-st() {
-    [[ $1 == 0 ]] || return 0 # do this only once vcs_info_msg_0_.
+    [[ $1 == 0 ]] || return 0 # do this only once for vcs_info_msg_0_.
 
     local ahead_and_behind_cmd ahead_and_behind
     local ahead behind remote
