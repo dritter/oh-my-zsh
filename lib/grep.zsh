@@ -6,7 +6,7 @@ _setup_grep_alias() {
 
     # Is grep argument $1 available?
     grep-flag-available() {
-        echo | grep $1 "" >/dev/null 2>&1
+        echo | command grep $1 "" >/dev/null 2>&1
     }
     # Color grep results.
     if grep-flag-available --color=auto; then
@@ -22,6 +22,7 @@ _setup_grep_alias() {
 
     # Remove alias and setup function.
     alias grep="grep ${GREP_OPTIONS}"
+    unfunction _setup_grep_alias
 
     # Run it on first invocation.
     command grep ${GREP_OPTIONS} "$@"
