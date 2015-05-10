@@ -57,9 +57,10 @@ _strip_escape_codes() {
 }
 
 # Via http://stackoverflow.com/a/10564427/15690.
-get_visible_length() {
+# NOTE: it could use `setopt localoptions nopromptsubst`, but it's assumed that
+# this should be expanded now.
     local zero='%([BSUbfksu]|([FB]|){*})'
-    echo ${#${(S%%)1//$~zero}}
+    print ${#${(S%%)1//$~zero}}
 }
 
 is_urxvt() {
