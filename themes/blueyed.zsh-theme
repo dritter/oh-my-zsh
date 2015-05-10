@@ -472,12 +472,11 @@ prompt_blueyed_precmd () {
     fi
     local pyenv_prompt
     if [[ $pyenv_version != ${_zsh_cache_pwd[pyenv_global]} ]]; then
-        pyenv_prompt=("${normtext}🐍 ${pyenv_version}")
-        if [[ $pyenv_version == '?' ]]; then
-            RPS1_list+=($pyenv_prompt)
-        else
-            RPS1_list+=($pyenv_prompt)
+        if [[ ${VIRTUAL_ENV##*/} == $pyenv_version ]]; then
+            pyenv_version=✓
         fi
+        pyenv_prompt=("${normtext}🐍 ${pyenv_version}")
+        RPS1_list+=($pyenv_prompt)
     fi
 
     # .env file (via https://github.com/Tarrasch/zsh-autoenv).
