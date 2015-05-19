@@ -435,7 +435,9 @@ export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 #   fi
 # fi
 
-# autoload $ZSH/functions/*(:t)
+# Autoload all functions.
+autoload $ZSH/functions/[^_]*(:t)
+
 
 # Display "^C" when aborting zle
 # XXX: behaves funny when aborting Ctrl-R
