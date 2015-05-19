@@ -58,7 +58,9 @@ _strip_escape_codes() {
 
 # Via http://stackoverflow.com/a/10564427/15690.
 # NOTE: it could use `setopt localoptions nopromptsubst`, but it's assumed that
-# this should be expanded now.
+# this should be expanded now.  It is meant to be used in a prompt, but not for
+# removing ANSI escape codes only.
+get_visible_length() {
     local zero='%([BSUbfksu]|([FB]|){*})'
     print ${#${(S%%)1//$~zero}}
 }
