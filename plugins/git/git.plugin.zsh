@@ -7,8 +7,118 @@ alias g='git'
 alias ga='git add'
 alias gap='git add --patch'
 alias gae='git add --edit'
-alias gb='git branch'
-alias gba='git branch -a'
+
+# Function for "git branch", handling the "list" case, by sorting it according
+# to committerdate, and displaying it.
+gb() {
+  local refs
+  if [[ -z $1 ]]; then
+    refs=(refs/heads)
+  elif [[ $# == 1 ]]; then
+    if [[ $1 == '-r' ]]; then
+      refs=(refs/remotes)
+    elif [[ $1 == '-a' ]]; then
+      refs=(refs/heads refs/remotes)
+    fi
+  fi
+
+  if [[ -n $refs ]]; then
+    local color_object=${(%):-'%F{yellow}'}
+    local color_date=${(%):-'%F{cyan}'}
+    local color_subject=${(%):-'%B%f'}
+    local color_author=${(%):-'%F{blue}'}
+    local color_reset=${(%):-'%f%b'}
+    local current=$(current_branch)
+    local line
+    typeset -a lines info_string
+    info_string=(
+      "%(refname:short)"
+      "%(authorname)"
+      "${color_date}%(committerdate:relative)${color_reset}"
+      "${color_subject}%(subject)${color_reset}"
+      "%(objectname:short)"
+    )
+    local my_name="$(git config user.name)"
+    for b in ${(f)"$(git for-each-ref --sort=-committerdate $refs \
+      --format="\0${(j:\0:)info_string}")"}; do
+      b=(${(s:\0:)b})
+
+      if [[ ${b[1]} == $current ]]; then
+        line=${(%):-'%F{green}* '}
+      elif [[ ${b[1]} == */* ]]; then
+        line=${(%):-'%F{red}  '}
+      else
+        line=${(%):-'%F{default}  '}
+      fi
+
+      # Describe object name.
+      b[5]="${color_object}$($_git_cmd describe --contains --always $b[5])${color_reset}"
+
+      # Decorate or remove author name.
+      local author_name=$b[2]
+      b=($b[1] $b[3,-1])
+      if [[ $author_name != $my_name ]]; then
+        b[3]="$b[3] (${color_author}$author_name${color_reset})"
+      else
+        # Include escape codes for zformat alignment.
+        b[3]="$b[3] ${color_author}${color_reset}"
+      fi
+
+      lines+=("$line${b[1]}\0${(j-\0-)${(@)b[2,-1]}}")
+    done
+
+    # Use zformat recursively, which requires escaping ":" on the left side.
+    typeset -a before escaped_lines format_lines
+    local i left right
+    format_lines=($lines)
+    local col=1
+
+    while true; do
+      before=($format_lines)
+      escaped_lines=()
+
+      local linenum=1
+      for line in $format_lines; do
+        split=(${(s:\0:)line})
+        if (( ${#:-"$(remove_ansi_codes ${split[$col]})"} > 30 )); then
+          split[$col]="skipped89012345678901234567890"
+        fi
+        # Escape left side.
+        left=${${(j:\0:)split[1,$col]}//:/\\:}
+        left=${left//\0/\\0}
+        right=${(j:\0:)split[$((col+1)),-1]}
+        escaped_lines+=("$left:$right")
+
+        (( linenum++ ))
+      done
+
+      zformat -a format_lines "\0" $escaped_lines
+      if (( ++col >= $#split )); then
+        break
+      fi
+    done
+
+    for i in {1..$#format_lines}; do
+      line=$format_lines[$i]
+      split=(${(s:\0:)line})
+      for col in {1..$#split}; do
+        if [[ $split[$col] == "skipped"* ]]; then
+          split[$col]=${${(s:\0:)lines[$i]}[$col]}
+        fi
+      done
+      # if [[ ${format_lines[$line]} != "skipped" ]]; then
+      lines[$i]=${(j: :)split}
+    done
+
+    # Display it using "less", but only to cut at $COLUMNS.
+    echo ${${(j:\n:)lines}} \
+      | less --no-init --chop-long-lines --QUIT-AT-EOF
+  else
+    git branch "$@"
+  fi
+}
+compdef _git gb=git-branch
+
 alias gbnm='git branch --no-merged'
 alias gbm='git branch --merged'
 alias gbl='git blame'
