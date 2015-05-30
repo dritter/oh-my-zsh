@@ -30,7 +30,7 @@ if [[ -n $_hub_command ]]; then
     if whence _hub >/dev/null; then
         compdef _hub git
     else
-        echo "NOTE: _hub not available for compdef!"
+        echo "NOTE: _hub not available for compdef!" >&2
     fi
 fi
 
