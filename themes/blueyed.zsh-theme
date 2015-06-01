@@ -80,7 +80,7 @@ is_gnome_terminal() {
     fi
     (( $+KONSOLE_PROFILE_NAME )) && return 1
     # Check /proc, but only on the local system.
-    if [[ -z $SSH_CLIENT ]] && [[ ${$(</proc/$PPID/cmdline):t} == gnome-terminal* ]]; then
+    if [[ -z $SSH_CLIENT ]] && [[ ${$(</proc/$PPID/cmdline 2> /dev/null):t} == gnome-terminal* ]]; then
         return 0
     fi
     return 1
